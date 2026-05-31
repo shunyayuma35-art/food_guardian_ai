@@ -1,7 +1,24 @@
 import type { Incident, SensoryEvaluation, Report, InspectionRecord } from './types'
 import { v4 as uuidv4 } from 'uuid'
-import { safeFetch } from './safe-fetch'
 import { DEMO_MODE, app } from './firebase'
+
+// ── localStorage ヘルパー（DEMO_MODE / Vercel デモ用） ────────────
+
+function localGet<T>(key: string): T[] {
+  if (typeof window === 'undefined') return []
+  try { return JSON.parse(localStorage.getItem(key) || '[]') } catch { return [] }
+}
+
+function localSet<T>(key: string, items: T[]) {
+  try {
+    localStorage.setItem(key, JSON.stringify(items))
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+      throw new Error('ストレージ容量が不足しています。古い記録を削除してください。')
+    }
+    throw e
+  }
+}
 
 // ── Firebase Firestore ヘルパー ───────────────────────────────────
 
@@ -28,8 +45,7 @@ async function fbGet(col: string, id: string) {
   if (!snap.exists()) return null
   const d = snap.data()
   return {
-    ...d,
-    id: snap.id,
+    ...d, id: snap.id,
     createdAt: d.createdAt?.toDate?.()?.toISOString() ?? d.createdAt ?? '',
     updatedAt: d.updatedAt?.toDate?.()?.toISOString() ?? d.updatedAt ?? '',
   }
@@ -45,8 +61,7 @@ async function fbList(col: string, userId?: string) {
   return snap.docs.map((d) => {
     const data = d.data()
     return {
-      ...data,
-      id: d.id,
+      ...data, id: d.id,
       createdAt: data.createdAt?.toDate?.()?.toISOString() ?? data.createdAt ?? '',
       updatedAt: data.updatedAt?.toDate?.()?.toISOString() ?? data.updatedAt ?? '',
     }
@@ -65,13 +80,9 @@ async function fbDelete(col: string, id: string) {
   await deleteDoc(doc(db, col, id))
 }
 
-// ── ローカルAPIフォールバック ─────────────────────────────────────
-
-function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
-  return safeFetch<T>(url, options)
-}
-
 // ── 異物事故 ─────────────────────────────────────────────────────
+
+const INC_KEY = 'fe_incidents'
 
 export async function createIncident(
   data: Omit<Incident, 'id' | 'createdAt' | 'updatedAt'>
@@ -80,25 +91,25 @@ export async function createIncident(
   const id = uuidv4()
 
   if (DEMO_MODE) {
-    const incident: Incident = { ...data, id, createdAt: now, updatedAt: now }
-    await apiFetch('/api/incidents', { method: 'POST', body: JSON.stringify(incident) })
+    const list = localGet<Incident>(INC_KEY)
+    list.unshift({ ...data, id, createdAt: now, updatedAt: now })
+    localSet(INC_KEY, list)
     return id
   }
-
   return fbAdd('incidents', { ...data, id })
 }
 
 export async function getIncident(id: string): Promise<Incident | null> {
-  if (DEMO_MODE) {
-    try { return await apiFetch<Incident>(`/api/incidents/${id}`) }
-    catch (err) { if (err instanceof Error && err.message.includes('404')) return null; throw err }
-  }
+  if (DEMO_MODE) return localGet<Incident>(INC_KEY).find((i) => i.id === id) ?? null
   return fbGet('incidents', id) as Promise<Incident | null>
 }
 
 export async function updateIncident(id: string, data: Partial<Incident>): Promise<void> {
   if (DEMO_MODE) {
-    await apiFetch(`/api/incidents/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+    const list = localGet<Incident>(INC_KEY)
+    const idx = list.findIndex((i) => i.id === id)
+    if (idx >= 0) list[idx] = { ...list[idx], ...data, updatedAt: new Date().toISOString() }
+    localSet(INC_KEY, list)
     return
   }
   await fbUpdate('incidents', id, data as Record<string, unknown>)
@@ -106,23 +117,22 @@ export async function updateIncident(id: string, data: Partial<Incident>): Promi
 
 export async function listIncidents(userId?: string): Promise<Incident[]> {
   if (DEMO_MODE) {
-    const params = new URLSearchParams()
-    if (userId) params.set('userId', userId)
-    return apiFetch<Incident[]>(`/api/incidents?${params}`)
+    const list = localGet<Incident>(INC_KEY)
+    return userId ? list.filter((i) => i.createdBy === userId) : list
   }
   return fbList('incidents', userId) as Promise<Incident[]>
 }
 
 export async function deleteIncident(id: string): Promise<void> {
-  if (DEMO_MODE) { await apiFetch(`/api/incidents/${id}`, { method: 'DELETE' }); return }
+  if (DEMO_MODE) { localSet(INC_KEY, localGet<Incident>(INC_KEY).filter((i) => i.id !== id)); return }
   await fbDelete('incidents', id)
 }
 
 export async function findIncidentsByLot(lotNumber: string, userId?: string): Promise<Incident[]> {
   if (DEMO_MODE) {
-    const params = new URLSearchParams({ lotNumber })
-    if (userId) params.set('userId', userId)
-    return apiFetch<Incident[]>(`/api/incidents?${params}`)
+    const list = localGet<Incident>(INC_KEY)
+    const s = userId ? list.filter((i) => i.createdBy === userId) : list
+    return s.filter((i) => i.lotNumber === lotNumber)
   }
   const { collection, query, where, getDocs } = await import('firebase/firestore')
   const db = await getDB()
@@ -134,6 +144,8 @@ export async function findIncidentsByLot(lotNumber: string, userId?: string): Pr
 
 // ── 検査記録 ─────────────────────────────────────────────────────
 
+const INSP_KEY = 'fe_inspections'
+
 export async function createInspectionRecord(
   data: Omit<InspectionRecord, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
@@ -141,8 +153,9 @@ export async function createInspectionRecord(
   const id = uuidv4()
 
   if (DEMO_MODE) {
-    const item: InspectionRecord = { ...data, id, createdAt: now, updatedAt: now }
-    await apiFetch('/api/inspections', { method: 'POST', body: JSON.stringify(item) })
+    const list = localGet<InspectionRecord>(INSP_KEY)
+    list.unshift({ ...data, id, createdAt: now, updatedAt: now })
+    localSet(INSP_KEY, list)
     return id
   }
   return fbAdd('inspections', { ...data, id })
@@ -150,31 +163,30 @@ export async function createInspectionRecord(
 
 export async function listInspections(userId?: string): Promise<InspectionRecord[]> {
   if (DEMO_MODE) {
-    const params = new URLSearchParams()
-    if (userId) params.set('userId', userId)
-    return apiFetch<InspectionRecord[]>(`/api/inspections?${params}`)
+    const list = localGet<InspectionRecord>(INSP_KEY)
+    return userId ? list.filter((i) => i.createdBy === userId) : list
   }
   return fbList('inspections', userId) as Promise<InspectionRecord[]>
 }
 
 export async function getInspection(id: string): Promise<InspectionRecord | null> {
-  if (DEMO_MODE) {
-    try { return await apiFetch<InspectionRecord>(`/api/inspections/${id}`) }
-    catch { return null }
-  }
+  if (DEMO_MODE) return localGet<InspectionRecord>(INSP_KEY).find((i) => i.id === id) ?? null
   return fbGet('inspections', id) as Promise<InspectionRecord | null>
 }
 
 export async function updateInspection(id: string, data: Partial<InspectionRecord>): Promise<void> {
   if (DEMO_MODE) {
-    await apiFetch(`/api/inspections/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+    const list = localGet<InspectionRecord>(INSP_KEY)
+    const idx = list.findIndex((i) => i.id === id)
+    if (idx >= 0) list[idx] = { ...list[idx], ...data, updatedAt: new Date().toISOString() }
+    localSet(INSP_KEY, list)
     return
   }
   await fbUpdate('inspections', id, data as Record<string, unknown>)
 }
 
 export async function deleteInspection(id: string): Promise<void> {
-  if (DEMO_MODE) { await apiFetch(`/api/inspections/${id}`, { method: 'DELETE' }); return }
+  if (DEMO_MODE) { localSet(INSP_KEY, localGet<InspectionRecord>(INSP_KEY).filter((i) => i.id !== id)); return }
   await fbDelete('inspections', id)
 }
 
@@ -186,30 +198,31 @@ export interface MasterData {
   devices: { name: string; type: 'metal_detector' | 'xray'; line?: string }[]
 }
 
+const MASTER_KEY = 'fe_masters'
 const MASTER_DOC_ID = 'global'
+const EMPTY_MASTER: MasterData = { staff: [], products: [], devices: [] }
 
 export async function getMasters(): Promise<MasterData> {
-  const empty: MasterData = { staff: [], products: [], devices: [] }
   if (DEMO_MODE) {
-    return apiFetch<MasterData>('/api/masters').catch(() => empty)
+    const list = localGet<MasterData>(MASTER_KEY)
+    return list.length > 0 ? list[0] : EMPTY_MASTER
   }
   const { doc, getDoc } = await import('firebase/firestore')
   const db = await getDB()
   const snap = await getDoc(doc(db, 'masters', MASTER_DOC_ID))
-  return snap.exists() ? snap.data() as MasterData : empty
+  return snap.exists() ? snap.data() as MasterData : EMPTY_MASTER
 }
 
 export async function saveMasters(data: MasterData): Promise<void> {
-  if (DEMO_MODE) {
-    await apiFetch('/api/masters', { method: 'POST', body: JSON.stringify(data) })
-    return
-  }
+  if (DEMO_MODE) { localSet(MASTER_KEY, [data]); return }
   const { doc, setDoc } = await import('firebase/firestore')
   const db = await getDB()
   await setDoc(doc(db, 'masters', MASTER_DOC_ID), data)
 }
 
 // ── 官能検査 ─────────────────────────────────────────────────────
+
+const SENSORY_KEY = 'fe_sensory'
 
 export async function createSensoryEvaluation(
   data: Omit<SensoryEvaluation, 'id' | 'createdAt' | 'updatedAt'>
@@ -218,74 +231,85 @@ export async function createSensoryEvaluation(
   const id = uuidv4()
 
   if (DEMO_MODE) {
-    const item: SensoryEvaluation = { ...data, id, createdAt: now, updatedAt: now }
-    await apiFetch('/api/sensory', { method: 'POST', body: JSON.stringify(item) }).catch(() => {})
+    const list = localGet<SensoryEvaluation>(SENSORY_KEY)
+    list.unshift({ ...data, id, createdAt: now, updatedAt: now })
+    localSet(SENSORY_KEY, list)
     return id
   }
   return fbAdd('sensory_evaluations', { ...data, id })
 }
 
 export async function getSensoryEvaluation(id: string): Promise<SensoryEvaluation | null> {
-  if (DEMO_MODE) { return apiFetch<SensoryEvaluation>(`/api/sensory/${id}`).catch(() => null) }
+  if (DEMO_MODE) return localGet<SensoryEvaluation>(SENSORY_KEY).find((i) => i.id === id) ?? null
   return fbGet('sensory_evaluations', id) as Promise<SensoryEvaluation | null>
 }
 
 export async function updateSensoryEvaluation(id: string, data: Partial<SensoryEvaluation>): Promise<void> {
-  if (DEMO_MODE) { await apiFetch(`/api/sensory/${id}`, { method: 'PUT', body: JSON.stringify(data) }).catch(() => {}); return }
+  if (DEMO_MODE) {
+    const list = localGet<SensoryEvaluation>(SENSORY_KEY)
+    const idx = list.findIndex((i) => i.id === id)
+    if (idx >= 0) list[idx] = { ...list[idx], ...data, updatedAt: new Date().toISOString() }
+    localSet(SENSORY_KEY, list)
+    return
+  }
   await fbUpdate('sensory_evaluations', id, data as Record<string, unknown>)
 }
 
 export async function listSensoryEvaluations(userId?: string): Promise<SensoryEvaluation[]> {
   if (DEMO_MODE) {
-    const params = new URLSearchParams()
-    if (userId) params.set('userId', userId)
-    return apiFetch<SensoryEvaluation[]>(`/api/sensory?${params}`).catch(() => [])
+    const list = localGet<SensoryEvaluation>(SENSORY_KEY)
+    return userId ? list.filter((i) => i.createdBy === userId) : list
   }
   return fbList('sensory_evaluations', userId) as Promise<SensoryEvaluation[]>
 }
 
 export async function deleteSensoryEvaluation(id: string): Promise<void> {
-  if (DEMO_MODE) { await apiFetch(`/api/sensory/${id}`, { method: 'DELETE' }).catch(() => {}); return }
+  if (DEMO_MODE) { localSet(SENSORY_KEY, localGet<SensoryEvaluation>(SENSORY_KEY).filter((i) => i.id !== id)); return }
   await fbDelete('sensory_evaluations', id)
 }
 
 // ── 報告書 ───────────────────────────────────────────────────────
+
+const REPORT_KEY = 'fe_reports'
 
 export async function createReport(data: Omit<Report, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
   const now = new Date().toISOString()
   const id = uuidv4()
 
   if (DEMO_MODE) {
-    const item: Report = { ...data, id, createdAt: now, updatedAt: now }
-    await apiFetch('/api/reports', { method: 'POST', body: JSON.stringify(item) })
+    const list = localGet<Report>(REPORT_KEY)
+    list.unshift({ ...data, id, createdAt: now, updatedAt: now })
+    localSet(REPORT_KEY, list)
     return id
   }
   return fbAdd('reports', { ...data, id })
 }
 
 export async function getReport(id: string): Promise<Report | null> {
-  if (DEMO_MODE) {
-    try { return await apiFetch<Report>(`/api/reports/${id}`) }
-    catch (err) { if (err instanceof Error && err.message.includes('404')) return null; throw err }
-  }
+  if (DEMO_MODE) return localGet<Report>(REPORT_KEY).find((i) => i.id === id) ?? null
   return fbGet('reports', id) as Promise<Report | null>
 }
 
 export async function updateReport(id: string, data: Partial<Report>): Promise<void> {
-  if (DEMO_MODE) { await apiFetch(`/api/reports/${id}`, { method: 'PUT', body: JSON.stringify(data) }); return }
+  if (DEMO_MODE) {
+    const list = localGet<Report>(REPORT_KEY)
+    const idx = list.findIndex((i) => i.id === id)
+    if (idx >= 0) list[idx] = { ...list[idx], ...data, updatedAt: new Date().toISOString() }
+    localSet(REPORT_KEY, list)
+    return
+  }
   await fbUpdate('reports', id, data as Record<string, unknown>)
 }
 
 export async function listReports(userId?: string): Promise<Report[]> {
   if (DEMO_MODE) {
-    const params = new URLSearchParams()
-    if (userId) params.set('userId', userId)
-    return apiFetch<Report[]>(`/api/reports?${params}`)
+    const list = localGet<Report>(REPORT_KEY)
+    return userId ? list.filter((i) => i.createdBy === userId) : list
   }
   return fbList('reports', userId) as Promise<Report[]>
 }
 
 export async function deleteReport(id: string): Promise<void> {
-  if (DEMO_MODE) { await apiFetch(`/api/reports/${id}`, { method: 'DELETE' }); return }
+  if (DEMO_MODE) { localSet(REPORT_KEY, localGet<Report>(REPORT_KEY).filter((i) => i.id !== id)); return }
   await fbDelete('reports', id)
 }

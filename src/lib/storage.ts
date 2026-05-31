@@ -1,17 +1,21 @@
 import { DEMO_MODE, app } from './firebase'
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 export async function uploadPhoto(userId: string, file: File): Promise<string> {
-  // ローカルモード: サーバーAPIにアップロード
+  // DEMOモード（Vercelデモ含む）: ブラウザ内Base64
   if (DEMO_MODE) {
-    const formData = new FormData()
-    formData.append('file', file)
-    const res = await fetch('/api/upload', { method: 'POST', body: formData })
-    if (!res.ok) throw new Error(`写真のアップロードに失敗しました: ${res.status}`)
-    const { url } = await res.json()
-    return url as string
+    return fileToBase64(file)
   }
 
-  // Firebase Storageモード
+  // Firebase Storageモード（本番）
   const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage')
   const storage = getStorage(app!)
   const ext = file.name.split('.').pop() ?? 'jpg'
