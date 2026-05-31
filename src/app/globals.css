@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-gray-800;
+    background-color: #fff7ed;
+    background-image:
+      url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'><g opacity='0.09'><circle cx='65' cy='65' r='38' fill='white' stroke='%23bfdbfe' stroke-width='2'/><circle cx='50' cy='74' r='6' fill='%23fca5a5'/><circle cx='80' cy='74' r='6' fill='%23fca5a5'/><circle cx='56' cy='62' r='5' fill='%231e3a8a'/><circle cx='74' cy='62' r='5' fill='%231e3a8a'/><circle cx='58' cy='63' r='1.5' fill='white'/><circle cx='76' cy='63' r='1.5' fill='white'/><path d='M55 76 Q65 83 75 76' fill='none' stroke='%231e3a8a' stroke-width='2' stroke-linecap='round'/><line x1='100' y1='100' x2='114' y2='114' stroke='%232563eb' stroke-width='6' stroke-linecap='round'/><circle cx='89' cy='88' r='19' fill='%23dbeafe' stroke='%232563eb' stroke-width='4'/></g></svg>"),
+      radial-gradient(ellipse 70% 50% at 10% 10%, rgba(251, 146, 60, 0.18), transparent),
+      radial-gradient(ellipse 60% 45% at 90% 85%, rgba(244, 63, 94, 0.10), transparent),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(251, 191, 36, 0.08), transparent),
+      linear-gradient(155deg, #fff7ed 0%, #fef3c7 35%, #fff0f3 70%, #faf0ff 100%);
+    background-size: 160px 160px, auto, auto, auto, auto;
+    background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-attachment: fixed;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: #fef9f0; }
+  ::-webkit-scrollbar-thumb { background: #fed7aa; border-radius: 9999px; }
+}
+
+@layer components {
+  /* ── ボタン ── */
+  .btn-primary {
+    @apply bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 px-6 rounded-2xl
+           transition-all shadow-lg shadow-orange-200 hover:shadow-xl hover:shadow-orange-300
+           hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-orange-50 text-orange-600 font-semibold py-3 px-6 rounded-2xl
+           border border-orange-200 hover:border-orange-300 transition-all shadow-sm hover:shadow-md;
+  }
+
+  /* ── カード ── */
+  .card {
+    @apply bg-white/90 backdrop-blur-sm rounded-2xl border border-orange-100
+           shadow-[0_2px_16px_rgba(251,146,60,0.08)];
+  }
+
+  /* ── インプット ── */
+  .input-field {
+    @apply w-full bg-white border border-orange-200 rounded-xl px-4 py-3 text-gray-800
+           placeholder-gray-400 focus:outline-none focus:border-orange-400
+           focus:ring-2 focus:ring-orange-100 transition-all shadow-sm;
+  }
+
+  .label {
+    @apply text-sm text-gray-600 mb-1.5 block font-semibold;
+  }
+
+  .section-title {
+    @apply text-xs font-bold text-orange-500 uppercase tracking-widest mb-3;
+  }
+
+  /* ── バッジ ── */
+  .badge-high         { @apply bg-red-50   text-red-600   border border-red-200; }
+  .badge-medium       { @apply bg-orange-50 text-orange-600 border border-orange-200; }
+  .badge-low          { @apply bg-yellow-50 text-yellow-600 border border-yellow-200; }
+  .badge-open         { @apply bg-orange-50 text-orange-600 border border-orange-200; }
+  .badge-investigating{ @apply bg-yellow-50 text-yellow-600 border border-yellow-200; }
+  .badge-closed       { @apply bg-green-50  text-green-600  border border-green-200; }
+
+  /* ── 戻るボタン（大）── */
+  .back-btn {
+    @apply w-12 h-12 rounded-full bg-orange-100 hover:bg-orange-200 active:bg-orange-300
+           flex items-center justify-center text-orange-600 text-2xl font-bold
+           transition-all shadow-sm hover:shadow-md active:scale-95;
+  }
+}
+
+/* ── 印刷 ── */
+@media print {
+  .no-print  { display: none !important; }
+  body {
+    background: white !important;
+    background-image: none !important;
+  }
+  .print-page { page-break-after: always; }
+}

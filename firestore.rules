@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(data) {
+      return request.auth != null && request.auth.uid == data.createdBy;
+    }
+
+    function isCreator() {
+      return request.auth != null &&
+             request.auth.uid == request.resource.data.createdBy;
+    }
+
+    match /incidents/{docId} {
+      allow read, update, delete: if isOwner(resource.data);
+      allow create: if isAuthenticated() && isCreator();
+    }
+
+    match /sensory_evaluations/{docId} {
+      allow read, update, delete: if isOwner(resource.data);
+      allow create: if isAuthenticated() && isCreator();
+    }
+
+    match /reports/{docId} {
+      allow read, update, delete: if isOwner(resource.data);
+      allow create: if isAuthenticated() && isCreator();
+    }
+  }
+}
