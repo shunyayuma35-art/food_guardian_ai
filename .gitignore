@@ -15,4 +15,8 @@ next-env.d.ts
 data/
 public/uploads/
 
+# Electronビルド出力（大容量のため除外）
+dist/
+electron/
+
 .vercel
