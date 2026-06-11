@@ -12,6 +12,9 @@ interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null
   loading: boolean
+  locked: boolean
+  lock: () => void
+  unlock: () => void
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   signup: (email: string, password: string) => Promise<void>
@@ -29,11 +32,17 @@ const DEMO_USER: AuthUser = {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [locked, setLocked] = useState(false)
 
   useEffect(() => {
+    // ロック状態をセッションから復元
+    const wasLocked = sessionStorage.getItem('foodeye_locked') === '1'
+    setLocked(wasLocked)
+
     if (DEMO_MODE) {
-      const saved = localStorage.getItem(DEMO_USER_KEY)
-      setUser(saved ? JSON.parse(saved) : null)
+      // DEMOモードは認証不要 → 常に自動ログイン
+      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(DEMO_USER))
+      setUser(DEMO_USER)
       setLoading(false)
       return
     }
@@ -58,6 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => unsubscribe?.()
   }, [])
+
+  function lock() {
+    setLocked(true)
+    sessionStorage.setItem('foodeye_locked', '1')
+  }
+
+  function unlock() {
+    setLocked(false)
+    sessionStorage.removeItem('foodeye_locked')
+  }
 
   async function login(email: string, password: string) {
     if (DEMO_MODE) {
@@ -95,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, signup }}>
+    <AuthContext.Provider value={{ user, loading, locked, lock, unlock, login, logout, signup }}>
       {children}
     </AuthContext.Provider>
   )

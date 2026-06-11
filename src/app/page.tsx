@@ -170,7 +170,7 @@ function HeatmapChart({ rows }: {
 // ── メインページ ──────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { user, loading, logout } = useAuth()
+  const { user, loading, lock } = useAuth()
   const router = useRouter()
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [reports, setReports] = useState<Report[]>([])
@@ -356,7 +356,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <button
-            onClick={async () => { await logout(); router.replace('/login') }}
+            onClick={lock}
             className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-red-600 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-red-300 bg-white hover:bg-red-50 transition-all active:scale-95"
           >
             🔒 画面ロック
@@ -694,6 +694,45 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* SNS リンク */}
+        <div className="flex items-center justify-center gap-3 py-2 flex-wrap">
+          <a
+            href="https://foodguardianai.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-orange-500 transition-colors font-medium"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+              <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm-1 17.93V18a1 1 0 0 0-1-1H8a3 3 0 0 1-3-3v-1l5 5v-.07zm6.9-2.54A8 8 0 0 1 13 19.93V18a3 3 0 0 0-3-3H8v-1a1 1 0 0 0-1-1H5.07A8 8 0 0 1 12 4a8 8 0 0 1 8 8 7.95 7.95 0 0 1-2.1 5.39z" />
+            </svg>
+            Web版
+          </a>
+          <span className="text-gray-300">|</span>
+          <a
+            href="https://x.com/hapifoodlab"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-black transition-colors font-medium"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.912-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+            @hapifoodlab
+          </a>
+          <span className="text-gray-300">|</span>
+          <a
+            href="https://note.com/hapifoodlab"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-green-600 transition-colors font-medium"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+              <path d="M2 5a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V5zm10.5 1.5a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2h-4zm-5 4a1 1 0 0 0 0 2h9a1 1 0 1 0 0-2h-9zm0 4a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-6z" />
+            </svg>
+            note
+          </a>
         </div>
 
       </div>

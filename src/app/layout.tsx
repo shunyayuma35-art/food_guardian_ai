@@ -3,6 +3,7 @@ import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
 import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import LockScreen from '@/components/LockScreen'
 
 export const metadata: Metadata = {
   title: 'FoodEye | 食品異物事故管理・特定支援システム',
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ja">
       <body>
         <AuthProvider>
+          <LockScreen />
           <ErrorBoundary>
           {children}
           </ErrorBoundary>
