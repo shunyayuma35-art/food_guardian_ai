@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import { listIncidents, listReports } from '@/lib/firestore'
 import { DEMO_MODE } from '@/lib/firebase'
 import {
@@ -13,6 +14,7 @@ import Navigation from '@/components/Navigation'
 import IncidentCard from '@/components/IncidentCard'
 import FoodEyeLogo from '@/components/FoodEyeLogo'
 import UsageGuide from '@/components/UsageGuide'
+import LanguageSelector from '@/components/LanguageSelector'
 import type { Incident, Report, InspectionRecord } from '@/lib/types'
 
 // ── チャートコンポーネント ─────────────────────────────────────────
@@ -170,7 +172,8 @@ function HeatmapChart({ rows }: {
 // ── メインページ ──────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { user, loading, lock } = useAuth()
+  const { user, loading } = useAuth()
+  const { t } = useLang()
   const router = useRouter()
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [reports, setReports] = useState<Report[]>([])
@@ -355,16 +358,39 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={lock}
-            className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-red-600 px-3 py-2 rounded-xl border-2 border-gray-200 hover:border-red-300 bg-white hover:bg-red-50 transition-all active:scale-95"
-          >
-            🔒 画面ロック
-          </button>
+          <LanguageSelector />
         </div>
       </header>
 
       <div className="max-w-2xl mx-auto px-5 py-6 space-y-6">
+
+        {/* ── ヒーロー：キャラクター + ウェルカム ── */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-orange-400 via-amber-400 to-rose-400 rounded-3xl shadow-lg shadow-orange-200">
+          {/* 背景デコ */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+            <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-rose-300/20 rounded-full blur-2xl" />
+          </div>
+          <div className="relative z-10 flex flex-col items-center text-center pt-7 pb-6 px-5">
+            {/* キャラクター */}
+            <div className="w-28 h-28 bg-white rounded-3xl flex items-center justify-center shadow-2xl shadow-orange-300 border-4 border-white mb-4">
+              <FoodEyeLogo size={88} />
+            </div>
+            <h2 className="text-white text-2xl font-extrabold leading-tight tracking-tight">FoodEye</h2>
+            <p className="text-white/85 text-sm font-medium mt-1">{t('home.subtitle')}</p>
+            <p className="text-white/70 text-xs mt-1.5">{t('home.tagline')}</p>
+            {(internalCount > 0 || externalCount > 0) && (
+              <div className="mt-3 flex gap-2">
+                <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  🏭 社内 {internalCount}件
+                </span>
+                <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  📦 外部 {externalCount}件
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* システム使い方ガイド */}
         <UsageGuide
@@ -375,7 +401,6 @@ export default function DashboardPage() {
             { icon: '📷', title: '異物を発見したら「新規 異物登録」', desc: '工場内発見・お客様クレームどちらも登録できます。写真を撮影し、異物の特徴（触感・色・においなど）を選択するとAIが種類を自動推定します。' },
             { icon: '🧲', title: '毎日「検査記録を登録」する', desc: '金属探知機・X線検査機のテストピース確認結果を記録します。始業・終業の合否チェックと排除件数を入力してください。' },
             { icon: '📊', title: '「月次・年次レポート」で傾向を確認', desc: '期間を選んで集計グラフを確認できます。監査・品質会議の資料として印刷もできます。' },
-            { icon: '🔒', title: '離席時は「ロック」ボタンでロック', desc: '下のナビバーの「🔒 ロック」か、右上の「🔒 画面ロック」をタップするとログイン画面に戻ります。' },
           ]}
           tips={[
             '登録したデータはサーバーPCに自動保存されます（1日1回自動バックアップ）',
@@ -384,35 +409,14 @@ export default function DashboardPage() {
           ]}
         />
 
-        {/* ウェルカムバナー */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-orange-400 via-amber-400 to-rose-400 rounded-3xl p-5 shadow-lg shadow-orange-200">
-          <div className="relative z-10">
-            <p className="text-white/80 text-sm font-medium">今日も安全な食品づくりを 🌟</p>
-            <h2 className="text-white text-xl font-extrabold mt-0.5">異物事故ゼロを目指して</h2>
-            {externalCount > 0 && (
-              <div className="mt-2 flex gap-2">
-                <span className="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  🏭 社内 {internalCount}件
-                </span>
-                <span className="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  📦 外部 {externalCount}件
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20">
-            <FoodEyeLogo size={72} />
-          </div>
-        </div>
-
         {/* 統計カード */}
         <div className="space-y-2">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">異物事故</p>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { value: todayIncidents, label: '今日の事故', color: 'text-red-500', bg: 'bg-red-50' },
-              { value: openCount + investigatingCount, label: '対応中', color: 'text-orange-500', bg: 'bg-orange-50' },
-              { value: incidents.length, label: '累計件数', color: 'text-gray-800', bg: 'bg-white' },
+              { value: todayIncidents, label: t('home.stats.today'), color: 'text-red-500', bg: 'bg-red-50' },
+              { value: openCount + investigatingCount, label: t('home.stats.active'), color: 'text-orange-500', bg: 'bg-orange-50' },
+              { value: incidents.length, label: t('home.stats.total'), color: 'text-gray-800', bg: 'bg-white' },
             ].map(({ value, label, color, bg }) => (
               <div key={label} className={`${bg} rounded-2xl border border-orange-100 shadow-sm p-3 text-center`}>
                 <p className={`text-2xl font-extrabold ${color}`}>{value}</p>
@@ -428,9 +432,9 @@ export default function DashboardPage() {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">検査記録（金属探知・X線）</p>
           <div className="grid grid-cols-3 gap-2 mt-2">
             {[
-              { value: todayInsp, label: '今日の検査', color: 'text-teal-600', bg: 'bg-teal-50' },
-              { value: inspFail, label: '異常・調整', color: 'text-red-500', bg: 'bg-red-50' },
-              { value: totalReject, label: '累計排除', color: 'text-amber-600', bg: 'bg-amber-50' },
+              { value: todayInsp, label: t('home.stats.todayInsp'), color: 'text-teal-600', bg: 'bg-teal-50' },
+              { value: inspFail, label: t('home.stats.fail'), color: 'text-red-500', bg: 'bg-red-50' },
+              { value: totalReject, label: t('home.stats.rejected'), color: 'text-amber-600', bg: 'bg-amber-50' },
             ].map(({ value, label, color, bg }) => (
               <div key={label} className={`${bg} rounded-2xl border border-teal-100 shadow-sm p-3 text-center`}>
                 <p className={`text-2xl font-extrabold ${color}`}>{value}</p>
@@ -447,29 +451,29 @@ export default function DashboardPage() {
             <Link href="/record">
               <div className="card p-4 flex flex-col items-center gap-2 hover:shadow-[0_4px_24px_rgba(251,146,60,0.18)] hover:border-orange-200 transition-all active:scale-[0.98] cursor-pointer">
                 <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-rose-400 rounded-2xl flex items-center justify-center text-3xl shadow-md shadow-orange-200">📷</div>
-                <span className="text-sm font-bold text-gray-800">新規 異物登録</span>
-                <span className="text-xs text-gray-500 text-center leading-relaxed">社内発見・外部クレームを記録</span>
+                <span className="text-sm font-bold text-gray-800">{t('home.quick.recordTitle')}</span>
+                <span className="text-xs text-gray-500 text-center leading-relaxed">{t('home.quick.recordDesc')}</span>
               </div>
             </Link>
             <Link href="/inspection/new">
               <div className="card p-4 flex flex-col items-center gap-2 hover:shadow-[0_4px_24px_rgba(20,184,166,0.18)] hover:border-teal-200 transition-all active:scale-[0.98] cursor-pointer">
                 <div className="w-14 h-14 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center text-3xl shadow-md shadow-teal-200">🧲</div>
-                <span className="text-sm font-bold text-gray-800">検査記録を登録</span>
-                <span className="text-xs text-gray-500 text-center leading-relaxed">金属探知機・X線検査の記録</span>
+                <span className="text-sm font-bold text-gray-800">{t('home.quick.inspTitle')}</span>
+                <span className="text-xs text-gray-500 text-center leading-relaxed">{t('home.quick.inspDesc')}</span>
               </div>
             </Link>
             <Link href="/list">
               <div className="card p-4 flex flex-col items-center gap-2 hover:shadow-[0_4px_24px_rgba(251,146,60,0.12)] hover:border-orange-200 transition-all active:scale-[0.98] cursor-pointer">
                 <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-400 rounded-2xl flex items-center justify-center text-3xl shadow-md shadow-amber-200">📋</div>
-                <span className="text-sm font-bold text-gray-800">事故一覧・検索</span>
-                <span className="text-xs text-gray-500 text-center leading-relaxed">過去の事故記録を確認</span>
+                <span className="text-sm font-bold text-gray-800">{t('home.quick.listTitle')}</span>
+                <span className="text-xs text-gray-500 text-center leading-relaxed">{t('home.quick.listDesc')}</span>
               </div>
             </Link>
             <Link href="/inspection">
               <div className="card p-4 flex flex-col items-center gap-2 hover:shadow-[0_4px_24px_rgba(20,184,166,0.12)] hover:border-teal-200 transition-all active:scale-[0.98] cursor-pointer">
                 <div className="w-14 h-14 bg-gradient-to-br from-cyan-400 to-teal-500 rounded-2xl flex items-center justify-center text-3xl shadow-md shadow-cyan-200">📊</div>
-                <span className="text-sm font-bold text-gray-800">検査記録 一覧</span>
-                <span className="text-xs text-gray-500 text-center leading-relaxed">テストピース確認・履歴</span>
+                <span className="text-sm font-bold text-gray-800">{t('home.quick.inspListTitle')}</span>
+                <span className="text-xs text-gray-500 text-center leading-relaxed">{t('home.quick.inspListDesc')}</span>
               </div>
             </Link>
           </div>
@@ -657,19 +661,16 @@ export default function DashboardPage() {
 
         {/* 注意事項 */}
         <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-2xl p-3.5">
-          <p className="text-yellow-600 text-xs font-bold">⚠️ ご利用上の注意</p>
-          <p className="text-gray-600 text-xs mt-1 leading-relaxed">
-            本システムは「AI一次判定・異物仮説分析・発生源推定支援」です。
-            確定分析には外部専門機関による鑑定が必要です。
-          </p>
+          <p className="text-yellow-600 text-xs font-bold">⚠️ {t('home.stats.fail') === '異常・調整' ? 'ご利用上の注意' : 'Notice'}</p>
+          <p className="text-gray-600 text-xs mt-1 leading-relaxed">{t('home.notice')}</p>
         </div>
 
         {/* 最近の異物記録 */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="section-title mb-0">最近の異物記録</p>
+            <p className="section-title mb-0">{t('home.recent')}</p>
             <Link href="/list" className="text-xs text-orange-500 hover:text-orange-600 font-semibold">
-              すべて見る →
+              {t('home.viewAll')}
             </Link>
           </div>
 
@@ -680,10 +681,10 @@ export default function DashboardPage() {
           ) : incidents.length === 0 ? (
             <div className="card p-8 text-center">
               <div className="text-5xl mb-3">📝</div>
-              <p className="text-gray-500 text-sm font-medium">まだ記録がありません</p>
+              <p className="text-gray-500 text-sm font-medium">{t('home.noData')}</p>
               <Link href="/record">
                 <button className="btn-primary mt-5 text-sm px-6 py-2.5">
-                  最初の異物を登録する
+                  {t('home.firstRecord')}
                 </button>
               </Link>
             </div>

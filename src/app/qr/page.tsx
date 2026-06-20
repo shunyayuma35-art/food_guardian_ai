@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
+import FoodEyeLogo from '@/components/FoodEyeLogo'
 import toast from 'react-hot-toast'
 
 export default function QRPage() {
@@ -15,21 +16,30 @@ export default function QRPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // サーバーの実際のIPアドレスをAPIから取得
+    const origin = window.location.origin
+
+    // HTTPS（Vercel等の公開URL）の場合はAPIを叩かずそのまま使う
+    if (origin.startsWith('https://')) {
+      setServerUrl(origin)
+      setServerIp('cloud')
+      setLoading(false)
+      return
+    }
+
+    // ローカルモード：LANのIPを取得
     fetch('/api/server-info')
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        if (data?.url) {
+        if (data?.url && data.ip !== '127.0.0.1') {
           setServerUrl(data.url)
           setServerIp(data.ip)
         } else {
-          // フォールバック: localhostの場合はそのまま表示
-          setServerUrl(window.location.origin)
+          setServerUrl(origin)
           setServerIp('localhost')
         }
       })
       .catch(() => {
-        setServerUrl(window.location.origin)
+        setServerUrl(origin)
         setServerIp('localhost')
       })
       .finally(() => setLoading(false))
@@ -42,7 +52,6 @@ export default function QRPage() {
       toast.success('URLをコピーしました 📋')
       setTimeout(() => setCopied(false), 2500)
     } catch {
-      // クリップボードAPIが使えない場合（一部Android）
       const el = document.createElement('textarea')
       el.value = serverUrl
       el.style.position = 'fixed'
@@ -57,7 +66,8 @@ export default function QRPage() {
     }
   }
 
-  const isLocalhost = serverIp === 'localhost' || serverIp === '127.0.0.1'
+  const isCloud = serverIp === 'cloud'
+  const isLocalhost = !isCloud && (serverIp === 'localhost' || serverIp === '127.0.0.1')
 
   return (
     <div className="min-h-screen pb-24">
@@ -73,9 +83,13 @@ export default function QRPage() {
 
       <div className="max-w-sm mx-auto px-5 py-6 space-y-5">
 
-        {/* バナー */}
-        <div className="bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500 rounded-3xl p-5 text-center shadow-lg shadow-violet-200">
-          <div className="text-5xl mb-2">📲</div>
+        {/* バナー — キャラクター大きめ */}
+        <div className="bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500 rounded-3xl p-6 text-center shadow-lg shadow-violet-200">
+          <div className="flex justify-center mb-4">
+            <div className="w-28 h-28 bg-white/90 rounded-3xl flex items-center justify-center shadow-xl shadow-violet-300 border-4 border-white">
+              <FoodEyeLogo size={88} />
+            </div>
+          </div>
           <h2 className="text-white text-xl font-extrabold">FoodEye を共有</h2>
           <p className="text-white/80 text-sm mt-1">
             同じ Wi-Fi のスマホ・タブレットから<br />すぐにアクセスできます
@@ -84,7 +98,15 @@ export default function QRPage() {
 
         {/* 接続状態バナー */}
         {!loading && (
-          isLocalhost ? (
+          isCloud ? (
+            <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-4">
+              <p className="text-green-700 text-sm font-bold">✅ スマホ・タブレット・PC どこからでも接続できます</p>
+              <p className="text-gray-600 text-xs mt-1 leading-relaxed">
+                インターネット接続があれば、Wi-Fi不要でどの端末からでもアクセスできます。<br />
+                <span className="font-mono font-bold text-green-700 break-all">{serverUrl}</span>
+              </p>
+            </div>
+          ) : isLocalhost ? (
             <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-4">
               <p className="text-red-700 text-sm font-bold">⚠️ スマホから接続できない状態です</p>
               <p className="text-gray-700 text-xs mt-2 leading-relaxed">
@@ -122,7 +144,7 @@ export default function QRPage() {
                 QRコードを生成できません<br />上記の手順で再起動してください
               </p>
             </div>
-          ) : (
+          ) : serverUrl ? (
             <div className="p-3 bg-white rounded-2xl border-2 border-violet-200 shadow-inner">
               <QRCodeSVG
                 value={serverUrl}
@@ -133,14 +155,14 @@ export default function QRPage() {
                 bgColor="#ffffff"
                 imageSettings={{
                   src: "data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='42' cy='44' r='36' fill='white' stroke='%23e2e8f0' stroke-width='2'/%3E%3Ccircle cx='34' cy='41' r='5.5' fill='%231e40af'/%3E%3Ccircle cx='50' cy='41' r='5.5' fill='%231e40af'/%3E%3Ccircle cx='36' cy='39' r='1.8' fill='white'/%3E%3Ccircle cx='52' cy='39' r='1.8' fill='white'/%3E%3Cpath d='M 31 54 Q 42 63 53 54' stroke='%23374151' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cline x1='70' y1='71' x2='87' y2='88' stroke='%232563eb' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='63' cy='64' r='20' fill='rgba(219%2C234%2C254%2C0.45)' stroke='%232563eb' stroke-width='5.5'/%3E%3C/svg%3E",
-                  height: 40,
-                  width: 40,
+                  height: 48,
+                  width: 48,
                   excavate: true,
                 }}
               />
             </div>
-          )}
-          {!loading && !isLocalhost && (
+          ) : null}
+          {!loading && !isLocalhost && serverUrl && (
             <p className="text-xs text-gray-500 mt-3 font-medium text-center">
               カメラを向けてスキャン 📷
             </p>
@@ -181,7 +203,6 @@ export default function QRPage() {
             { icon: '📶', title: 'スマホを同じWi-Fiに接続する', desc: 'サーバーPCと同じWi-Fiネットワークにスマホ・タブレットを接続してください。別のネットワークでは接続できません。' },
             { icon: '📷', title: 'カメラでQRコードをスキャン', desc: 'スマホの標準カメラアプリでQRコードを読み取ります。QRリーダーアプリは不要です。' },
             { icon: '🔗', title: '表示されたリンクをタップ', desc: '「http://10.x.x.x:3001」のようなURLが表示されます。タップするとFoodEyeが開きます。' },
-            { icon: '🔒', title: 'ロック解除してログイン', desc: '「✅ ロック解除・ログイン」ボタンをタップするとすぐに使えます。' },
             { icon: '📌', title: 'ブックマーク登録で次回から簡単に', desc: 'ブラウザの「ブックマーク追加」でURLを保存しておくと、次回からQRスキャンなしでアクセスできます。' },
           ]}
           tips={[

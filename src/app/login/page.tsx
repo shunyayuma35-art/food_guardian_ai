@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import { DEMO_MODE } from '@/lib/firebase'
 import FoodEyeLogo from '@/components/FoodEyeLogo'
+import LanguageSelector from '@/components/LanguageSelector'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
   const { user, loading, login, signup } = useAuth()
+  const { t } = useLang()
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -85,23 +88,25 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full max-w-sm relative z-10">
+        {/* 言語選択 */}
+        <div className="flex justify-end mb-4">
+          <LanguageSelector />
+        </div>
         {/* ロゴ */}
         <div className="text-center mb-8">
           <div className="inline-flex w-24 h-24 bg-gradient-to-br from-sky-100 to-blue-100 rounded-3xl items-center justify-center shadow-xl shadow-blue-100 mb-4 border-2 border-blue-200">
             <FoodEyeLogo size={72} />
           </div>
           <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">FoodEye</h1>
-          <p className="text-gray-500 text-sm mt-1.5 font-medium">食品異物事故 管理・特定支援システム</p>
+          <p className="text-gray-500 text-sm mt-1.5 font-medium">{t('login.subtitle')}</p>
         </div>
 
         {DEMO_MODE ? (
-          /* ── ローカルモード: 1タップでログイン ── */
+          /* ── ローカルモード: 1タップでスタート ── */
           <div className="space-y-4">
             <div className="card p-6 text-center">
-              <div className="text-5xl mb-3">🔒</div>
-              <h2 className="text-lg font-extrabold text-gray-800 mb-1">画面がロックされています</h2>
-              <p className="text-gray-500 text-sm mb-5 leading-relaxed">
-                続けて使用するには<br />下のボタンをタップしてください
+              <p className="text-gray-500 text-sm mb-5 leading-relaxed whitespace-pre-line">
+                {t('login.tap')}
               </p>
               <button
                 type="button"
@@ -111,18 +116,17 @@ export default function LoginPage() {
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
-                    ロック解除中...
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {t('login.loading')}
                   </span>
                 ) : (
-                  '✅ ロック解除・ログイン'
+                  t('login.start')
                 )}
               </button>
             </div>
 
-            <p className="text-xs text-gray-400 text-center leading-relaxed px-2">
-              ※ AI一次判定・異物仮説分析・発生源推定支援システム<br />
-              確定分析には外部機関の鑑定が必要です
+            <p className="text-xs text-gray-400 text-center leading-relaxed px-2 whitespace-pre-line">
+              {t('login.warning')}
             </p>
           </div>
         ) : (

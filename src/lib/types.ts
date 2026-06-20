@@ -38,11 +38,16 @@ export const DISCOVERY_PROCESS_LABELS: Record<DiscoveryProcess, string> = {
 // ── 異物特徴チェック ────────────────────────────────────────────
 
 export interface TextureFeatures {
-  hard: boolean       // 固い
-  soft: boolean       // 柔らかい
-  elastic: boolean    // 弾力あり
-  crumbly: boolean    // 崩れやすい
-  sticky: boolean     // 粘着あり
+  hard: boolean        // 固い
+  soft: boolean        // 柔らかい
+  elastic: boolean     // 弾力あり
+  crumbly: boolean     // 崩れやすい
+  sticky: boolean      // 粘着あり
+  sharp: boolean       // 鋭い・尖り（危険）
+  smooth: boolean      // なめらか・すべすべ
+  rough: boolean       // ざらざら・粗い
+  coldFeel: boolean    // 冷たく感じる（熱伝導高い）
+  brittle: boolean     // 脆い・パキッと割れる
 }
 
 export interface AppearanceFeatures {
@@ -61,16 +66,33 @@ export interface AppearanceFeatures {
   scratched: boolean    // キズあり
   patterned: boolean    // 模様あり
   rubbery: boolean      // ゴム感
+  // 新規追加
+  wireShape: boolean    // 線状・針状・ワイヤー形
+  flatPlate: boolean    // 薄板・プレート状
+  spiralCoil: boolean   // コイル・らせん状
+  flakeChip: boolean    // フレーク・薄い剥離片
+  needleShape: boolean  // 棘状・ニードル形（骨・針）
+  mirrorGloss: boolean  // 鏡面・強光沢（SUS・ガラス）
 }
 
 export interface ColorFeatures {
-  black: boolean       // 黒
-  brown: boolean       // 茶・褐色
-  white: boolean       // 白・乳白
-  whiteTurbid: boolean // 白濁
-  metalColor: boolean  // 金属光沢
-  transparent: boolean // 透明
-  green: boolean       // 緑
+  black: boolean        // 黒
+  brown: boolean        // 茶・褐色
+  white: boolean        // 白・乳白
+  whiteTurbid: boolean  // 白濁
+  metalColor: boolean   // 金属光沢（汎用）
+  transparent: boolean  // 透明
+  green: boolean        // 緑
+  // 新規追加
+  silver: boolean       // 銀色・シルバー（SUS・アルミ）
+  gold: boolean         // 金色・黄金色（真鍮・銅合金）
+  copperRed: boolean    // 銅色・橙赤色（銅）
+  gray: boolean         // 灰色（鉄・コンクリート）
+  red: boolean          // 赤色（手袋・ラベル・錆）
+  blue: boolean         // 青色（手袋・スポンジ）
+  yellow: boolean       // 黄色（包材・スポンジ）
+  orange: boolean       // 橙色
+  pink: boolean         // ピンク（識別手袋等）
 }
 
 export interface SmellFeatures {
@@ -78,12 +100,17 @@ export interface SmellFeatures {
   oilSmell: boolean      // 油臭
   chemicalSmell: boolean // 薬品臭
   noSmell: boolean       // 無臭
+  // 新規追加
+  metalSmell: boolean    // 金属臭・鉄臭
+  rubberSmell: boolean   // ゴム臭
+  plasticSmell: boolean  // プラスチック臭
+  sourSmell: boolean     // 酸臭（腐食・さびつき）
 }
 
 export interface WaterTestFeatures {
-  floats: boolean    // 浮く
-  sinks: boolean     // 沈む
-  dissolves: boolean // 溶ける
+  floats: boolean     // 浮く
+  sinks: boolean      // 沈む
+  dissolves: boolean  // 溶ける
   oilSurface: boolean // 油浮き
 }
 
@@ -94,6 +121,21 @@ export interface SizeFeatures {
   thickPiece: boolean // 厚片・塊状
   tiny: boolean       // 微小（1mm未満）
   medium: boolean     // 中型（1〜5mm）
+  large: boolean      // 大型（5mm超）
+}
+
+// 磁石試験（金属種別判定に最重要）
+export interface MagnetTestFeatures {
+  sticks: boolean       // 磁石につく（鉄・鋼・フェライト系SUS）
+  noStick: boolean      // 磁石につかない（SUS304・Al・Cu・ガラス・プラ）
+  partialStick: boolean // 一部つく
+  notTested: boolean    // 未実施
+}
+
+// 重さ感（素材推定補助）
+export interface WeightHintFeatures {
+  veryLight: boolean  // 非常に軽い（発泡スチロール・薄膜プラ）
+  heavy: boolean      // 重い・ずっしり（金属・ガラス）
 }
 
 export interface FeatureChecklist {
@@ -103,6 +145,8 @@ export interface FeatureChecklist {
   smell: SmellFeatures
   waterTest: WaterTestFeatures
   size: SizeFeatures
+  magnetTest: MagnetTestFeatures
+  weight: WeightHintFeatures
 }
 
 export interface EstimationResult {
@@ -172,43 +216,35 @@ export const PDCA_STATUS_COLORS: Record<PdcaStatus, string> = {
 
 export function createEmptyFeatures(): FeatureChecklist {
   return {
-    texture: { hard: false, soft: false, elastic: false, crumbly: false, sticky: false },
+    texture: {
+      hard: false, soft: false, elastic: false, crumbly: false, sticky: false,
+      sharp: false, smooth: false, rough: false, coldFeel: false, brittle: false,
+    },
     appearance: {
-      glossy: false,
-      matte: false,
-      translucent: false,
-      transparent: false,
-      burned: false,
-      fibrous: false,
-      breakSection: false,
-      bent: false,
-      granular: false,
-      layered: false,
-      bubbly: false,
-      metallic: false,
-      scratched: false,
-      patterned: false,
-      rubbery: false,
+      glossy: false, matte: false, translucent: false, transparent: false,
+      burned: false, fibrous: false, breakSection: false, bent: false,
+      granular: false, layered: false, bubbly: false, metallic: false,
+      scratched: false, patterned: false, rubbery: false,
+      wireShape: false, flatPlate: false, spiralCoil: false,
+      flakeChip: false, needleShape: false, mirrorGloss: false,
     },
     color: {
-      black: false,
-      brown: false,
-      white: false,
-      whiteTurbid: false,
-      metalColor: false,
-      transparent: false,
-      green: false,
+      black: false, brown: false, white: false, whiteTurbid: false,
+      metalColor: false, transparent: false, green: false,
+      silver: false, gold: false, copperRed: false, gray: false,
+      red: false, blue: false, yellow: false, orange: false, pink: false,
     },
-    smell: { burnedSmell: false, oilSmell: false, chemicalSmell: false, noSmell: false },
+    smell: {
+      burnedSmell: false, oilSmell: false, chemicalSmell: false, noSmell: false,
+      metalSmell: false, rubberSmell: false, plasticSmell: false, sourSmell: false,
+    },
     waterTest: { floats: false, sinks: false, dissolves: false, oilSurface: false },
     size: {
-      finePowder: false,
-      longFiber: false,
-      thinFilm: false,
-      thickPiece: false,
-      tiny: false,
-      medium: false,
+      finePowder: false, longFiber: false, thinFilm: false,
+      thickPiece: false, tiny: false, medium: false, large: false,
     },
+    magnetTest: { sticks: false, noStick: false, partialStick: false, notTested: true },
+    weight: { veryLight: false, heavy: false },
   }
 }
 
