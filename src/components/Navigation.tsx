@@ -14,6 +14,7 @@ export default function Navigation() {
     { href: '/ai-chat',    icon: '🔬', label: t('nav.ai') },
     { href: '/list',       icon: '📋', label: t('nav.list') },
     { href: '/inspection', icon: '🧲', label: t('nav.inspection') },
+    { href: '/qr',         icon: '📱', label: t('nav.qr') },
   ]
 
   return (
