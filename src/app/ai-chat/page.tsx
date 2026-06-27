@@ -219,18 +219,32 @@ export default function AiChatPage() {
   }, [])
 
   const handleImage = useCallback((file: File) => {
-    const url = URL.createObjectURL(file)
-    setImageUrl(url)
-    setMimeType(file.type || 'image/jpeg')
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const result = e.target?.result as string
-      // data:image/jpeg;base64,XXXX → XXXX の部分だけ抽出
-      const base64 = result.split(',')[1]
-      setImageBase64(base64)
+    // ファイルサイズチェック（5MB以下）
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`画像は5MB以下である必要があります。（現在: ${(file.size / 1024 / 1024).toFixed(1)}MB）`);
+      return;
     }
-    reader.readAsDataURL(file)
+
+    // ファイル形式チェック
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('JPEG、PNG、GIF、WebP形式の画像をお使いください。');
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setImageUrl(url);
+    setMimeType(file.type || 'image/jpeg');
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      // data:image/jpeg;base64,XXXX → XXXX の部分だけ抽出
+      const base64 = result.split(',')[1];
+      setImageBase64(base64);
+    };
+    reader.readAsDataURL(file);
   }, [])
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,26 +254,34 @@ export default function AiChatPage() {
   }, [handleImage])
 
   const handleClaudeSearch = useCallback(async () => {
-    const query = searchQuery.trim()
+    const query = searchQuery.trim();
     if (!query) {
-      toast.error('キーワードを入力してください')
-      return
+      toast.error('キーワードを入力してください');
+      return;
     }
 
-    setSearchLoading(true)
+    setSearchLoading(true);
+    const timeoutId = setTimeout(() => {
+      setSearchLoading(false);
+      toast.error('検索がタイムアウトしました。接続を確認して再度お試しください。');
+    }, 35000); // 35秒後にタイムアウト
+
     try {
       const res = await fetch('/api/claude-search', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ query }),
-      })
+        signal: AbortSignal.timeout(30000), // 30秒でAPI呼び出しをキャンセル
+      });
 
-      const data = await res.json()
+      clearTimeout(timeoutId);
+
+      const data = await res.json();
 
       if (!res.ok || data.error) {
-        toast.error(data.error ?? 'Claude検索に失敗しました')
-        setSearchLoading(false)
-        return
+        toast.error(data.error ?? 'Claude検索に失敗しました');
+        setSearchLoading(false);
+        return;
       }
 
       const searchMsg: Message = {
@@ -268,21 +290,31 @@ export default function AiChatPage() {
         content: data.result ?? '',
         searchResult: data,
         timestamp: new Date(),
-      }
+      };
 
-      setMessages((prev) => [...prev, searchMsg])
-      setSearchQuery('')
-    } catch {
-      toast.error('通信エラーが発生しました')
+      setMessages((prev) => [...prev, searchMsg]);
+      setSearchQuery('');
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast.error('検索がタイムアウトしました。接続を確認して再度お試しください。');
+      } else {
+        toast.error('通信エラーが発生しました');
+      }
     } finally {
-      setSearchLoading(false)
+      setSearchLoading(false);
     }
   }, [searchQuery])
 
   const handleImageUploadAnalysis = useCallback(async (file: File) => {
-    if (!imageBase64) return
+    if (!imageBase64) return;
     
-    setLoading(true)
+    setLoading(true);
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+      toast.error('画像解析がタイムアウトしました。接続を確認して再度お試しください。');
+    }, 35000); // 35秒後にタイムアウト
+
     try {
       const res = await fetch('/api/analyze-foreign-matter', {
         method: 'POST',
@@ -291,14 +323,17 @@ export default function AiChatPage() {
           imageBase64,
           mediaType: mimeType,
         }),
-      })
+        signal: AbortSignal.timeout(30000), // 30秒でAPI呼び出しをキャンセル
+      });
 
-      const data = await res.json()
+      clearTimeout(timeoutId);
+
+      const data = await res.json();
 
       if (!res.ok || data.error) {
-        toast.error(data.error ?? '画像解析に失敗しました')
-        setLoading(false)
-        return
+        toast.error(data.error ?? '画像解析に失敗しました');
+        setLoading(false);
+        return;
       }
 
       const analysisMsg: Message = {
@@ -308,15 +343,20 @@ export default function AiChatPage() {
         imageAnalysis: data,
         imageUrl: imageUrl ?? undefined,
         timestamp: new Date(),
-      }
+      };
 
-      setMessages((prev) => [...prev, analysisMsg])
-      setImageBase64(null)
-      setImageUrl(null)
-    } catch {
-      toast.error('通信エラーが発生しました')
+      setMessages((prev) => [...prev, analysisMsg]);
+      setImageBase64(null);
+      setImageUrl(null);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast.error('画像解析がタイムアウトしました。接続を確認して再度お試しください。');
+      } else {
+        toast.error('通信エラーが発生しました');
+      }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }, [imageBase64, imageUrl, mimeType])
 
