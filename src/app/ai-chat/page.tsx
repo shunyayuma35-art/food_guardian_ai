@@ -451,47 +451,85 @@ export default function AiChatPage() {
   }, [sendMessage])
 
   const saveAsIncident = useCallback(async () => {
-    const aiMessages = messages.filter((m) => m.role === 'assistant' && m.analysis)
-    if (aiMessages.length === 0) {
-      toast.error('解析結果がまだありません')
-      return
+    // AI解析結果を最優先で探す
+    let resultContent = '';
+    let resultTitle = '';
+    
+    const aiAnalysisMsg = messages.find((m) => m.role === 'assistant' && m.analysis);
+    if (aiAnalysisMsg && aiAnalysisMsg.analysis) {
+      const analysis = aiAnalysisMsg.analysis;
+      const topCandidate = analysis.candidates[0];
+      resultTitle = `AI解析: ${topCandidate?.name ?? '異物混入事故'} — ${new Date().toLocaleDateString('ja-JP')}`;
+      resultContent = [
+        `【AI解析結果】`,
+        `推定異物：${topCandidate?.name ?? '不明'} (${topCandidate?.probability ?? 0}%)`,
+        `緊急度：${analysis.urgency === 'high' ? '高' : analysis.urgency === 'medium' ? '中' : '低'}`,
+        `目視特徴：${analysis.visualFeatures.join('、')}`,
+        '',
+        `【AI対話内容】`,
+        ...messages
+          .filter((m) => m.role !== 'assistant' || !m.analysis)
+          .slice(0, 5)
+          .map((m) => `${m.role === 'user' ? 'Q' : 'A'}: ${m.content}`),
+      ].join('\n');
+    } else if (messages.some((m) => m.imageAnalysis)) {
+      // 画像解析結果を保存
+      const imageMsg = messages.find((m) => m.imageAnalysis);
+      if (imageMsg?.imageAnalysis) {
+        resultTitle = `画像解析: 異物特定結果 — ${new Date().toLocaleDateString('ja-JP')}`;
+        resultContent = [
+          `【画像解析結果】`,
+          imageMsg.imageAnalysis.result,
+          '',
+          `【対話情報】`,
+          ...messages
+            .filter((m) => m.role === 'user')
+            .map((m) => `Q: ${m.content}`),
+        ].join('\n');
+      }
+    } else if (messages.some((m) => m.searchResult)) {
+      // Claude検索結果を保存
+      const searchMsg = messages.find((m) => m.searchResult);
+      if (searchMsg?.searchResult) {
+        resultTitle = `Claude検索: 異物・害虫情報 — ${new Date().toLocaleDateString('ja-JP')}`;
+        resultContent = [
+          `【Claude検索結果】`,
+          searchMsg.searchResult.result,
+          '',
+          `【検索クエリ】`,
+          ...messages
+            .filter((m) => m.role === 'user')
+            .map((m) => `Q: ${m.content}`),
+        ].join('\n');
+      }
     }
-    const firstAnalysis = aiMessages[0].analysis!
-    const topCandidate = firstAnalysis.candidates[0]
-    const description = [
-      `【AI解析結果】`,
-      `推定異物：${topCandidate?.name ?? '不明'} (${topCandidate?.probability ?? 0}%)`,
-      `緊急度：${firstAnalysis.urgency === 'high' ? '高' : firstAnalysis.urgency === 'medium' ? '中' : '低'}`,
-      `目視特徴：${firstAnalysis.visualFeatures.join('、')}`,
-      '',
-      `【AI対話内容】`,
-      ...messages
-        .filter((m) => m.role !== 'assistant' || !m.analysis)
-        .slice(0, 5)
-        .map((m) => `${m.role === 'user' ? 'Q' : 'A'}: ${m.content}`),
-    ].join('\n')
 
-    setSaving(true)
+    if (!resultContent) {
+      toast.error('保存する結果がありません。検索または解析を実行してください。');
+      return;
+    }
+
+    setSaving(true);
     try {
       const res = await fetch('/api/claude-save', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          title: `AI解析: ${topCandidate?.name ?? '異物混入事故'} — ${new Date().toLocaleDateString('ja-JP')}`,
+          title: resultTitle,
           location: '（AI対話から記録）',
-          description,
-          status: firstAnalysis.urgency === 'high' ? 'investigating' : 'open',
+          description: resultContent,
+          status: 'open',
           source: 'ai_chat',
         }),
-      })
-      if (!res.ok) throw new Error('save failed')
-      toast.success('事故記録として保存しました')
+      });
+      if (!res.ok) throw new Error('save failed');
+      toast.success('結果を記録として保存しました');
     } catch {
-      toast.error('保存に失敗しました')
+      toast.error('保存に失敗しました');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }, [messages])
+  }, [messages]);
 
   const resetChat = useCallback(() => {
     chatHistoryRef.current = []
@@ -507,8 +545,12 @@ export default function AiChatPage() {
     setInput('')
   }, [])
 
-  const hasAnalysis = messages.some((m) => m.analysis)
+  const hasAnalysis = messages.some((m) => m.analysis || m.searchResult || m.imageAnalysis)
   const isFirstUserTurn = chatHistoryRef.current.length === 0
+
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -524,13 +566,22 @@ export default function AiChatPage() {
           </div>
           <div className="flex items-center gap-2">
             {hasAnalysis && (
-              <button
-                onClick={saveAsIncident}
-                disabled={saving}
-                className="text-xs px-3 py-1.5 bg-orange-500 text-white rounded-lg font-medium active:scale-95 transition-all disabled:opacity-50 shadow-sm"
-              >
-                {saving ? '保存中...' : '💾 記録保存'}
-              </button>
+              <>
+                <button
+                  onClick={handlePrint}
+                  className="text-xs px-3 py-1.5 bg-gray-500 text-white rounded-lg font-medium active:scale-95 transition-all shadow-sm"
+                  title="結果を印刷"
+                >
+                  🖨️ 印刷
+                </button>
+                <button
+                  onClick={saveAsIncident}
+                  disabled={saving}
+                  className="text-xs px-3 py-1.5 bg-orange-500 text-white rounded-lg font-medium active:scale-95 transition-all disabled:opacity-50 shadow-sm"
+                >
+                  {saving ? '保存中...' : '💾 記録保存'}
+                </button>
+              </>
             )}
             <button
               onClick={resetChat}

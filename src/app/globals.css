@@ -79,10 +79,42 @@
 
 /* ── 印刷 ── */
 @media print {
-  .no-print  { display: none !important; }
+  .no-print { display: none !important; }
+  
   body {
     background: white !important;
     background-image: none !important;
+    color: #000 !important;
   }
+  
   .print-page { page-break-after: always; }
+  
+  /* AI チャットページの印刷スタイル */
+  header { display: none !important; }
+  footer { display: none !important; }
+  nav { display: none !important; }
+  .Navigation { display: none !important; }
+  
+  /* チャットメッセージの印刷スタイル */
+  .flex-col {
+    page-break-inside: avoid;
+  }
+  
+  /* 入力エリアを非表示 */
+  [class*="pb-[calc"] { display: none !important; }
+  
+  /* メッセージバブルのスタイル */
+  div[class*="justify-start"],
+  div[class*="justify-end"] {
+    page-break-inside: avoid;
+  }
+  
+  /* リセット・保存ボタンを非表示 */
+  button { display: none !important; }
+  
+  /* メッセージコンテンツは表示 */
+  div[class*="rounded-2xl"][class*="border"] {
+    border: 1px solid #000 !important;
+    page-break-inside: avoid;
+  }
 }
