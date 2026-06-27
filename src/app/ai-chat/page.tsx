@@ -12,12 +12,22 @@ interface AnalysisResult {
   quickReplies: string[]
 }
 
+interface SearchResult {
+  result: string
+}
+
+interface ImageAnalysisResult {
+  result: string
+}
+
 interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
   imageUrl?: string   // ユーザーが送った画像（表示用）
   analysis?: AnalysisResult
+  searchResult?: SearchResult
+  imageAnalysis?: ImageAnalysisResult
   quickReplies?: string[]
   timestamp: Date
 }
@@ -116,6 +126,26 @@ function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (tex
         {/* AI 解析カード */}
         {msg.analysis && <AnalysisCard analysis={msg.analysis} />}
 
+        {/* Claude 検索結果 */}
+        {msg.searchResult && (
+          <div className="mt-2 rounded-xl border border-blue-200 bg-blue-50 p-3">
+            <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide mb-2">🔍 Claude 検索結果</p>
+            <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap line-clamp-4">
+              {msg.searchResult.result}
+            </div>
+          </div>
+        )}
+
+        {/* 画像解析結果 */}
+        {msg.imageAnalysis && (
+          <div className="mt-2 rounded-xl border border-orange-200 bg-orange-50 p-3">
+            <p className="text-[10px] font-semibold text-orange-700 uppercase tracking-wide mb-2">🔬 画像解析結果</p>
+            <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap line-clamp-6">
+              {msg.imageAnalysis.result}
+            </div>
+          </div>
+        )}
+
         {/* クイックリプライボタン */}
         {msg.quickReplies && msg.quickReplies.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
@@ -165,13 +195,17 @@ export default function AiChatPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [mimeType, setMimeType] = useState('image/jpeg')
   const [saving, setSaving] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchLoading, setSearchLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
 
+  const QUICK_SUGGESTIONS = ['チョウバエ', 'カツオブシムシ', 'コクゾウムシ', '金属片', 'プラスチック片', '毛髪']
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
+  }, [messages, loading, searchLoading])
 
   // 初回ウェルカムメッセージ
   useEffect(() => {
@@ -204,6 +238,87 @@ export default function AiChatPage() {
     if (file) handleImage(file)
     e.target.value = ''
   }, [handleImage])
+
+  const handleClaudeSearch = useCallback(async () => {
+    const query = searchQuery.trim()
+    if (!query) {
+      toast.error('キーワードを入力してください')
+      return
+    }
+
+    setSearchLoading(true)
+    try {
+      const res = await fetch('/api/claude-search', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ query }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || data.error) {
+        toast.error(data.error ?? 'Claude検索に失敗しました')
+        setSearchLoading(false)
+        return
+      }
+
+      const searchMsg: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: data.result ?? '',
+        searchResult: data,
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, searchMsg])
+      setSearchQuery('')
+    } catch {
+      toast.error('通信エラーが発生しました')
+    } finally {
+      setSearchLoading(false)
+    }
+  }, [searchQuery])
+
+  const handleImageUploadAnalysis = useCallback(async (file: File) => {
+    if (!imageBase64) return
+    
+    setLoading(true)
+    try {
+      const res = await fetch('/api/analyze-foreign-matter', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64,
+          mediaType: mimeType,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || data.error) {
+        toast.error(data.error ?? '画像解析に失敗しました')
+        setLoading(false)
+        return
+      }
+
+      const analysisMsg: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: data.result ?? '',
+        imageAnalysis: data,
+        imageUrl: imageUrl ?? undefined,
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, analysisMsg])
+      setImageBase64(null)
+      setImageUrl(null)
+    } catch {
+      toast.error('通信エラーが発生しました')
+    } finally {
+      setLoading(false)
+    }
+  }, [imageBase64, imageUrl, mimeType])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -389,9 +504,69 @@ export default function AiChatPage() {
 
       {/* チャットエリア */}
       <div className="flex-1 overflow-y-auto px-4 py-3 pb-2 max-w-2xl w-full mx-auto">
-        {/* 写真プレビュー（送信前） */}
-        {imageUrl && isFirstUserTurn && (
-          <div className="mb-3 p-3 bg-white rounded-2xl border-2 border-orange-200 shadow-sm">
+        {/* メッセージ一覧 */}
+        {messages.map((msg) => (
+          <MessageBubble key={msg.id} msg={msg} onQuickReply={handleQuickReply} />
+        ))}
+
+        {loading && <TypingIndicator />}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* 入力エリア */}
+      <div className="bg-white border-t border-gray-100 px-3 pt-2 pb-[calc(theme(spacing.16)+env(safe-area-inset-bottom,0px)+8px)] max-w-2xl w-full mx-auto space-y-3">
+        {/* Claude 検索セクション */}
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 space-y-2">
+          <p className="text-xs font-semibold text-blue-700">🔍 Claude 検索：異物・害虫情報</p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleClaudeSearch()}
+              placeholder="キーワードを入力..."
+              className="flex-1 bg-white rounded-lg px-3 py-2 text-xs border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+              disabled={searchLoading}
+            />
+            <button
+              onClick={handleClaudeSearch}
+              disabled={searchLoading || !searchQuery.trim()}
+              className="px-3 py-2 bg-blue-500 text-white text-xs font-medium rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {searchLoading ? '検索中...' : '検索'}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {QUICK_SUGGESTIONS.map((suggestion) => (
+              <button
+                key={suggestion}
+                onClick={() => {
+                  setSearchQuery(suggestion)
+                }}
+                className="text-[10px] px-2 py-1 bg-white border border-blue-200 text-blue-600 rounded-full hover:bg-blue-50 active:scale-95 transition-all font-medium"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 画像解析セクション */}
+        {!imageBase64 && (
+          <div
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-orange-200 rounded-2xl p-5 flex flex-col items-center gap-2 bg-orange-50/50 active:bg-orange-50 cursor-pointer transition-colors"
+          >
+            <span className="text-3xl">📷</span>
+            <p className="text-sm font-semibold text-orange-600">異物の写真を追加</p>
+            <p className="text-xs text-gray-400">タップまたはドラッグ＆ドロップ</p>
+          </div>
+        )}
+
+        {imageUrl && (
+          <div className="p-3 bg-white rounded-2xl border-2 border-orange-200 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-orange-600 flex items-center gap-1">
                 <span>📸</span> 異物写真（解析待ち）
@@ -404,39 +579,23 @@ export default function AiChatPage() {
               </button>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt="異物写真" className="w-full max-h-52 object-contain rounded-xl bg-gray-50" />
-            <p className="text-[10px] text-gray-400 text-center mt-2">メッセージを送信すると解析が始まります</p>
+            <img src={imageUrl} alt="異物写真" className="w-full max-h-52 object-contain rounded-xl bg-gray-50 mb-2" />
+            <button
+              onClick={() => handleImageUploadAnalysis(new File([imageBase64!], 'image.jpg', { type: mimeType }))}
+              disabled={loading}
+              className="w-full px-3 py-2 bg-orange-500 text-white text-xs font-semibold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? '解析中...' : '🔬 画像を解析'}
+            </button>
           </div>
         )}
 
-        {/* メッセージ一覧 */}
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} msg={msg} onQuickReply={handleQuickReply} />
-        ))}
+        {/* 従来の入力エリア */}
 
-        {loading && <TypingIndicator />}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* 入力エリア */}
-      <div className="bg-white border-t border-gray-100 px-3 pt-2 pb-[calc(theme(spacing.16)+env(safe-area-inset-bottom,0px)+8px)] max-w-2xl w-full mx-auto">
-        {/* 写真なし & 最初のメッセージなら大きい写真アップロードエリア */}
-        {!imageBase64 && isFirstUserTurn && (
-          <div
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
-            onClick={() => fileInputRef.current?.click()}
-            className="mb-2 border-2 border-dashed border-orange-200 rounded-2xl p-5 flex flex-col items-center gap-2 bg-orange-50/50 active:bg-orange-50 cursor-pointer transition-colors"
-          >
-            <span className="text-3xl">📷</span>
-            <p className="text-sm font-semibold text-orange-600">異物の写真を追加</p>
-            <p className="text-xs text-gray-400">タップまたはドラッグ＆ドロップ</p>
-          </div>
-        )}
-
+        {/* 従来の入力エリア */}
         <div className="flex gap-2 items-end">
           {/* 写真ボタン（会話中） */}
-          {(!isFirstUserTurn || imageBase64) && (
+          {(!isFirstUserTurn || imageBase64) && !imageUrl && (
             <button
               onClick={() => fileInputRef.current?.click()}
               className="w-10 h-10 shrink-0 flex items-center justify-center bg-orange-50 border border-orange-200 rounded-xl text-lg active:scale-95 transition-all"
