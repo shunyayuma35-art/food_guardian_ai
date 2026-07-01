@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useLang } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { LANGUAGES } from '@/lib/i18n'
 
 export default function FloatingLanguageButton() {
-  const { lang, setLang } = useLang()
+  const { lang, setLang, t } = useLang()
+  const { lock } = useAuth()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0]
@@ -19,10 +21,10 @@ export default function FloatingLanguageButton() {
   }, [])
 
   return (
-    <div ref={ref} className="fixed bottom-[72px] right-3 z-[100] no-print">
+    <div ref={ref} className="fixed bottom-[72px] right-3 z-[100] no-print flex flex-col items-end gap-2">
       {/* 言語リスト（上に展開） */}
       {open && (
-        <div className="absolute bottom-14 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden w-48 mb-1">
+        <div className="absolute bottom-28 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden w-48 mb-1">
           <div className="px-3 py-2 border-b border-gray-50">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Language / 言語</p>
           </div>
@@ -47,7 +49,19 @@ export default function FloatingLanguageButton() {
         </div>
       )}
 
-      {/* フローティングボタン本体 */}
+      {/* 🔒 ロックボタン */}
+      <button
+        type="button"
+        onClick={lock}
+        title={t('lock.button')}
+        aria-label={t('lock.button')}
+        className="w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 flex flex-col items-center justify-center gap-0 hover:shadow-xl hover:border-red-300 hover:bg-red-50 transition-all active:scale-95 group"
+      >
+        <span className="text-xl leading-none group-hover:scale-110 transition-transform">🔒</span>
+        <span className="text-[8px] text-gray-400 font-semibold leading-none mt-0.5 group-hover:text-red-400">LOCK</span>
+      </button>
+
+      {/* 🌐 言語ボタン */}
       <button
         type="button"
         onClick={() => setOpen(!open)}

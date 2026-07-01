@@ -32,25 +32,22 @@ interface Message {
   timestamp: Date
 }
 
-const URGENCY_LABEL = {
-  high:   { text: '緊急度：高', bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500', textColor: 'text-red-700' },
-  medium: { text: '緊急度：中', bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-500', textColor: 'text-amber-700' },
-  low:    { text: '緊急度：低', bg: 'bg-green-50', border: 'border-green-200', dot: 'bg-green-500', textColor: 'text-green-700' },
-}
-
-function AnalysisCard({ analysis }: { analysis: AnalysisResult }) {
-  const u = URGENCY_LABEL[analysis.urgency]
+function AnalysisCard({ analysis, urgencyLabels, candidatesLabel, visualLabel }: {
+  analysis: AnalysisResult
+  urgencyLabels: Record<string, { text: string; bg: string; border: string; dot: string; textColor: string }>
+  candidatesLabel: string
+  visualLabel: string
+}) {
+  const u = urgencyLabels[analysis.urgency]
   return (
     <div className={`mt-2 rounded-xl border ${u.border} ${u.bg} p-3 space-y-2.5`}>
-      {/* 緊急度 */}
       <div className="flex items-center gap-1.5">
         <span className={`w-2 h-2 rounded-full ${u.dot} animate-pulse`} />
         <span className={`text-xs font-bold ${u.textColor}`}>{u.text}</span>
       </div>
 
-      {/* 推定異物種別 */}
       <div>
-        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">推定異物種別</p>
+        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{candidatesLabel}</p>
         <div className="space-y-1.5">
           {analysis.candidates.map((c, i) => (
             <div key={i} className="flex items-start gap-2">
@@ -80,7 +77,7 @@ function AnalysisCard({ analysis }: { analysis: AnalysisResult }) {
       {/* 目視特徴 */}
       {analysis.visualFeatures.length > 0 && (
         <div>
-          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">目視確認特徴</p>
+          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">{visualLabel}</p>
           <div className="flex flex-wrap gap-1">
             {analysis.visualFeatures.map((f, i) => (
               <span key={i} className="text-[10px] bg-white border border-gray-200 text-gray-600 rounded-full px-2 py-0.5">
@@ -95,6 +92,12 @@ function AnalysisCard({ analysis }: { analysis: AnalysisResult }) {
 }
 
 function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (text: string) => void }) {
+  const { t } = useLang()
+  const urgencyLabels = {
+    high:   { text: t('aichat.urgency.high'), bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500', textColor: 'text-red-700' },
+    medium: { text: t('aichat.urgency.medium'), bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-500', textColor: 'text-amber-700' },
+    low:    { text: t('aichat.urgency.low'), bg: 'bg-green-50', border: 'border-green-200', dot: 'bg-green-500', textColor: 'text-green-700' },
+  }
   const isAI = msg.role === 'assistant'
   return (
     <div className={`flex ${isAI ? 'justify-start' : 'justify-end'} mb-3`}>
@@ -124,12 +127,12 @@ function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (tex
         )}
 
         {/* AI 解析カード */}
-        {msg.analysis && <AnalysisCard analysis={msg.analysis} />}
+        {msg.analysis && <AnalysisCard analysis={msg.analysis} urgencyLabels={urgencyLabels} candidatesLabel={t('aichat.candidates')} visualLabel={t('aichat.visualFeatures')} />}
 
         {/* Claude 検索結果 */}
         {msg.searchResult && (
           <div className="mt-2 rounded-xl border border-blue-200 bg-blue-50 p-3">
-            <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide mb-2">🔍 Claude 検索結果</p>
+            <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide mb-2">{t('aichat.searchResult')}</p>
             <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap line-clamp-4">
               {msg.searchResult.result}
             </div>
@@ -139,7 +142,7 @@ function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (tex
         {/* 画像解析結果 */}
         {msg.imageAnalysis && (
           <div className="mt-2 rounded-xl border border-orange-200 bg-orange-50 p-3">
-            <p className="text-[10px] font-semibold text-orange-700 uppercase tracking-wide mb-2">🔬 画像解析結果</p>
+            <p className="text-[10px] font-semibold text-orange-700 uppercase tracking-wide mb-2">{t('aichat.imageAnalysis')}</p>
             <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap line-clamp-6">
               {msg.imageAnalysis.result}
             </div>
@@ -560,9 +563,9 @@ export default function AiChatPage() {
           <div>
             <h1 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
               <span className="text-xl">🔬</span>
-              AI 異物チャット
+              {t('aichat.title')}
             </h1>
-            <p className="text-[10px] text-gray-400 leading-none">写真と対話で異物を特定</p>
+            <p className="text-[10px] text-gray-400 leading-none">{t('aichat.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             {hasAnalysis && (
@@ -570,16 +573,15 @@ export default function AiChatPage() {
                 <button
                   onClick={handlePrint}
                   className="text-xs px-3 py-1.5 bg-gray-500 text-white rounded-lg font-medium active:scale-95 transition-all shadow-sm"
-                  title="結果を印刷"
                 >
-                  🖨️ 印刷
+                  {t('report.print')}
                 </button>
                 <button
                   onClick={saveAsIncident}
                   disabled={saving}
                   className="text-xs px-3 py-1.5 bg-orange-500 text-white rounded-lg font-medium active:scale-95 transition-all disabled:opacity-50 shadow-sm"
                 >
-                  {saving ? '保存中...' : '💾 記録保存'}
+                  {saving ? t('common.saving') : t('aichat.save')}
                 </button>
               </>
             )}
@@ -587,7 +589,7 @@ export default function AiChatPage() {
               onClick={resetChat}
               className="text-xs px-2.5 py-1.5 bg-gray-100 text-gray-600 rounded-lg font-medium active:scale-95 transition-all"
             >
-              ↺ リセット
+              {t('aichat.reset')}
             </button>
           </div>
         </div>
@@ -608,7 +610,7 @@ export default function AiChatPage() {
       <div className="bg-white border-t border-gray-100 px-3 pt-2 pb-[calc(theme(spacing.16)+env(safe-area-inset-bottom,0px)+8px)] max-w-2xl w-full mx-auto space-y-3">
         {/* Claude 検索セクション */}
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 space-y-2">
-          <p className="text-xs font-semibold text-blue-700">🔍 Claude 検索：異物・害虫情報</p>
+          <p className="text-xs font-semibold text-blue-700">{t('aichat.searchSection')}</p>
           <div className="flex gap-2">
             <input
               type="text"
@@ -624,7 +626,7 @@ export default function AiChatPage() {
               disabled={searchLoading || !searchQuery.trim()}
               className="px-3 py-2 bg-blue-500 text-white text-xs font-medium rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {searchLoading ? '検索中...' : '検索'}
+              {searchLoading ? t('aichat.searching') : t('aichat.searchBtn')}
             </button>
           </div>
           <div className="flex flex-wrap gap-1">
@@ -651,8 +653,8 @@ export default function AiChatPage() {
             className="border-2 border-dashed border-orange-200 rounded-2xl p-5 flex flex-col items-center gap-2 bg-orange-50/50 active:bg-orange-50 cursor-pointer transition-colors"
           >
             <span className="text-3xl">📷</span>
-            <p className="text-sm font-semibold text-orange-600">異物の写真を追加</p>
-            <p className="text-xs text-gray-400">タップまたはドラッグ＆ドロップ</p>
+            <p className="text-sm font-semibold text-orange-600">{t('aichat.addPhoto')}</p>
+            <p className="text-xs text-gray-400">{t('aichat.tapOrDrop')}</p>
           </div>
         )}
 
@@ -660,13 +662,13 @@ export default function AiChatPage() {
           <div className="p-3 bg-white rounded-2xl border-2 border-orange-200 shadow-sm">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-orange-600 flex items-center gap-1">
-                <span>📸</span> 異物写真（解析待ち）
+                <span>📸</span> {t('aichat.photoReady')}
               </p>
               <button
                 onClick={() => { setImageUrl(null); setImageBase64(null) }}
                 className="text-[10px] text-gray-400 hover:text-red-400"
               >
-                ✕ 削除
+                {t('aichat.deletePhoto')}
               </button>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -676,7 +678,7 @@ export default function AiChatPage() {
               disabled={loading}
               className="w-full px-3 py-2 bg-orange-500 text-white text-xs font-semibold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '解析中...' : '🔬 画像を解析'}
+              {loading ? t('aichat.analyzing') : t('aichat.analyzeBtn')}
             </button>
           </div>
         )}
@@ -700,7 +702,7 @@ export default function AiChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={imageBase64 ? '解析の指示を追加（任意）' : loading ? 'AI が解析中...' : 'メッセージを入力...'}
+            placeholder={imageBase64 ? t('aichat.inputWithPhoto') : loading ? t('aichat.analyzing') : t('aichat.inputPlaceholder')}
             disabled={loading}
             rows={1}
             className="flex-1 resize-none bg-gray-100 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:bg-white transition-all max-h-28 overflow-y-auto leading-relaxed disabled:opacity-50"
@@ -725,7 +727,7 @@ export default function AiChatPage() {
 
         {/* 注意書き */}
         <p className="text-[9px] text-gray-400 text-center mt-1.5 leading-tight">
-          ※ AI一次判定・仮説分析支援システム。確定診断には外部専門機関の鑑定が必要です。
+          {t('disclaimer')}
         </p>
       </div>
 

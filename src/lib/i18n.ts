@@ -63,6 +63,16 @@ export type TranslationKey =
   | 'report.categoryRanking' | 'report.byProcess' | 'report.monthlyTrend' | 'report.inspSummary'
   | 'report.totalInsp' | 'report.normal' | 'report.abnormal' | 'report.adjusted' | 'report.abnormalRate'
   | 'report.noData' | 'report.printTitle'
+  // ai-chat page
+  | 'aichat.title' | 'aichat.subtitle' | 'aichat.save' | 'aichat.reset'
+  | 'aichat.candidates' | 'aichat.visualFeatures'
+  | 'aichat.urgency.high' | 'aichat.urgency.medium' | 'aichat.urgency.low'
+  | 'aichat.searchResult' | 'aichat.imageAnalysis' | 'aichat.searchSection'
+  | 'aichat.searchBtn' | 'aichat.searching' | 'aichat.addPhoto' | 'aichat.tapOrDrop'
+  | 'aichat.photoReady' | 'aichat.deletePhoto' | 'aichat.analyzeBtn' | 'aichat.analyzing'
+  | 'aichat.inputPlaceholder' | 'aichat.inputWithPhoto'
+  // lock
+  | 'lock.button'
 
 type Dict = Record<TranslationKey, string>
 
@@ -142,6 +152,17 @@ const ja: Dict = {
   'report.title': '月次・年次レポート', 'report.print': '🖨️ 印刷', 'report.monthly': '月次', 'report.yearly': '年次', 'report.period': '集計期間',
   'report.incidentSummary': '異物事故サマリー', 'report.total': '総件数', 'report.open': '未処理', 'report.closed': '完了', 'report.internal': '社内発見', 'report.external': '外部クレーム',
   'report.categoryRanking': '異物種別ランキング', 'report.byProcess': '発見工程別', 'report.monthlyTrend': '月別推移', 'report.inspSummary': '検査記録サマリー', 'report.totalInsp': '総検査件数', 'report.normal': '正常', 'report.abnormal': '異常', 'report.adjusted': '調整後OK', 'report.abnormalRate': '異常率', 'report.noData': 'この期間のデータがありません', 'report.printTitle': '食品安全 集計レポート',
+  'aichat.title': 'AI 異物チャット', 'aichat.subtitle': '写真と対話で異物を特定',
+  'aichat.save': '💾 記録保存', 'aichat.reset': '↺ リセット',
+  'aichat.candidates': '推定異物種別', 'aichat.visualFeatures': '目視確認特徴',
+  'aichat.urgency.high': '緊急度：高', 'aichat.urgency.medium': '緊急度：中', 'aichat.urgency.low': '緊急度：低',
+  'aichat.searchResult': '🔍 Claude 検索結果', 'aichat.imageAnalysis': '🔬 画像解析結果',
+  'aichat.searchSection': '🔍 Claude 検索：異物・害虫情報', 'aichat.searchBtn': '検索', 'aichat.searching': '検索中...',
+  'aichat.addPhoto': '異物の写真を追加', 'aichat.tapOrDrop': 'タップまたはドラッグ＆ドロップ',
+  'aichat.photoReady': '異物写真（解析待ち）', 'aichat.deletePhoto': '✕ 削除',
+  'aichat.analyzeBtn': '🔬 画像を解析', 'aichat.analyzing': '解析中...',
+  'aichat.inputPlaceholder': 'メッセージを入力...', 'aichat.inputWithPhoto': '解析の指示を追加（任意）',
+  'lock.button': '🔒 ロック',
 }
 
 const en: Dict = {
@@ -220,6 +241,17 @@ const en: Dict = {
   'report.title': 'Monthly / Annual Report', 'report.print': '🖨️ Print', 'report.monthly': 'Monthly', 'report.yearly': 'Annual', 'report.period': 'Period',
   'report.incidentSummary': 'Incident Summary', 'report.total': 'Total', 'report.open': 'Open', 'report.closed': 'Closed', 'report.internal': 'Internal', 'report.external': 'External Claim',
   'report.categoryRanking': 'Category Ranking', 'report.byProcess': 'By Process', 'report.monthlyTrend': 'Monthly Trend', 'report.inspSummary': 'Inspection Summary', 'report.totalInsp': 'Total Inspections', 'report.normal': 'Normal', 'report.abnormal': 'Abnormal', 'report.adjusted': 'Adjusted OK', 'report.abnormalRate': 'Abnormal Rate', 'report.noData': 'No data for this period', 'report.printTitle': 'Food Safety Summary Report',
+  'aichat.title': 'AI Foreign Matter Chat', 'aichat.subtitle': 'Identify matter through photos & chat',
+  'aichat.save': '💾 Save Record', 'aichat.reset': '↺ Reset',
+  'aichat.candidates': 'Estimated Foreign Matter', 'aichat.visualFeatures': 'Visual Features',
+  'aichat.urgency.high': 'Urgency: High', 'aichat.urgency.medium': 'Urgency: Medium', 'aichat.urgency.low': 'Urgency: Low',
+  'aichat.searchResult': '🔍 Claude Search Result', 'aichat.imageAnalysis': '🔬 Image Analysis Result',
+  'aichat.searchSection': '🔍 Claude Search: Foreign Matter Info', 'aichat.searchBtn': 'Search', 'aichat.searching': 'Searching...',
+  'aichat.addPhoto': 'Add Photo of Foreign Matter', 'aichat.tapOrDrop': 'Tap or drag & drop',
+  'aichat.photoReady': 'Foreign Matter Photo (Pending Analysis)', 'aichat.deletePhoto': '✕ Remove',
+  'aichat.analyzeBtn': '🔬 Analyze Image', 'aichat.analyzing': 'Analyzing...',
+  'aichat.inputPlaceholder': 'Type a message...', 'aichat.inputWithPhoto': 'Add analysis instructions (optional)',
+  'lock.button': '🔒 Lock',
 }
 
 const zh: Dict = {
@@ -298,6 +330,17 @@ const zh: Dict = {
   'report.title': '月次·年次报告', 'report.print': '🖨️ 打印', 'report.monthly': '月次', 'report.yearly': '年次', 'report.period': '统计期间',
   'report.incidentSummary': '异物事故汇总', 'report.total': '总件数', 'report.open': '未处理', 'report.closed': '完成', 'report.internal': '内部发现', 'report.external': '外部投诉',
   'report.categoryRanking': '异物种类排行', 'report.byProcess': '按发现工序', 'report.monthlyTrend': '月别趋势', 'report.inspSummary': '检查记录汇总', 'report.totalInsp': '总检查件数', 'report.normal': '正常', 'report.abnormal': '异常', 'report.adjusted': '调整后OK', 'report.abnormalRate': '异常率', 'report.noData': '此期间无数据', 'report.printTitle': '食品安全集计报告',
+  'aichat.title': 'AI 异物聊天', 'aichat.subtitle': '通过照片和对话识别异物',
+  'aichat.save': '💾 保存记录', 'aichat.reset': '↺ 重置',
+  'aichat.candidates': '推定异物种类', 'aichat.visualFeatures': '目视特征',
+  'aichat.urgency.high': '紧急度：高', 'aichat.urgency.medium': '紧急度：中', 'aichat.urgency.low': '紧急度：低',
+  'aichat.searchResult': '🔍 Claude 搜索结果', 'aichat.imageAnalysis': '🔬 图像解析结果',
+  'aichat.searchSection': '🔍 Claude 搜索：异物信息', 'aichat.searchBtn': '搜索', 'aichat.searching': '搜索中...',
+  'aichat.addPhoto': '添加异物照片', 'aichat.tapOrDrop': '点击或拖放',
+  'aichat.photoReady': '异物照片（待解析）', 'aichat.deletePhoto': '✕ 删除',
+  'aichat.analyzeBtn': '🔬 解析图像', 'aichat.analyzing': '解析中...',
+  'aichat.inputPlaceholder': '输入消息...', 'aichat.inputWithPhoto': '添加解析指示（可选）',
+  'lock.button': '🔒 锁定',
 }
 
 const ko: Dict = {
@@ -376,6 +419,17 @@ const ko: Dict = {
   'report.title': '월별·연별 보고서', 'report.print': '🖨️ 인쇄', 'report.monthly': '월별', 'report.yearly': '연별', 'report.period': '집계 기간',
   'report.incidentSummary': '이물 사고 요약', 'report.total': '총 건수', 'report.open': '미처리', 'report.closed': '완료', 'report.internal': '사내 발견', 'report.external': '외부 클레임',
   'report.categoryRanking': '이물 종별 순위', 'report.byProcess': '발견 공정별', 'report.monthlyTrend': '월별 추이', 'report.inspSummary': '검사 기록 요약', 'report.totalInsp': '총 검사 건수', 'report.normal': '정상', 'report.abnormal': '이상', 'report.adjusted': '조정 후 OK', 'report.abnormalRate': '이상률', 'report.noData': '이 기간의 데이터가 없습니다', 'report.printTitle': '식품 안전 집계 보고서',
+  'aichat.title': 'AI 이물 채팅', 'aichat.subtitle': '사진과 대화로 이물 특정',
+  'aichat.save': '💾 기록 저장', 'aichat.reset': '↺ 초기화',
+  'aichat.candidates': '추정 이물 종별', 'aichat.visualFeatures': '목시 확인 특징',
+  'aichat.urgency.high': '긴급도：고', 'aichat.urgency.medium': '긴급도：중', 'aichat.urgency.low': '긴급도：저',
+  'aichat.searchResult': '🔍 Claude 검색 결과', 'aichat.imageAnalysis': '🔬 이미지 분석 결과',
+  'aichat.searchSection': '🔍 Claude 검색：이물 정보', 'aichat.searchBtn': '검색', 'aichat.searching': '검색 중...',
+  'aichat.addPhoto': '이물 사진 추가', 'aichat.tapOrDrop': '탭 또는 드래그 앤 드롭',
+  'aichat.photoReady': '이물 사진（분석 대기）', 'aichat.deletePhoto': '✕ 삭제',
+  'aichat.analyzeBtn': '🔬 이미지 분석', 'aichat.analyzing': '분석 중...',
+  'aichat.inputPlaceholder': '메시지를 입력...', 'aichat.inputWithPhoto': '분석 지시 추가（선택사항）',
+  'lock.button': '🔒 잠금',
 }
 
 const vi: Dict = {
@@ -454,6 +508,17 @@ const vi: Dict = {
   'report.title': 'Báo cáo hàng tháng / hàng năm', 'report.print': '🖨️ In', 'report.monthly': 'Hàng tháng', 'report.yearly': 'Hàng năm', 'report.period': 'Kỳ tổng hợp',
   'report.incidentSummary': 'Tóm tắt sự cố', 'report.total': 'Tổng số', 'report.open': 'Chưa xử lý', 'report.closed': 'Hoàn thành', 'report.internal': 'Phát hiện nội bộ', 'report.external': 'Khiếu nại bên ngoài',
   'report.categoryRanking': 'Xếp hạng loại tạp chất', 'report.byProcess': 'Theo công đoạn', 'report.monthlyTrend': 'Xu hướng theo tháng', 'report.inspSummary': 'Tóm tắt kiểm tra', 'report.totalInsp': 'Tổng số kiểm tra', 'report.normal': 'Bình thường', 'report.abnormal': 'Bất thường', 'report.adjusted': 'Đã điều chỉnh', 'report.abnormalRate': 'Tỷ lệ bất thường', 'report.noData': 'Không có dữ liệu kỳ này', 'report.printTitle': 'Báo cáo an toàn thực phẩm',
+  'aichat.title': 'AI Chat Tạp Chất', 'aichat.subtitle': 'Nhận dạng tạp chất qua ảnh',
+  'aichat.save': '💾 Lưu Hồ Sơ', 'aichat.reset': '↺ Đặt lại',
+  'aichat.candidates': 'Loại tạp chất dự kiến', 'aichat.visualFeatures': 'Đặc điểm quan sát',
+  'aichat.urgency.high': 'Khẩn cấp: Cao', 'aichat.urgency.medium': 'Khẩn cấp: Trung bình', 'aichat.urgency.low': 'Khẩn cấp: Thấp',
+  'aichat.searchResult': '🔍 Kết quả tìm kiếm Claude', 'aichat.imageAnalysis': '🔬 Kết quả phân tích ảnh',
+  'aichat.searchSection': '🔍 Tìm kiếm Claude: Thông tin tạp chất', 'aichat.searchBtn': 'Tìm kiếm', 'aichat.searching': 'Đang tìm...',
+  'aichat.addPhoto': 'Thêm ảnh tạp chất', 'aichat.tapOrDrop': 'Chạm hoặc kéo thả',
+  'aichat.photoReady': 'Ảnh tạp chất (chờ phân tích)', 'aichat.deletePhoto': '✕ Xóa',
+  'aichat.analyzeBtn': '🔬 Phân tích ảnh', 'aichat.analyzing': 'Đang phân tích...',
+  'aichat.inputPlaceholder': 'Nhập tin nhắn...', 'aichat.inputWithPhoto': 'Thêm hướng dẫn (tùy chọn)',
+  'lock.button': '🔒 Khóa',
 }
 
 const id: Dict = {
@@ -532,6 +597,17 @@ const id: Dict = {
   'report.title': 'Laporan Bulanan / Tahunan', 'report.print': '🖨️ Cetak', 'report.monthly': 'Bulanan', 'report.yearly': 'Tahunan', 'report.period': 'Periode',
   'report.incidentSummary': 'Ringkasan Insiden', 'report.total': 'Total', 'report.open': 'Belum Ditangani', 'report.closed': 'Selesai', 'report.internal': 'Temuan Internal', 'report.external': 'Klaim Eksternal',
   'report.categoryRanking': 'Peringkat Kategori', 'report.byProcess': 'Per Proses', 'report.monthlyTrend': 'Tren Bulanan', 'report.inspSummary': 'Ringkasan Inspeksi', 'report.totalInsp': 'Total Inspeksi', 'report.normal': 'Normal', 'report.abnormal': 'Tidak Normal', 'report.adjusted': 'Disesuaikan', 'report.abnormalRate': 'Tingkat Ketidaknormalan', 'report.noData': 'Tidak ada data untuk periode ini', 'report.printTitle': 'Laporan Keamanan Pangan',
+  'aichat.title': 'Chat AI Benda Asing', 'aichat.subtitle': 'Identifikasi benda asing melalui foto',
+  'aichat.save': '💾 Simpan Catatan', 'aichat.reset': '↺ Reset',
+  'aichat.candidates': 'Estimasi Benda Asing', 'aichat.visualFeatures': 'Fitur Visual',
+  'aichat.urgency.high': 'Urgensi: Tinggi', 'aichat.urgency.medium': 'Urgensi: Sedang', 'aichat.urgency.low': 'Urgensi: Rendah',
+  'aichat.searchResult': '🔍 Hasil Pencarian Claude', 'aichat.imageAnalysis': '🔬 Hasil Analisis Gambar',
+  'aichat.searchSection': '🔍 Pencarian Claude: Info Benda Asing', 'aichat.searchBtn': 'Cari', 'aichat.searching': 'Mencari...',
+  'aichat.addPhoto': 'Tambah Foto Benda Asing', 'aichat.tapOrDrop': 'Ketuk atau seret & lepas',
+  'aichat.photoReady': 'Foto Benda Asing (Menunggu Analisis)', 'aichat.deletePhoto': '✕ Hapus',
+  'aichat.analyzeBtn': '🔬 Analisis Gambar', 'aichat.analyzing': 'Menganalisis...',
+  'aichat.inputPlaceholder': 'Ketik pesan...', 'aichat.inputWithPhoto': 'Tambah instruksi analisis (opsional)',
+  'lock.button': '🔒 Kunci',
 }
 
 const ne: Dict = {
@@ -610,6 +686,17 @@ const ne: Dict = {
   'report.title': 'मासिक / वार्षिक रिपोर्ट', 'report.print': '🖨️ छाप्नुहोस्', 'report.monthly': 'मासिक', 'report.yearly': 'वार्षिक', 'report.period': 'सङ्कलन अवधि',
   'report.incidentSummary': 'घटना सारांश', 'report.total': 'कुल', 'report.open': 'अनुपचारित', 'report.closed': 'सम्पन्न', 'report.internal': 'आन्तरिक पत्ता', 'report.external': 'बाह्य उजुरी',
   'report.categoryRanking': 'श्रेणी क्रम', 'report.byProcess': 'प्रक्रिया अनुसार', 'report.monthlyTrend': 'मासिक प्रवृत्ति', 'report.inspSummary': 'निरीक्षण सारांश', 'report.totalInsp': 'कुल निरीक्षण', 'report.normal': 'सामान्य', 'report.abnormal': 'असामान्य', 'report.adjusted': 'समायोजन पछि OK', 'report.abnormalRate': 'असामान्य दर', 'report.noData': 'यस अवधिको डेटा छैन', 'report.printTitle': 'खाद्य सुरक्षा रिपोर्ट',
+  'aichat.title': 'AI विदेशी पदार्थ च्याट', 'aichat.subtitle': 'फोटोबाट पदार्थ पहिचान',
+  'aichat.save': '💾 रेकर्ड बचत', 'aichat.reset': '↺ रिसेट',
+  'aichat.candidates': 'अनुमानित विदेशी पदार्थ', 'aichat.visualFeatures': 'दृश्य विशेषताहरू',
+  'aichat.urgency.high': 'जरुरी: उच्च', 'aichat.urgency.medium': 'जरुरी: मध्यम', 'aichat.urgency.low': 'जरुरी: कम',
+  'aichat.searchResult': '🔍 Claude खोज परिणाम', 'aichat.imageAnalysis': '🔬 छवि विश्लेषण परिणाम',
+  'aichat.searchSection': '🔍 Claude खोज: विदेशी पदार्थ जानकारी', 'aichat.searchBtn': 'खोज्नुहोस्', 'aichat.searching': 'खोज्दैछ...',
+  'aichat.addPhoto': 'विदेशी पदार्थको फोटो थप्नुहोस्', 'aichat.tapOrDrop': 'ट्याप गर्नुहोस् वा ड्रप',
+  'aichat.photoReady': 'विदेशी पदार्थ फोटो (विश्लेषण प्रतीक्षामा)', 'aichat.deletePhoto': '✕ हटाउनुहोस्',
+  'aichat.analyzeBtn': '🔬 छवि विश्लेषण', 'aichat.analyzing': 'विश्लेषण हुँदैछ...',
+  'aichat.inputPlaceholder': 'सन्देश टाइप गर्नुहोस्...', 'aichat.inputWithPhoto': 'विश्लेषण निर्देशन थप्नुहोस्',
+  'lock.button': '🔒 लक',
 }
 
 const km: Dict = {
@@ -688,6 +775,17 @@ const km: Dict = {
   'report.title': 'របាយការណ៍ប្រចាំខែ/ឆ្នាំ', 'report.print': '🖨️ បោះពុម្ព', 'report.monthly': 'ប្រចាំខែ', 'report.yearly': 'ប្រចាំឆ្នាំ', 'report.period': 'រយៈពេល',
   'report.incidentSummary': 'សង្ខេបឧប្បត្តិហេតុ', 'report.total': 'សរុប', 'report.open': 'មិនទាន់ដោះស្រាយ', 'report.closed': 'បានបញ្ចប់', 'report.internal': 'រកឃើញខាងក្នុង', 'report.external': 'បណ្តឹងខាងក្រៅ',
   'report.categoryRanking': 'ចំណាត់ថ្នាក់ប្រភេទ', 'report.byProcess': 'តាមដំណើរការ', 'report.monthlyTrend': 'និន្នាការប្រចាំខែ', 'report.inspSummary': 'សង្ខេបការត្រួតពិនិត្យ', 'report.totalInsp': 'ការត្រួតពិនិត្យសរុប', 'report.normal': 'ធម្មតា', 'report.abnormal': 'មិនធម្មតា', 'report.adjusted': 'បានកែតម្រូវ', 'report.abnormalRate': 'អត្រាមិនធម្មតា', 'report.noData': 'គ្មានទិន្នន័យ', 'report.printTitle': 'របាយការណ៍សុវត្ថិភាពអាហារ',
+  'aichat.title': 'Chat AI សារធាតុបរទេស', 'aichat.subtitle': 'ស្គាល់សារធាតុបរទេសតាមរូបភាព',
+  'aichat.save': '💾 រក្សាទុកកំណត់ត្រា', 'aichat.reset': '↺ កំណត់ឡើងវិញ',
+  'aichat.candidates': 'សារធាតុបរទេសដែលប៉ាន់ស្មាន', 'aichat.visualFeatures': 'លក្ខណៈដែលមើលឃើញ',
+  'aichat.urgency.high': 'បន្ទាន់: ខ្ពស់', 'aichat.urgency.medium': 'បន្ទាន់: មធ្យម', 'aichat.urgency.low': 'បន្ទាន់: ទាប',
+  'aichat.searchResult': '🔍 លទ្ធផលស្វែងរក Claude', 'aichat.imageAnalysis': '🔬 លទ្ធផលវិភាគរូបភាព',
+  'aichat.searchSection': '🔍 ស្វែងរក Claude: ព័ត៌មានសារធាតុបរទេស', 'aichat.searchBtn': 'ស្វែងរក', 'aichat.searching': 'កំពុងស្វែងរក...',
+  'aichat.addPhoto': 'បន្ថែមរូបភាពសារធាតុបរទេស', 'aichat.tapOrDrop': 'ចុចឬអូសទម្លាក់',
+  'aichat.photoReady': 'រូបភាព (រង់ចាំវិភាគ)', 'aichat.deletePhoto': '✕ លុប',
+  'aichat.analyzeBtn': '🔬 វិភាគរូបភាព', 'aichat.analyzing': 'កំពុងវិភាគ...',
+  'aichat.inputPlaceholder': 'វាយសារ...', 'aichat.inputWithPhoto': 'បន្ថែមការណែនាំ (ជាជម្រើស)',
+  'lock.button': '🔒 ចាក់សោ',
 }
 
 const my: Dict = {
@@ -766,6 +864,17 @@ const my: Dict = {
   'report.title': 'လစဉ် / နှစ်စဉ်အစီရင်ခံစာ', 'report.print': '🖨️ ပုံနှိပ်', 'report.monthly': 'လစဉ်', 'report.yearly': 'နှစ်စဉ်', 'report.period': 'ကာလ',
   'report.incidentSummary': 'ဖြစ်ရပ်အကျဉ်းချုပ်', 'report.total': 'စုစုပေါင်း', 'report.open': 'မကုသရသေး', 'report.closed': 'ပြီးဆုံး', 'report.internal': 'အတွင်းပိုင်းတွေ့ရှိ', 'report.external': 'ပြင်ပတိုင်ကြားချက်',
   'report.categoryRanking': 'အမျိုးအစားအဆင့်', 'report.byProcess': 'ဖြစ်စဉ်အလိုက်', 'report.monthlyTrend': 'လစဉ်ကြောင်းကြောင်', 'report.inspSummary': 'စစ်ဆေးမှုအကျဉ်းချုပ်', 'report.totalInsp': 'စစ်ဆေးမှုစုစုပေါင်း', 'report.normal': 'ပုံမှန်', 'report.abnormal': 'မပုံမှန်', 'report.adjusted': 'ချိန်ညှိပြီး OK', 'report.abnormalRate': 'မပုံမှန်နှုန်း', 'report.noData': 'ဤကာလအတွက်ဒေတာမရှိ', 'report.printTitle': 'အစားအသောက်ဘေးကင်းရေးအစီရင်ခံစာ',
+  'aichat.title': 'AI ပါဝင်ပစ္စည်း Chat', 'aichat.subtitle': 'ဓာတ်ပုံဖြင့် ပါဝင်ပစ္စည်းသိရှိ',
+  'aichat.save': '💾 မှတ်တမ်းသိမ်း', 'aichat.reset': '↺ ပြန်လည်စတင်',
+  'aichat.candidates': 'ခန့်မှန်းသောပါဝင်ပစ္စည်း', 'aichat.visualFeatures': 'မျက်မြင်လက္ခဏာများ',
+  'aichat.urgency.high': 'အရေးပေါ်: မြင့်', 'aichat.urgency.medium': 'အရေးပေါ်: အလယ်', 'aichat.urgency.low': 'အရေးပေါ်: နိမ့်',
+  'aichat.searchResult': '🔍 Claude ရှာဖွေရလဒ်', 'aichat.imageAnalysis': '🔬 ပုံခွဲခြမ်းရလဒ်',
+  'aichat.searchSection': '🔍 Claude ရှာဖွေမှု', 'aichat.searchBtn': 'ရှာဖွေ', 'aichat.searching': 'ရှာဖွေနေသည်...',
+  'aichat.addPhoto': 'ဓာတ်ပုံထည့်ရန်', 'aichat.tapOrDrop': 'တို့ပါ သို့မဟုတ် ဆွဲချပါ',
+  'aichat.photoReady': 'ဓာတ်ပုံ (ခွဲခြမ်းရန်စောင့်)', 'aichat.deletePhoto': '✕ ဖျက်ရန်',
+  'aichat.analyzeBtn': '🔬 ပုံခွဲခြမ်း', 'aichat.analyzing': 'ခွဲခြမ်းနေသည်...',
+  'aichat.inputPlaceholder': 'မက်ဆေ့ပြောရန်...', 'aichat.inputWithPhoto': 'ညွှန်ကြားချက်ထည့်ရန်',
+  'lock.button': '🔒 လော့ခ်',
 }
 
 const th: Dict = {
@@ -844,6 +953,17 @@ const th: Dict = {
   'report.title': 'รายงานรายเดือน / รายปี', 'report.print': '🖨️ พิมพ์', 'report.monthly': 'รายเดือน', 'report.yearly': 'รายปี', 'report.period': 'ช่วงเวลา',
   'report.incidentSummary': 'สรุปเหตุการณ์', 'report.total': 'ทั้งหมด', 'report.open': 'ยังไม่ได้จัดการ', 'report.closed': 'เสร็จสิ้น', 'report.internal': 'พบภายใน', 'report.external': 'การร้องเรียนจากภายนอก',
   'report.categoryRanking': 'อันดับประเภท', 'report.byProcess': 'แยกตามกระบวนการ', 'report.monthlyTrend': 'แนวโน้มรายเดือน', 'report.inspSummary': 'สรุปการตรวจสอบ', 'report.totalInsp': 'ตรวจสอบทั้งหมด', 'report.normal': 'ปกติ', 'report.abnormal': 'ผิดปกติ', 'report.adjusted': 'ปรับแล้ว OK', 'report.abnormalRate': 'อัตราผิดปกติ', 'report.noData': 'ไม่มีข้อมูลในช่วงนี้', 'report.printTitle': 'รายงานสรุปความปลอดภัยอาหาร',
+  'aichat.title': 'AI แชทสิ่งแปลกปลอม', 'aichat.subtitle': 'ระบุสิ่งแปลกปลอมผ่านรูปภาพ',
+  'aichat.save': '💾 บันทึก', 'aichat.reset': '↺ รีเซ็ต',
+  'aichat.candidates': 'สิ่งแปลกปลอมที่คาดว่าเป็น', 'aichat.visualFeatures': 'ลักษณะที่มองเห็น',
+  'aichat.urgency.high': 'ความเร่งด่วน: สูง', 'aichat.urgency.medium': 'ความเร่งด่วน: ปานกลาง', 'aichat.urgency.low': 'ความเร่งด่วน: ต่ำ',
+  'aichat.searchResult': '🔍 ผลการค้นหา Claude', 'aichat.imageAnalysis': '🔬 ผลการวิเคราะห์รูปภาพ',
+  'aichat.searchSection': '🔍 ค้นหา Claude: ข้อมูลสิ่งแปลกปลอม', 'aichat.searchBtn': 'ค้นหา', 'aichat.searching': 'กำลังค้นหา...',
+  'aichat.addPhoto': 'เพิ่มรูปภาพสิ่งแปลกปลอม', 'aichat.tapOrDrop': 'แตะหรือลากวาง',
+  'aichat.photoReady': 'รูปภาพ (รอการวิเคราะห์)', 'aichat.deletePhoto': '✕ ลบ',
+  'aichat.analyzeBtn': '🔬 วิเคราะห์รูปภาพ', 'aichat.analyzing': 'กำลังวิเคราะห์...',
+  'aichat.inputPlaceholder': 'พิมพ์ข้อความ...', 'aichat.inputWithPhoto': 'เพิ่มคำแนะนำ (ไม่บังคับ)',
+  'lock.button': '🔒 ล็อก',
 }
 
 const TRANSLATIONS: Record<LangCode, Dict> = { ja, en, zh, ko, vi, id, ne, km, my, th }
