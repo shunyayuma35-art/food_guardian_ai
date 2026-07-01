@@ -73,6 +73,23 @@ export type TranslationKey =
   | 'aichat.inputPlaceholder' | 'aichat.inputWithPhoto'
   // lock
   | 'lock.button'
+  // usage guide UI
+  | 'guide.open' | 'guide.close' | 'guide.point' | 'guide.title' | 'guide.jaOnly'
+  | 'guide.list' | 'guide.record' | 'guide.insp' | 'guide.inspList' | 'guide.report'
+  // toast messages
+  | 'toast.qrRead' | 'toast.fillNameOrLot' | 'toast.saved' | 'toast.failed'
+  | 'toast.photoSaved' | 'toast.photoFailed' | 'toast.inspSaved'
+  | 'toast.enterDeviceName' | 'toast.enterInspector'
+  | 'toast.networkError' | 'toast.timeout'
+  | 'toast.imageSize' | 'toast.imageFormat'
+  | 'toast.enterKeyword' | 'toast.searchFailed' | 'toast.analysisFailed' | 'toast.aiFailed'
+  | 'toast.aiSaveEmpty' | 'toast.aiSaved' | 'toast.aiSaveFailed'
+  // inline hints / descriptions
+  | 'record.internal.desc' | 'record.external.desc'
+  | 'record.photoHint' | 'record.featureSubhint' | 'record.qrHint'
+  | 'common.anomalyNote' | 'common.specialNote'
+  | 'list.totalCount'
+  | 'aichat.welcome' | 'aichat.resetMsg'
 
 type Dict = Record<TranslationKey, string>
 
@@ -163,6 +180,20 @@ const ja: Dict = {
   'aichat.analyzeBtn': '🔬 画像を解析', 'aichat.analyzing': '解析中...',
   'aichat.inputPlaceholder': 'メッセージを入力...', 'aichat.inputWithPhoto': '解析の指示を追加（任意）',
   'lock.button': '🔒 ロック',
+  'guide.open': '▼ 開く', 'guide.close': '▲ 閉じる', 'guide.point': '💡 ポイント', 'guide.title': '📖 使い方・操作手順', 'guide.jaOnly': '📖 使い方ガイド（日本語）',
+  'guide.list': '📖 事故一覧・検索の使い方', 'guide.record': '📖 異物登録の手順', 'guide.insp': '📖 検査記録の入力手順', 'guide.inspList': '📖 検査記録一覧の使い方', 'guide.report': '📖 月次・年次レポートの使い方',
+  'toast.qrRead': 'QRコードを読み込みました', 'toast.fillNameOrLot': '商品名またはロット番号を入力してください', 'toast.saved': '登録完了しました', 'toast.failed': '登録に失敗しました',
+  'toast.photoSaved': '写真を保存しました', 'toast.photoFailed': '写真のアップロードに失敗しました', 'toast.inspSaved': '検査記録を登録しました',
+  'toast.enterDeviceName': '機器名を入力してください', 'toast.enterInspector': '検査担当者を入力してください',
+  'toast.networkError': '通信エラーが発生しました', 'toast.timeout': 'タイムアウトしました。接続を確認して再度お試しください。',
+  'toast.imageSize': '画像は5MB以下にしてください', 'toast.imageFormat': 'JPEG・PNG・GIF・WebP形式の画像をお使いください',
+  'toast.enterKeyword': 'キーワードを入力してください', 'toast.searchFailed': 'Claude検索に失敗しました', 'toast.analysisFailed': '画像解析に失敗しました', 'toast.aiFailed': 'AI解析に失敗しました',
+  'toast.aiSaveEmpty': '保存する結果がありません。検索または解析を実行してください。', 'toast.aiSaved': '結果を記録として保存しました', 'toast.aiSaveFailed': '保存に失敗しました',
+  'record.internal.desc': '工場内で発見した異物', 'record.external.desc': '店舗・消費者からのクレーム',
+  'record.photoHint': '定規やコインを一緒に撮ると大きさが分かりやすくなります', 'record.featureSubhint': '触感・見た目・色・においで該当するものをすべて選んでください', 'record.qrHint': 'スキャンで商品情報を自動入力（または下記に手入力）',
+  'common.anomalyNote': '異常があれば記入', 'common.specialNote': '特記事項など', 'list.totalCount': '全 {n} 件',
+  'aichat.welcome': '異物の写真を送ってください。\n\n📸 カメラ撮影・ギャラリーから選択できます。\n\n写真を解析して推定種別・緊急度・即時対応アドバイスをお伝えします。',
+  'aichat.resetMsg': 'チャットをリセットしました。新しい異物写真を送ってください。',
 }
 
 const en: Dict = {
@@ -252,6 +283,20 @@ const en: Dict = {
   'aichat.analyzeBtn': '🔬 Analyze Image', 'aichat.analyzing': 'Analyzing...',
   'aichat.inputPlaceholder': 'Type a message...', 'aichat.inputWithPhoto': 'Add analysis instructions (optional)',
   'lock.button': '🔒 Lock',
+  'guide.open': '▼ Open', 'guide.close': '▲ Close', 'guide.point': '💡 Tips', 'guide.title': '📖 How to Use', 'guide.jaOnly': '📖 Guide (Japanese only)',
+  'guide.list': '📖 Incident List Guide', 'guide.record': '📖 Incident Registration Guide', 'guide.insp': '📖 Inspection Record Guide', 'guide.inspList': '📖 Inspection List Guide', 'guide.report': '📖 Report Guide',
+  'toast.qrRead': 'QR code scanned', 'toast.fillNameOrLot': 'Enter product name or lot number', 'toast.saved': 'Registered successfully', 'toast.failed': 'Registration failed',
+  'toast.photoSaved': 'Photo saved', 'toast.photoFailed': 'Photo upload failed', 'toast.inspSaved': 'Inspection record saved',
+  'toast.enterDeviceName': 'Enter device name', 'toast.enterInspector': 'Enter inspector name',
+  'toast.networkError': 'Network error occurred', 'toast.timeout': 'Timed out. Check connection and try again.',
+  'toast.imageSize': 'Image must be under 5MB', 'toast.imageFormat': 'Use JPEG, PNG, GIF, or WebP images',
+  'toast.enterKeyword': 'Enter a keyword', 'toast.searchFailed': 'Claude search failed', 'toast.analysisFailed': 'Image analysis failed', 'toast.aiFailed': 'AI analysis failed',
+  'toast.aiSaveEmpty': 'No results to save. Run a search or analysis first.', 'toast.aiSaved': 'Result saved as record', 'toast.aiSaveFailed': 'Save failed',
+  'record.internal.desc': 'Foreign matter found in factory', 'record.external.desc': 'Complaint from store or consumer',
+  'record.photoHint': 'Include a ruler or coin to show scale', 'record.featureSubhint': 'Select all that apply: texture, appearance, color, smell', 'record.qrHint': 'Scan to auto-fill product info (or type below)',
+  'common.anomalyNote': 'Note if any anomaly', 'common.specialNote': 'Special notes', 'list.totalCount': '{n} total',
+  'aichat.welcome': 'Send a photo of the foreign matter.\n\n📸 Take a photo or select from gallery.\n\nI will analyze it and provide estimated type, urgency level, and response advice.',
+  'aichat.resetMsg': 'Chat reset. Please send a new photo of the foreign matter.',
 }
 
 const zh: Dict = {
@@ -341,6 +386,20 @@ const zh: Dict = {
   'aichat.analyzeBtn': '🔬 解析图像', 'aichat.analyzing': '解析中...',
   'aichat.inputPlaceholder': '输入消息...', 'aichat.inputWithPhoto': '添加解析指示（可选）',
   'lock.button': '🔒 锁定',
+  'guide.open': '▼ 展开', 'guide.close': '▲ 折叠', 'guide.point': '💡 要点', 'guide.title': '📖 使用说明', 'guide.jaOnly': '📖 使用指南（仅限日语）',
+  'guide.list': '📖 事故一览使用方法', 'guide.record': '📖 异物登记步骤', 'guide.insp': '📖 检查记录输入步骤', 'guide.inspList': '📖 检查记录一览使用方法', 'guide.report': '📖 报告使用方法',
+  'toast.qrRead': 'QR码已读取', 'toast.fillNameOrLot': '请输入商品名或批号', 'toast.saved': '登记完成', 'toast.failed': '登记失败',
+  'toast.photoSaved': '照片已保存', 'toast.photoFailed': '照片上传失败', 'toast.inspSaved': '检查记录已登记',
+  'toast.enterDeviceName': '请输入机器名', 'toast.enterInspector': '请输入检查负责人',
+  'toast.networkError': '发生通信错误', 'toast.timeout': '超时。请确认连接后重试。',
+  'toast.imageSize': '图片请在5MB以下', 'toast.imageFormat': '请使用JPEG・PNG・GIF・WebP格式',
+  'toast.enterKeyword': '请输入关键词', 'toast.searchFailed': 'Claude搜索失败', 'toast.analysisFailed': '图像解析失败', 'toast.aiFailed': 'AI解析失败',
+  'toast.aiSaveEmpty': '没有可保存的结果。请先执行搜索或解析。', 'toast.aiSaved': '结果已保存为记录', 'toast.aiSaveFailed': '保存失败',
+  'record.internal.desc': '在工厂内发现的异物', 'record.external.desc': '来自店铺・消费者的投诉',
+  'record.photoHint': '连同尺子或硬币一起拍摄可更清楚了解大小', 'record.featureSubhint': '请从触感・外观・颜色・气味中选择所有符合的选项', 'record.qrHint': '扫描可自动填写商品信息（或在下方手动输入）',
+  'common.anomalyNote': '如有异常请填写', 'common.specialNote': '特别事项等', 'list.totalCount': '共 {n} 件',
+  'aichat.welcome': '请发送异物的照片。\n\n📸 可以拍照或从相册选择。\n\n将解析并提供推定种类・紧急度・即时对应建议。',
+  'aichat.resetMsg': '聊天已重置。请发送新的异物照片。',
 }
 
 const ko: Dict = {
@@ -430,6 +489,20 @@ const ko: Dict = {
   'aichat.analyzeBtn': '🔬 이미지 분석', 'aichat.analyzing': '분석 중...',
   'aichat.inputPlaceholder': '메시지를 입력...', 'aichat.inputWithPhoto': '분석 지시 추가（선택사항）',
   'lock.button': '🔒 잠금',
+  'guide.open': '▼ 열기', 'guide.close': '▲ 닫기', 'guide.point': '💡 포인트', 'guide.title': '📖 사용 방법', 'guide.jaOnly': '📖 가이드 (일본어 전용)',
+  'guide.list': '📖 사고 목록 사용 방법', 'guide.record': '📖 이물 등록 절차', 'guide.insp': '📖 검사 기록 입력 절차', 'guide.inspList': '📖 검사 기록 목록 사용 방법', 'guide.report': '📖 보고서 사용 방법',
+  'toast.qrRead': 'QR코드를 읽었습니다', 'toast.fillNameOrLot': '상품명 또는 로트번호를 입력해주세요', 'toast.saved': '등록 완료', 'toast.failed': '등록 실패',
+  'toast.photoSaved': '사진이 저장되었습니다', 'toast.photoFailed': '사진 업로드 실패', 'toast.inspSaved': '검사 기록이 등록되었습니다',
+  'toast.enterDeviceName': '기기명을 입력해주세요', 'toast.enterInspector': '검사 담당자를 입력해주세요',
+  'toast.networkError': '통신 오류가 발생했습니다', 'toast.timeout': '타임아웃. 연결을 확인하고 다시 시도해주세요.',
+  'toast.imageSize': '이미지는 5MB 이하로 해주세요', 'toast.imageFormat': 'JPEG・PNG・GIF・WebP 형식을 사용해주세요',
+  'toast.enterKeyword': '키워드를 입력해주세요', 'toast.searchFailed': 'Claude 검색 실패', 'toast.analysisFailed': '이미지 분석 실패', 'toast.aiFailed': 'AI 분석 실패',
+  'toast.aiSaveEmpty': '저장할 결과가 없습니다. 검색 또는 분석을 먼저 실행해주세요.', 'toast.aiSaved': '결과가 기록으로 저장되었습니다', 'toast.aiSaveFailed': '저장 실패',
+  'record.internal.desc': '공장 내에서 발견한 이물', 'record.external.desc': '매장·소비자로부터의 클레임',
+  'record.photoHint': '자와 동전을 함께 촬영하면 크기를 쉽게 알 수 있습니다', 'record.featureSubhint': '촉감·외관·색상·냄새에서 해당하는 것을 모두 선택해주세요', 'record.qrHint': '스캔으로 상품 정보를 자동 입력 (또는 아래에 수동 입력)',
+  'common.anomalyNote': '이상이 있으면 기입', 'common.specialNote': '특기사항 등', 'list.totalCount': '전체 {n}건',
+  'aichat.welcome': '이물의 사진을 보내주세요.\n\n📸 카메라 촬영 또는 갤러리에서 선택할 수 있습니다.\n\n사진을 분석하여 추정 종류・긴급도・즉시 대응 조언을 알려드립니다.',
+  'aichat.resetMsg': '채팅이 초기화되었습니다. 새로운 이물 사진을 보내주세요.',
 }
 
 const vi: Dict = {
@@ -519,6 +592,20 @@ const vi: Dict = {
   'aichat.analyzeBtn': '🔬 Phân tích ảnh', 'aichat.analyzing': 'Đang phân tích...',
   'aichat.inputPlaceholder': 'Nhập tin nhắn...', 'aichat.inputWithPhoto': 'Thêm hướng dẫn (tùy chọn)',
   'lock.button': '🔒 Khóa',
+  'guide.open': '▼ Mở', 'guide.close': '▲ Đóng', 'guide.point': '💡 Lưu ý', 'guide.title': '📖 Hướng dẫn sử dụng', 'guide.jaOnly': '📖 Hướng dẫn (Tiếng Nhật)',
+  'guide.list': '📖 Hướng dẫn danh sách sự cố', 'guide.record': '📖 Hướng dẫn đăng ký tạp chất', 'guide.insp': '📖 Hướng dẫn nhập ghi nhật ký', 'guide.inspList': '📖 Hướng dẫn danh sách kiểm tra', 'guide.report': '📖 Hướng dẫn báo cáo',
+  'toast.qrRead': 'Đã đọc mã QR', 'toast.fillNameOrLot': 'Nhập tên sản phẩm hoặc số lô', 'toast.saved': 'Đăng ký thành công', 'toast.failed': 'Đăng ký thất bại',
+  'toast.photoSaved': 'Ảnh đã lưu', 'toast.photoFailed': 'Tải ảnh lên thất bại', 'toast.inspSaved': 'Đã lưu ghi nhật ký kiểm tra',
+  'toast.enterDeviceName': 'Nhập tên thiết bị', 'toast.enterInspector': 'Nhập tên người kiểm tra',
+  'toast.networkError': 'Đã xảy ra lỗi kết nối', 'toast.timeout': 'Hết thời gian. Kiểm tra kết nối và thử lại.',
+  'toast.imageSize': 'Ảnh phải dưới 5MB', 'toast.imageFormat': 'Dùng ảnh JPEG, PNG, GIF hoặc WebP',
+  'toast.enterKeyword': 'Nhập từ khóa', 'toast.searchFailed': 'Tìm kiếm Claude thất bại', 'toast.analysisFailed': 'Phân tích ảnh thất bại', 'toast.aiFailed': 'Phân tích AI thất bại',
+  'toast.aiSaveEmpty': 'Không có kết quả để lưu. Chạy tìm kiếm hoặc phân tích trước.', 'toast.aiSaved': 'Đã lưu kết quả dưới dạng hồ sơ', 'toast.aiSaveFailed': 'Lưu thất bại',
+  'record.internal.desc': 'Tạp chất phát hiện trong nhà máy', 'record.external.desc': 'Khiếu nại từ cửa hàng hoặc người tiêu dùng',
+  'record.photoHint': 'Chụp kèm thước hoặc xu để thể hiện kích thước', 'record.featureSubhint': 'Chọn tất cả phù hợp: kết cấu, ngoại hình, màu, mùi', 'record.qrHint': 'Quét để tự động điền thông tin sản phẩm',
+  'common.anomalyNote': 'Ghi nếu có bất thường', 'common.specialNote': 'Ghi chú đặc biệt', 'list.totalCount': 'Tổng {n}',
+  'aichat.welcome': 'Gửi ảnh tạp chất.\n\n📸 Chụp ảnh hoặc chọn từ thư viện.\n\nTôi sẽ phân tích và cung cấp loại ước tính, mức độ khẩn cấp và lời khuyên.',
+  'aichat.resetMsg': 'Đã đặt lại chat. Vui lòng gửi ảnh tạp chất mới.',
 }
 
 const id: Dict = {
@@ -608,6 +695,20 @@ const id: Dict = {
   'aichat.analyzeBtn': '🔬 Analisis Gambar', 'aichat.analyzing': 'Menganalisis...',
   'aichat.inputPlaceholder': 'Ketik pesan...', 'aichat.inputWithPhoto': 'Tambah instruksi analisis (opsional)',
   'lock.button': '🔒 Kunci',
+  'guide.open': '▼ Buka', 'guide.close': '▲ Tutup', 'guide.point': '💡 Poin', 'guide.title': '📖 Cara Penggunaan', 'guide.jaOnly': '📖 Panduan (Bahasa Jepang)',
+  'guide.list': '📖 Panduan Daftar Insiden', 'guide.record': '📖 Panduan Pendaftaran', 'guide.insp': '📖 Panduan Input Catatan Inspeksi', 'guide.inspList': '📖 Panduan Daftar Inspeksi', 'guide.report': '📖 Panduan Laporan',
+  'toast.qrRead': 'Kode QR berhasil dibaca', 'toast.fillNameOrLot': 'Masukkan nama produk atau nomor lot', 'toast.saved': 'Berhasil didaftarkan', 'toast.failed': 'Pendaftaran gagal',
+  'toast.photoSaved': 'Foto tersimpan', 'toast.photoFailed': 'Gagal upload foto', 'toast.inspSaved': 'Catatan inspeksi tersimpan',
+  'toast.enterDeviceName': 'Masukkan nama alat', 'toast.enterInspector': 'Masukkan petugas inspeksi',
+  'toast.networkError': 'Terjadi kesalahan jaringan', 'toast.timeout': 'Waktu habis. Periksa koneksi dan coba lagi.',
+  'toast.imageSize': 'Gambar harus di bawah 5MB', 'toast.imageFormat': 'Gunakan gambar JPEG, PNG, GIF, atau WebP',
+  'toast.enterKeyword': 'Masukkan kata kunci', 'toast.searchFailed': 'Pencarian Claude gagal', 'toast.analysisFailed': 'Analisis gambar gagal', 'toast.aiFailed': 'Analisis AI gagal',
+  'toast.aiSaveEmpty': 'Tidak ada hasil untuk disimpan. Jalankan pencarian atau analisis dahulu.', 'toast.aiSaved': 'Hasil disimpan sebagai catatan', 'toast.aiSaveFailed': 'Penyimpanan gagal',
+  'record.internal.desc': 'Benda asing ditemukan di dalam pabrik', 'record.external.desc': 'Klaim dari toko atau konsumen',
+  'record.photoHint': 'Sertakan penggaris atau koin untuk menunjukkan ukuran', 'record.featureSubhint': 'Pilih semua yang berlaku: tekstur, penampilan, warna, bau', 'record.qrHint': 'Pindai untuk mengisi info produk otomatis',
+  'common.anomalyNote': 'Isi jika ada anomali', 'common.specialNote': 'Catatan khusus', 'list.totalCount': 'Total {n}',
+  'aichat.welcome': 'Kirim foto benda asing.\n\n📸 Ambil foto atau pilih dari galeri.\n\nSaya akan menganalisis dan memberikan jenis estimasi, tingkat urgensi, dan saran.',
+  'aichat.resetMsg': 'Chat direset. Kirim foto benda asing baru.',
 }
 
 const ne: Dict = {
@@ -697,6 +798,20 @@ const ne: Dict = {
   'aichat.analyzeBtn': '🔬 छवि विश्लेषण', 'aichat.analyzing': 'विश्लेषण हुँदैछ...',
   'aichat.inputPlaceholder': 'सन्देश टाइप गर्नुहोस्...', 'aichat.inputWithPhoto': 'विश्लेषण निर्देशन थप्नुहोस्',
   'lock.button': '🔒 लक',
+  'guide.open': '▼ खोल्नुहोस्', 'guide.close': '▲ बन्द', 'guide.point': '💡 मुख्य बिन्दु', 'guide.title': '📖 प्रयोग विधि', 'guide.jaOnly': '📖 गाइड (जापानी मात्र)',
+  'guide.list': '📖 घटना सूची गाइड', 'guide.record': '📖 दर्ता प्रक्रिया', 'guide.insp': '📖 निरीक्षण गाइड', 'guide.inspList': '📖 निरीक्षण सूची गाइड', 'guide.report': '📖 रिपोर्ट गाइड',
+  'toast.qrRead': 'QR कोड पढिएको छ', 'toast.fillNameOrLot': 'उत्पाद नाम वा लट नम्बर भर्नुहोस्', 'toast.saved': 'सफलतापूर्वक दर्ता भयो', 'toast.failed': 'दर्ता गर्न सकिएन',
+  'toast.photoSaved': 'फोटो बचत भयो', 'toast.photoFailed': 'फोटो अपलोड असफल', 'toast.inspSaved': 'निरीक्षण रेकर्ड दर्ता भयो',
+  'toast.enterDeviceName': 'उपकरण नाम भर्नुहोस्', 'toast.enterInspector': 'निरीक्षण जिम्मेवार भर्नुहोस्',
+  'toast.networkError': 'नेटवर्क त्रुटि भयो', 'toast.timeout': 'समय सकियो। जडान जाँचेर पुनः प्रयास गर्नुहोस्।',
+  'toast.imageSize': 'छवि 5MB भन्दा कम हुनुपर्छ', 'toast.imageFormat': 'JPEG, PNG, GIF वा WebP छवि प्रयोग गर्नुहोस्',
+  'toast.enterKeyword': 'खोज शब्द भर्नुहोस्', 'toast.searchFailed': 'Claude खोज असफल', 'toast.analysisFailed': 'छवि विश्लेषण असफल', 'toast.aiFailed': 'AI विश्लेषण असफल',
+  'toast.aiSaveEmpty': 'बचत गर्ने परिणाम छैन। पहिले खोज वा विश्लेषण गर्नुहोस्।', 'toast.aiSaved': 'परिणाम रेकर्डको रूपमा बचत भयो', 'toast.aiSaveFailed': 'बचत असफल',
+  'record.internal.desc': 'कारखाना भित्र फेला परेको विदेशी पदार्थ', 'record.external.desc': 'पसल वा उपभोक्ताबाट उजुरी',
+  'record.photoHint': 'आकार देखाउन रुलर वा सिक्का सहित तस्बिर लिनुहोस्', 'record.featureSubhint': 'स्पर्श, देखावट, रङ, गन्धबाट सबै उपयुक्त छान्नुहोस्', 'record.qrHint': 'स्क्यान गरेर उत्पाद जानकारी स्वतः भर्नुहोस्',
+  'common.anomalyNote': 'असामान्यता भए उल्लेख गर्नुहोस्', 'common.specialNote': 'विशेष टिप्पणीहरू', 'list.totalCount': 'जम्मा {n}',
+  'aichat.welcome': 'विदेशी पदार्थको फोटो पठाउनुहोस्।\n\n📸 क्यामेराले खिच्नुहोस् वा ग्यालेरीबाट छान्नुहोस्।\n\nविश्लेषण गरेर प्रकार अनुमान, अत्यावश्यकता र प्रतिक्रिया सल्लाह दिइन्छ।',
+  'aichat.resetMsg': 'च्याट रिसेट भयो। नयाँ विदेशी पदार्थको फोटो पठाउनुहोस्।',
 }
 
 const km: Dict = {
@@ -786,6 +901,20 @@ const km: Dict = {
   'aichat.analyzeBtn': '🔬 វិភាគរូបភាព', 'aichat.analyzing': 'កំពុងវិភាគ...',
   'aichat.inputPlaceholder': 'វាយសារ...', 'aichat.inputWithPhoto': 'បន្ថែមការណែនាំ (ជាជម្រើស)',
   'lock.button': '🔒 ចាក់សោ',
+  'guide.open': '▼ បើក', 'guide.close': '▲ បិទ', 'guide.point': '💡 ចំណុចសំខាន់', 'guide.title': '📖 របៀបប្រើ', 'guide.jaOnly': '📖 ណែនាំ (ភាសាជប៉ុន)',
+  'guide.list': '📖 ការណែនាំបញ្ជី', 'guide.record': '📖 ការណែនាំចុះឈ្មោះ', 'guide.insp': '📖 ការណែនាំកំណត់ត្រា', 'guide.inspList': '📖 ការណែនាំបញ្ជីត្រួត', 'guide.report': '📖 ការណែនាំរបាយការណ៍',
+  'toast.qrRead': 'បានអាន QR', 'toast.fillNameOrLot': 'សូមបញ្ចូលឈ្មោះ ឬលេខ Lot', 'toast.saved': 'ចុះឈ្មោះបានជោគជ័យ', 'toast.failed': 'ចុះឈ្មោះបរាជ័យ',
+  'toast.photoSaved': 'រូបភាពត្រូវបានរក្សា', 'toast.photoFailed': 'ការផ្ទុករូបភាពបានបរាជ័យ', 'toast.inspSaved': 'បានរក្សាកំណត់ត្រា',
+  'toast.enterDeviceName': 'បញ្ចូលឈ្មោះឧបករណ៍', 'toast.enterInspector': 'បញ្ចូលឈ្មោះអ្នកត្រួត',
+  'toast.networkError': 'មានបញ្ហាបណ្តាញ', 'toast.timeout': 'អស់ពេល។ ពិនិត្យការតភ្ជាប់ហើយព្យាយាមម្ដងទៀត។',
+  'toast.imageSize': 'រូបភាពត្រូវតែតិចជាង 5MB', 'toast.imageFormat': 'ប្រើ JPEG, PNG, GIF ឬ WebP',
+  'toast.enterKeyword': 'បញ្ចូលពាក្យគន្លឹះ', 'toast.searchFailed': 'ការស្វែងរកបានបរាជ័យ', 'toast.analysisFailed': 'ការវិភាគរូបភាពបានបរាជ័យ', 'toast.aiFailed': 'ការវិភាគ AI បានបរាជ័យ',
+  'toast.aiSaveEmpty': 'គ្មានលទ្ធផលដើម្បីរក្សា។ ដំណើរការស្វែងរកជាមុន។', 'toast.aiSaved': 'លទ្ធផលត្រូវបានរក្សា', 'toast.aiSaveFailed': 'ការរក្សាបានបរាជ័យ',
+  'record.internal.desc': 'សារធាតុបរទេសរកឃើញនៅក្នុងរោងចក្រ', 'record.external.desc': 'ពាក្យបណ្តឹងពីហាងឬអ្នកប្រើ',
+  'record.photoHint': 'ថតរួមជាមួយឧបករណ៍វាស់ ឬកាក់', 'record.featureSubhint': 'ជ្រើសរើសលក្ខណៈដែលត្រូវ', 'record.qrHint': 'ស្កែនដើម្បីបំពេញព័ត៌មានដោយស្វ័យប្រវត្តិ',
+  'common.anomalyNote': 'សរសេរប្រសិនបើមានបញ្ហា', 'common.specialNote': 'ចំណាំពិសេស', 'list.totalCount': 'សរុប {n}',
+  'aichat.welcome': 'សូមផ្ញើរូបភាពសារធាតុបរទេស។\n\n📸 ថតរូបឬជ្រើសពីវិចិត្រសាល។\n\nខ្ញុំនឹងវិភាគ ហើយផ្តល់ប្រភេទ កម្រិតបន្ទាន់ និងដំបូន្មាន។',
+  'aichat.resetMsg': 'Chat ត្រូវបានកំណត់ឡើងវិញ។ សូមផ្ញើរូបភាពថ្មី។',
 }
 
 const my: Dict = {
@@ -875,6 +1004,20 @@ const my: Dict = {
   'aichat.analyzeBtn': '🔬 ပုံခွဲခြမ်း', 'aichat.analyzing': 'ခွဲခြမ်းနေသည်...',
   'aichat.inputPlaceholder': 'မက်ဆေ့ပြောရန်...', 'aichat.inputWithPhoto': 'ညွှန်ကြားချက်ထည့်ရန်',
   'lock.button': '🔒 လော့ခ်',
+  'guide.open': '▼ ဖွင့်ရန်', 'guide.close': '▲ ပိတ်ရန်', 'guide.point': '💡 အချက်', 'guide.title': '📖 အသုံးပြုနည်း', 'guide.jaOnly': '📖 လမ်းညွှန် (ဂျပန်ဘာသာ)',
+  'guide.list': '📖 ဖြစ်ရပ်စာရင်းလမ်းညွှန်', 'guide.record': '📖 မှတ်ပုံတင်လမ်းညွှန်', 'guide.insp': '📖 စစ်ဆေးမှတ်တမ်းလမ်းညွှန်', 'guide.inspList': '📖 စစ်ဆေးစာရင်းလမ်းညွှန်', 'guide.report': '📖 အစီရင်ခံလမ်းညွှန်',
+  'toast.qrRead': 'QR ကုဒ်ဖတ်ပြီး', 'toast.fillNameOrLot': 'ထုတ်ကုန်အမည် သို့ လော့နံပါတ်ဖြည့်ပါ', 'toast.saved': 'မှတ်ပုံတင်ပြီး', 'toast.failed': 'မှတ်ပုံတင်မရ',
+  'toast.photoSaved': 'ဓာတ်ပုံသိမ်းပြီး', 'toast.photoFailed': 'ဓာတ်ပုံတင်မရ', 'toast.inspSaved': 'စစ်ဆေးမှတ်တမ်းမှတ်ပုံတင်ပြီး',
+  'toast.enterDeviceName': 'ကိရိယာအမည်ဖြည့်ပါ', 'toast.enterInspector': 'စစ်ဆေးတာဝန်ခံဖြည့်ပါ',
+  'toast.networkError': 'ကွန်ရက်မှားယွင်းမှုဖြစ်သည်', 'toast.timeout': 'ချိန်ကန့်သတ်ပြည့်ပြီ။ ချိတ်ဆက်မှုစစ်ပြီး ထပ်ကြိုးစားပါ။',
+  'toast.imageSize': 'ပုံ 5MB အောက်ဖြစ်ရမည်', 'toast.imageFormat': 'JPEG, PNG, GIF သို့ WebP ပုံသုံးပါ',
+  'toast.enterKeyword': 'ကီးဝတ်ဖြည့်ပါ', 'toast.searchFailed': 'Claude ရှာဖွေမရ', 'toast.analysisFailed': 'ပုံခွဲခြမ်းမရ', 'toast.aiFailed': 'AI ခွဲခြမ်းမရ',
+  'toast.aiSaveEmpty': 'သိမ်းရန်ရလဒ်မရှိ။ ရှာဖွေမှု သို့ ခွဲခြမ်းမှုကြိုးစားပါ။', 'toast.aiSaved': 'ရလဒ်မှတ်တမ်းအဖြစ်သိမ်းပြီး', 'toast.aiSaveFailed': 'သိမ်းဆည်းမရ',
+  'record.internal.desc': 'စက်ရုံတွင်းတွေ့ရသောပါဝင်ပစ္စည်း', 'record.external.desc': 'ဆိုင် သို့ ဖောက်သည်မှတိုင်ကြားချက်',
+  'record.photoHint': 'အရွယ်အစားပြရန် စကေး သို့ ဒင်္ဂါးပြားနှင့်တစ်ပါတည်းရိုက်ပါ', 'record.featureSubhint': 'ထိတွေ့ပုံ, ပုံသဏ္ဍာန်, အရောင်, အနံ - သင့်တော်သည်ကိုရွေးပါ', 'record.qrHint': 'ကုန်ပစ္စည်းအချက်အလက်ဖြည့်ရန် စကင်ဖတ်ပါ',
+  'common.anomalyNote': 'မမှန်ကန်မှုရှိလျှင်ရေးပါ', 'common.specialNote': 'အထူးမှတ်ချက်', 'list.totalCount': '{n} ခု',
+  'aichat.welcome': 'ပါဝင်ပစ္စည်းဓာတ်ပုံပို့ပါ။\n\n📸 ကင်မရာရိုက် သို့ ဓာတ်ပုံဆိုင်မှရွေးနိုင်သည်။\n\nခွဲခြမ်းဆန်းစစ်ပြီး အမျိုးအစား၊ အရေးပေါ်ကိစ္စ၊ ဆောင်ရွက်ချက်ကိုပြန်ပြောမည်။',
+  'aichat.resetMsg': 'Chat ပြန်လည်စတင်ပြီ။ ဓာတ်ပုံသစ်ပို့ပါ။',
 }
 
 const th: Dict = {
@@ -964,6 +1107,20 @@ const th: Dict = {
   'aichat.analyzeBtn': '🔬 วิเคราะห์รูปภาพ', 'aichat.analyzing': 'กำลังวิเคราะห์...',
   'aichat.inputPlaceholder': 'พิมพ์ข้อความ...', 'aichat.inputWithPhoto': 'เพิ่มคำแนะนำ (ไม่บังคับ)',
   'lock.button': '🔒 ล็อก',
+  'guide.open': '▼ เปิด', 'guide.close': '▲ ปิด', 'guide.point': '💡 จุดสำคัญ', 'guide.title': '📖 วิธีใช้งาน', 'guide.jaOnly': '📖 คู่มือ (ภาษาญี่ปุ่น)',
+  'guide.list': '📖 คู่มือรายการเหตุการณ์', 'guide.record': '📖 คู่มือลงทะเบียน', 'guide.insp': '📖 คู่มือบันทึกการตรวจ', 'guide.inspList': '📖 คู่มือรายการตรวจ', 'guide.report': '📖 คู่มือรายงาน',
+  'toast.qrRead': 'อ่าน QR สำเร็จ', 'toast.fillNameOrLot': 'กรุณาระบุชื่อสินค้าหรือหมายเลขล็อต', 'toast.saved': 'ลงทะเบียนสำเร็จ', 'toast.failed': 'ลงทะเบียนล้มเหลว',
+  'toast.photoSaved': 'บันทึกรูปภาพแล้ว', 'toast.photoFailed': 'อัปโหลดรูปภาพล้มเหลว', 'toast.inspSaved': 'บันทึกการตรวจสอบแล้ว',
+  'toast.enterDeviceName': 'กรุณาระบุชื่ออุปกรณ์', 'toast.enterInspector': 'กรุณาระบุผู้ตรวจสอบ',
+  'toast.networkError': 'เกิดข้อผิดพลาดเครือข่าย', 'toast.timeout': 'หมดเวลา กรุณาตรวจสอบการเชื่อมต่อและลองอีกครั้ง',
+  'toast.imageSize': 'รูปภาพต้องไม่เกิน 5MB', 'toast.imageFormat': 'ใช้รูปภาพ JPEG, PNG, GIF หรือ WebP',
+  'toast.enterKeyword': 'กรุณาระบุคำค้นหา', 'toast.searchFailed': 'การค้นหา Claude ล้มเหลว', 'toast.analysisFailed': 'วิเคราะห์รูปภาพล้มเหลว', 'toast.aiFailed': 'วิเคราะห์ AI ล้มเหลว',
+  'toast.aiSaveEmpty': 'ไม่มีผลลัพธ์ที่จะบันทึก กรุณาค้นหาหรือวิเคราะห์ก่อน', 'toast.aiSaved': 'บันทึกผลลัพธ์เป็นบันทึกแล้ว', 'toast.aiSaveFailed': 'การบันทึกล้มเหลว',
+  'record.internal.desc': 'สิ่งแปลกปลอมพบในโรงงาน', 'record.external.desc': 'การร้องเรียนจากร้านค้าหรือผู้บริโภค',
+  'record.photoHint': 'ถ่ายรูปพร้อมไม้บรรทัดหรือเหรียญเพื่อแสดงขนาด', 'record.featureSubhint': 'เลือกทุกอย่างที่ตรงกัน: พื้นผิว, รูปลักษณ์, สี, กลิ่น', 'record.qrHint': 'สแกนเพื่อกรอกข้อมูลสินค้าอัตโนมัติ',
+  'common.anomalyNote': 'กรอกหากมีสิ่งผิดปกติ', 'common.specialNote': 'หมายเหตุพิเศษ', 'list.totalCount': 'ทั้งหมด {n}',
+  'aichat.welcome': 'ส่งรูปภาพสิ่งแปลกปลอม\n\n📸 ถ่ายรูปหรือเลือกจากคลังรูป\n\nฉันจะวิเคราะห์และแจ้งประเภทโดยประมาณ ระดับความเร่งด่วน และคำแนะนำ',
+  'aichat.resetMsg': 'รีเซ็ตแชทแล้ว กรุณาส่งรูปภาพสิ่งแปลกปลอมใหม่',
 }
 
 const TRANSLATIONS: Record<LangCode, Dict> = { ja, en, zh, ko, vi, id, ne, km, my, th }

@@ -89,10 +89,10 @@ export default function ListPage() {
       setAiIncidents((prev) =>
         prev.map((inc) => inc.id === incidentId ? { ...inc, image_url: url } : inc)
       )
-      toast.success('写真を保存しました')
+      toast.success(t('toast.photoSaved'))
     } catch (err) {
       console.error(err)
-      toast.error('写真のアップロードに失敗しました')
+      toast.error(t('toast.photoFailed'))
     } finally {
       setUploadingId(null)
     }
@@ -167,7 +167,7 @@ export default function ListPage() {
             </button>
             <div className="flex-1">
               <h1 className="font-extrabold text-gray-800 text-lg leading-tight">{t('list.pageTitle')}</h1>
-              <p className="text-xs text-gray-500 font-medium">全 {totalCount} 件</p>
+              <p className="text-xs text-gray-500 font-medium">{t('list.totalCount').replace('{n}', String(totalCount))}</p>
             </div>
             <button
               onClick={() => router.push('/record')}
@@ -221,7 +221,7 @@ export default function ListPage() {
 
       <div className="max-w-2xl mx-auto px-5 py-4 space-y-4">
         <UsageGuide
-          title="📖 事故一覧・検索の使い方"
+          title={t('guide.list')}
           color="orange"
           steps={[
             { icon: '🔍', title: 'キーワード検索', desc: '上の検索欄に製品名・ロット番号・担当者名などを入力すると、一致する記録だけが表示されます。' },

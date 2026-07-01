@@ -105,8 +105,8 @@ export default function InspectionNewPage() {
 
   async function handleSubmit() {
     if (!user) return
-    if (!deviceName.trim()) { toast.error('機器名を入力してください'); return }
-    if (!inspector.trim()) { toast.error('検査担当者を入力してください'); return }
+    if (!deviceName.trim()) { toast.error(t('toast.enterDeviceName')); return }
+    if (!inspector.trim()) { toast.error(t('toast.enterInspector')); return }
 
     setSubmitting(true)
     try {
@@ -137,11 +137,11 @@ export default function InspectionNewPage() {
         createdBy: user.uid,
       })
 
-      toast.success('✅ 検査記録を登録しました')
+      toast.success('✅ ' + t('toast.inspSaved'))
       router.push(`/inspection/${id}`)
     } catch (err) {
       console.error(err)
-      toast.error('登録に失敗しました。もう一度試してください。')
+      toast.error(t('toast.failed'))
     } finally {
       setSubmitting(false)
     }
@@ -172,7 +172,7 @@ export default function InspectionNewPage() {
       <div className="max-w-2xl mx-auto px-5 py-5 space-y-5">
 
         <UsageGuide
-          title="📖 検査記録の入力手順"
+          title={t('guide.insp')}
           color="teal"
           steps={[
             { icon: '🔧', title: t('insp.deviceType'), desc: '「金属探知機」か「X線検査機」を選択します。選んだ種類によって入力項目が変わります。' },
@@ -330,7 +330,7 @@ export default function InspectionNewPage() {
           <div>
             <label className="label">{t('common.note')}</label>
             <input value={startCheck.note ?? ''} onChange={(e) => updateCheck('start', 'note', e.target.value)}
-              className="input-field" placeholder="異常があれば記入" />
+              className="input-field" placeholder={t('common.anomalyNote')} />
           </div>
         </div>
 
@@ -366,7 +366,7 @@ export default function InspectionNewPage() {
           <div>
             <label className="label">{t('common.note')}</label>
             <input value={endCheck.note ?? ''} onChange={(e) => updateCheck('end', 'note', e.target.value)}
-              className="input-field" placeholder="異常があれば記入" />
+              className="input-field" placeholder={t('common.anomalyNote')} />
           </div>
         </div>
 
@@ -430,7 +430,7 @@ export default function InspectionNewPage() {
           <div>
             <label className="label">{t('common.comment')}</label>
             <textarea value={comment} onChange={(e) => setComment(e.target.value)}
-              rows={2} className="input-field resize-none" placeholder="特記事項など" />
+              rows={2} className="input-field resize-none" placeholder={t('common.specialNote')} />
           </div>
         </div>
       </div>

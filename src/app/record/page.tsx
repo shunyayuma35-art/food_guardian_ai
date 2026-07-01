@@ -76,13 +76,13 @@ export default function RecordPage() {
     if (parsed.expiryDate) setExpiryDate(parsed.expiryDate)
     if (parsed.lineNumber) setLineNumber(parsed.lineNumber)
     if (parsed.factory) setFactory(parsed.factory)
-    toast.success('📱 QRコードを読み込みました')
+    toast.success('📱 ' + t('toast.qrRead'))
   }, [])
 
   async function handleSubmit() {
     if (!user) return
     if (!lotNumber.trim() && !productName.trim()) {
-      toast.error('商品名またはロット番号を入力してください')
+      toast.error(t('toast.fillNameOrLot'))
       setStep(0)
       return
     }
@@ -111,11 +111,11 @@ export default function RecordPage() {
           claimPhotos: claimPhotoURLs,
         } : {}),
       })
-      toast.success('✅ 登録完了しました')
+      toast.success('✅ ' + t('toast.saved'))
       router.push(`/record/${id}`)
     } catch (err) {
       console.error(err)
-      toast.error('登録に失敗しました')
+      toast.error(t('toast.failed'))
     } finally {
       setSubmitting(false)
     }
@@ -177,7 +177,7 @@ export default function RecordPage() {
         {step === 0 && (
           <div className="mb-4">
             <UsageGuide
-              title="📖 異物登録の手順"
+              title={t('guide.record')}
               color="orange"
               steps={[
                 { icon: '📌', title: `STEP 1｜${t('record.step.product')}`, desc: '発生区分（社内発見 or お客様クレーム）を選び、製品名・ロット番号を入力します。' },
@@ -201,8 +201,8 @@ export default function RecordPage() {
               <div className="grid grid-cols-2 gap-3">
                 {(['internal', 'external'] as OccurrenceType[]).map((type) => {
                   const cfg = {
-                    internal: { icon: '🏭', desc: '工場内で発見した異物', activeClass: 'bg-orange-500 border-orange-500 text-white shadow-orange-200' },
-                    external: { icon: '📦', desc: '店舗・消費者からのクレーム', activeClass: 'bg-purple-500 border-purple-500 text-white shadow-purple-200' },
+                    internal: { icon: '🏭', desc: t('record.internal.desc'), activeClass: 'bg-orange-500 border-orange-500 text-white shadow-orange-200' },
+                    external: { icon: '📦', desc: t('record.external.desc'), activeClass: 'bg-purple-500 border-purple-500 text-white shadow-purple-200' },
                   }[type]
                   return (
                     <button
@@ -258,6 +258,7 @@ export default function RecordPage() {
               <span className="text-3xl">📱</span>
               {t('record.scanQR')}
             </button>
+            <p className="text-xs text-gray-500 text-center -mt-2">{t('record.qrHint')}</p>
 
             <div>
               <label className="label">{t('record.productName')}</label>
@@ -305,10 +306,8 @@ export default function RecordPage() {
         {step === 1 && (
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-200 rounded-2xl p-4">
-              <p className="text-blue-600 text-xs font-bold">📷 撮影ポイント</p>
-              <p className="text-gray-600 text-xs mt-1 leading-relaxed">
-                {t('record.featureHint').replace('特徴を選択すると', '定規やコインを一緒に撮影するとサイズが分かりやすくなります。顕微鏡写真は')}
-              </p>
+              <p className="text-blue-600 text-xs font-bold">📷 {t('record.step.photo')}</p>
+              <p className="text-gray-600 text-xs mt-1 leading-relaxed">{t('record.photoHint')}</p>
             </div>
 
             {occurrenceType === 'external' && (
@@ -333,9 +332,7 @@ export default function RecordPage() {
           <div>
             <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-4 mb-5">
               <p className="text-orange-600 text-xs font-bold">💡 {t('record.featureHint')}</p>
-              <p className="text-gray-500 text-xs mt-1 leading-relaxed">
-                触感・見た目・色・におい・水試験で該当するものをすべて選んでください
-              </p>
+              <p className="text-gray-500 text-xs mt-1 leading-relaxed">{t('record.featureSubhint')}</p>
             </div>
             <FeatureChecklistComponent value={features} onChange={setFeatures} />
           </div>

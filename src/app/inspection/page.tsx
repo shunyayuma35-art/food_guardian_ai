@@ -74,7 +74,7 @@ export default function InspectionListPage() {
 
       <div className="max-w-2xl mx-auto px-5 py-5 space-y-4">
         <UsageGuide
-          title="📖 検査記録一覧の使い方"
+          title={t('guide.inspList')}
           color="teal"
           steps={[
             { icon: '➕', title: `「＋ ${t('common.new')}」で検査記録を登録`, desc: '右上の「＋ 新規」ボタンから、金属探知機・X線検査機の記録を登録します。' },

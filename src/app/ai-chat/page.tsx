@@ -215,7 +215,7 @@ export default function AiChatPage() {
     setMessages([{
       id: 'welcome',
       role: 'assistant',
-      content: '異物の写真を送ってください。\n\n📸 カメラ撮影・ギャラリーから選択できます。\n\n写真を解析して：\n• 推定される異物の種類と確率\n• 目視で確認できる物理特徴\n• 緊急度と即時対応アドバイス\n• 特定に必要な追加情報の質問\n\nをお伝えします。',
+      content: t('aichat.welcome'),
       quickReplies: [],
       timestamp: new Date(),
     }])
@@ -225,14 +225,13 @@ export default function AiChatPage() {
     // ファイルサイズチェック（5MB以下）
     const MAX_FILE_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(`画像は5MB以下である必要があります。（現在: ${(file.size / 1024 / 1024).toFixed(1)}MB）`);
+      toast.error(t('toast.imageSize') + ` (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
       return;
     }
 
-    // ファイル形式チェック
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      toast.error('JPEG、PNG、GIF、WebP形式の画像をお使いください。');
+      toast.error(t('toast.imageFormat'));
       return;
     }
 
@@ -259,22 +258,22 @@ export default function AiChatPage() {
   const handleClaudeSearch = useCallback(async () => {
     const query = searchQuery.trim();
     if (!query) {
-      toast.error('キーワードを入力してください');
+      toast.error(t('toast.enterKeyword'));
       return;
     }
 
     setSearchLoading(true);
     const timeoutId = setTimeout(() => {
       setSearchLoading(false);
-      toast.error('検索がタイムアウトしました。接続を確認して再度お試しください。');
-    }, 35000); // 35秒後にタイムアウト
+      toast.error(t('toast.timeout'));
+    }, 35000);
 
     try {
       const res = await fetch('/api/claude-search', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ query }),
-        signal: AbortSignal.timeout(30000), // 30秒でAPI呼び出しをキャンセル
+        signal: AbortSignal.timeout(30000),
       });
 
       clearTimeout(timeoutId);
@@ -282,7 +281,7 @@ export default function AiChatPage() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        toast.error(data.error ?? 'Claude検索に失敗しました');
+        toast.error(data.error ?? t('toast.searchFailed'));
         setSearchLoading(false);
         return;
       }
@@ -300,9 +299,9 @@ export default function AiChatPage() {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
-        toast.error('検索がタイムアウトしました。接続を確認して再度お試しください。');
+        toast.error(t('toast.timeout'));
       } else {
-        toast.error('通信エラーが発生しました');
+        toast.error(t('toast.networkError'));
       }
     } finally {
       setSearchLoading(false);
@@ -315,7 +314,7 @@ export default function AiChatPage() {
     setLoading(true);
     const timeoutId = setTimeout(() => {
       setLoading(false);
-      toast.error('画像解析がタイムアウトしました。接続を確認して再度お試しください。');
+      toast.error(t('toast.timeout'));
     }, 35000); // 35秒後にタイムアウト
 
     try {
@@ -334,7 +333,7 @@ export default function AiChatPage() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        toast.error(data.error ?? '画像解析に失敗しました');
+        toast.error(data.error ?? t('toast.analysisFailed'));
         setLoading(false);
         return;
       }
@@ -354,9 +353,9 @@ export default function AiChatPage() {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
-        toast.error('画像解析がタイムアウトしました。接続を確認して再度お試しください。');
+        toast.error(t('toast.timeout'));
       } else {
-        toast.error('通信エラーが発生しました');
+        toast.error(t('toast.networkError'));
       }
     } finally {
       setLoading(false);
@@ -414,7 +413,7 @@ export default function AiChatPage() {
       const data = await res.json()
 
       if (!res.ok || data.error) {
-        toast.error(data.error ?? 'AI解析に失敗しました')
+        toast.error(data.error ?? t('toast.aiFailed'))
         setLoading(false)
         return
       }
@@ -436,7 +435,7 @@ export default function AiChatPage() {
         setImageBase64(null)
       }
     } catch {
-      toast.error('通信エラーが発生しました')
+      toast.error(t('toast.networkError'))
     } finally {
       setLoading(false)
     }
@@ -508,7 +507,7 @@ export default function AiChatPage() {
     }
 
     if (!resultContent) {
-      toast.error('保存する結果がありません。検索または解析を実行してください。');
+      toast.error(t('toast.aiSaveEmpty'));
       return;
     }
 
@@ -526,9 +525,9 @@ export default function AiChatPage() {
         }),
       });
       if (!res.ok) throw new Error('save failed');
-      toast.success('結果を記録として保存しました');
+      toast.success(t('toast.aiSaved'));
     } catch {
-      toast.error('保存に失敗しました');
+      toast.error(t('toast.aiSaveFailed'));
     } finally {
       setSaving(false);
     }
@@ -539,14 +538,14 @@ export default function AiChatPage() {
     setMessages([{
       id: 'welcome-reset',
       role: 'assistant',
-      content: 'チャットをリセットしました。新しい異物写真を送ってください。',
+      content: t('aichat.resetMsg'),
       quickReplies: [],
       timestamp: new Date(),
     }])
     setImageBase64(null)
     setImageUrl(null)
     setInput('')
-  }, [])
+  }, [t])
 
   const hasAnalysis = messages.some((m) => m.analysis || m.searchResult || m.imageAnalysis)
   const isFirstUserTurn = chatHistoryRef.current.length === 0
