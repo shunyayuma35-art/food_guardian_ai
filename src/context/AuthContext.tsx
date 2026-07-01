@@ -12,6 +12,9 @@ interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null
   loading: boolean
+  locked: boolean
+  lock: () => void
+  unlock: () => void
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   signup: (email: string, password: string) => Promise<void>
@@ -30,6 +33,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // DEMO_MODEは同期的に即時ログイン（ローディング画面を出さない）
   const [user, setUser] = useState<AuthUser | null>(DEMO_MODE ? DEMO_USER : null)
   const [loading, setLoading] = useState(!DEMO_MODE)
+  // タブを開くたびにロック画面を表示し、一度解除したら同セッション中は再表示しない
+  const [locked, setLocked] = useState(true)
+
+  useEffect(() => {
+    if (sessionStorage.getItem('foodeye_unlocked') === '1') setLocked(false)
+  }, [])
+
+  function lock() {
+    setLocked(true)
+    sessionStorage.removeItem('foodeye_unlocked')
+  }
+
+  function unlock() {
+    setLocked(false)
+    sessionStorage.setItem('foodeye_unlocked', '1')
+  }
 
   useEffect(() => {
     if (DEMO_MODE) {
@@ -94,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, signup }}>
+    <AuthContext.Provider value={{ user, loading, locked, lock, unlock, login, logout, signup }}>
       {children}
     </AuthContext.Provider>
   )

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import { v4 as uuidv4 } from 'uuid'
 import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
@@ -61,6 +62,7 @@ function CheckBtn({
 
 export default function InspectionNewPage() {
   const { user, loading } = useAuth()
+  const { t } = useLang()
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
 
@@ -73,17 +75,14 @@ export default function InspectionNewPage() {
   const [inspectionDate, setInspectionDate] = useState(today)
   const [inspector, setInspector] = useState('')
 
-  // 感度設定
   const [feSens, setFeSens] = useState('')
   const [susSens, setSusSens] = useState('')
   const [nonFeSens, setNonFeSens] = useState('')
   const [xrayThreshold, setXrayThreshold] = useState('')
 
-  // テストピース
   const [startCheck, setStartCheck] = useState<TestPieceCheck>(() => emptyCheck(nowTime()))
   const [endCheck, setEndCheck] = useState<TestPieceCheck>(() => emptyCheck(nowTime()))
 
-  // 結果
   const [rejectCount, setRejectCount] = useState(0)
   const [rejectDetails, setRejectDetails] = useState('')
   const [result, setResult] = useState<InspectionResult>('pass')
@@ -113,8 +112,7 @@ export default function InspectionNewPage() {
     try {
       const now = new Date().toISOString()
       const id = uuidv4()
-      const record = {
-        id,
+      await createInspectionRecord({
         deviceType,
         deviceName: deviceName.trim(),
         lineNumber: lineNumber.trim(),
@@ -137,28 +135,6 @@ export default function InspectionNewPage() {
         correctionAction: correctionAction.trim() || undefined,
         comment: comment.trim() || undefined,
         createdBy: user.uid,
-        createdAt: now,
-        updatedAt: now,
-      }
-
-      await createInspectionRecord({
-        deviceType: record.deviceType,
-        deviceName: record.deviceName,
-        lineNumber: record.lineNumber,
-        factory: record.factory,
-        sensitivity: record.sensitivity,
-        productName: record.productName,
-        lotNumber: record.lotNumber,
-        inspectionDate: record.inspectionDate,
-        inspector: record.inspector,
-        startCheck: record.startCheck,
-        endCheck: record.endCheck,
-        rejectCount: record.rejectCount,
-        rejectDetails: record.rejectDetails,
-        result: record.result,
-        correctionAction: record.correctionAction,
-        comment: record.comment,
-        createdBy: record.createdBy,
       })
 
       toast.success('✅ 検査記録を登録しました')
@@ -186,7 +162,7 @@ export default function InspectionNewPage() {
       <header className="bg-white/85 backdrop-blur-xl border-b border-teal-100 shadow-sm px-5 py-4 sticky top-0 z-40">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <button onClick={() => router.push('/inspection')} className="back-btn">←</button>
-          <h1 className="font-extrabold text-gray-800 text-base">新規 検査記録</h1>
+          <h1 className="font-extrabold text-gray-800 text-base">{t('insp.title')}</h1>
           <span className="text-xs text-teal-600 bg-teal-50 font-bold px-3 py-1 rounded-full">
             {DEVICE_TYPE_LABELS[deviceType]}
           </span>
@@ -195,28 +171,26 @@ export default function InspectionNewPage() {
 
       <div className="max-w-2xl mx-auto px-5 py-5 space-y-5">
 
-        {/* 使い方ガイド */}
         <UsageGuide
           title="📖 検査記録の入力手順"
           color="teal"
           steps={[
-            { icon: '🔧', title: '機器種別を選ぶ', desc: '「金属探知機」か「X線検査機」を選択します。選んだ種類によって入力項目が変わります。' },
-            { icon: '⚙️', title: '感度設定値を入力', desc: 'その日の検出感度設定値を記録します。金属探知機はFe・SUS・Non-Feの感度（例: φ1.5mm）を入力してください。' },
-            { icon: '📦', title: '製品情報・担当者を入力', desc: '検査した製品名・ロット番号・検査日・担当者を入力します。マスターデータに登録済みであれば入力が省けます。' },
-            { icon: '🟢', title: '始業テストピース確認を記録', desc: '始業前に実施したテストピース確認の結果をOK/NGで記録します。確認時刻も入力してください。' },
-            { icon: '🔴', title: '終業テストピース確認を記録', desc: '終業時のテストピース確認結果を同様に入力します。終業確認は製造品全体の安全性を担保する重要な記録です。' },
-            { icon: '📋', title: '総合判定・保存', desc: '排除件数・是正処置を入力し「保存」ボタンを押します。排除が0件の場合はそのまま「正常」で保存できます。' },
+            { icon: '🔧', title: t('insp.deviceType'), desc: '「金属探知機」か「X線検査機」を選択します。選んだ種類によって入力項目が変わります。' },
+            { icon: '⚙️', title: t('insp.sensitivity'), desc: 'その日の検出感度設定値を記録します。' },
+            { icon: '📦', title: t('insp.productInfo'), desc: '検査した製品名・ロット番号・検査日・担当者を入力します。' },
+            { icon: '🟢', title: t('insp.startCheck'), desc: '始業前に実施したテストピース確認の結果をOK/NGで記録します。' },
+            { icon: '🔴', title: t('insp.endCheck'), desc: '終業時のテストピース確認結果を同様に入力します。' },
+            { icon: '📋', title: t('insp.overallResult'), desc: '排除件数・是正処置を入力し保存ボタンを押します。' },
           ]}
           tips={[
             'テストピース確認でNGが出た場合は「総合判定：異常」または「調整後OK」を選択し、是正処置を必ず記入してください',
             '記録は保存後にCSV出力・印刷ができます（審査・監査の証拠書類として使用可能）',
-            '毎日の検査記録がホーム画面の統計に反映されます',
           ]}
         />
 
         {/* 機器種別 */}
         <div className="card p-4">
-          <p className="text-xs font-bold text-gray-500 mb-3">🔧 検査機器種別 <span className="text-red-400">*</span></p>
+          <p className="text-xs font-bold text-gray-500 mb-3">🔧 {t('insp.deviceType')} <span className="text-red-400">*</span></p>
           <div className="grid grid-cols-2 gap-3">
             {(['metal_detector', 'xray'] as DeviceType[]).map((type) => {
               const cfg = {
@@ -247,20 +221,20 @@ export default function InspectionNewPage() {
 
         {/* 機器・ライン情報 */}
         <div className="card p-4 space-y-3">
-          <p className="text-xs font-bold text-gray-500">🏭 機器・ライン情報</p>
+          <p className="text-xs font-bold text-gray-500">🏭 {t('insp.deviceInfo')}</p>
           <div>
-            <label className="label">機器名 <span className="text-red-400">*</span></label>
+            <label className="label">{t('insp.deviceName')} <span className="text-red-400">*</span></label>
             <input value={deviceName} onChange={(e) => setDeviceName(e.target.value)}
               className="input-field" placeholder="例: 1号金属探知機 / X線検査機-A" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">ライン番号</label>
+              <label className="label">{t('record.lineNo')}</label>
               <input value={lineNumber} onChange={(e) => setLineNumber(e.target.value)}
                 className="input-field" placeholder="例: 1ライン" />
             </div>
             <div>
-              <label className="label">工場名</label>
+              <label className="label">{t('record.factory')}</label>
               <input value={factory} onChange={(e) => setFactory(e.target.value)}
                 className="input-field" placeholder="例: 第1工場" />
             </div>
@@ -269,7 +243,7 @@ export default function InspectionNewPage() {
 
         {/* 感度設定 */}
         <div className="card p-4 space-y-3">
-          <p className="text-xs font-bold text-gray-500">⚙️ 検出感度設定値</p>
+          <p className="text-xs font-bold text-gray-500">⚙️ {t('insp.sensitivity')}</p>
           {isMetal ? (
             <div className="grid grid-cols-3 gap-2">
               <div>
@@ -290,7 +264,7 @@ export default function InspectionNewPage() {
             </div>
           ) : (
             <div>
-              <label className="label">X線検出閾値</label>
+              <label className="label">{t('insp.xrayThreshold')}</label>
               <input value={xrayThreshold} onChange={(e) => setXrayThreshold(e.target.value)}
                 className="input-field" placeholder="例: Fe 1.0mm / SUS 1.5mm / 骨 2.0mm" />
             </div>
@@ -299,26 +273,26 @@ export default function InspectionNewPage() {
 
         {/* 製品情報 */}
         <div className="card p-4 space-y-3">
-          <p className="text-xs font-bold text-gray-500">📦 製品情報</p>
+          <p className="text-xs font-bold text-gray-500">📦 {t('insp.productInfo')}</p>
           <div>
-            <label className="label">製品名</label>
+            <label className="label">{t('insp.productName')}</label>
             <input value={productName} onChange={(e) => setProductName(e.target.value)}
               className="input-field" placeholder="例: 万能ごま 220g" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">ロット番号</label>
+              <label className="label">{t('record.lotNo')}</label>
               <input value={lotNumber} onChange={(e) => setLotNumber(e.target.value)}
                 className="input-field" placeholder="例: L2024-001" />
             </div>
             <div>
-              <label className="label">検査日</label>
+              <label className="label">{t('insp.date')}</label>
               <input type="date" value={inspectionDate}
                 onChange={(e) => setInspectionDate(e.target.value)} className="input-field" />
             </div>
           </div>
           <div>
-            <label className="label">検査担当者 <span className="text-red-400">*</span></label>
+            <label className="label">{t('insp.inspector')} <span className="text-red-400">*</span></label>
             <input value={inspector} onChange={(e) => setInspector(e.target.value)}
               className="input-field" placeholder="例: 山田 太郎" />
           </div>
@@ -327,15 +301,15 @@ export default function InspectionNewPage() {
         {/* 始業テストピース確認 */}
         <div className="card p-4 space-y-3 border-l-4 border-teal-400">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-teal-700">🟢 始業前テストピース確認</p>
+            <p className="text-xs font-bold text-teal-700">🟢 {t('insp.startCheck')}</p>
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
               startCheck.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
             }`}>
-              {startCheck.passed ? '合格' : '不合格'}
+              {startCheck.passed ? t('insp.pass') : t('insp.fail')}
             </span>
           </div>
           <div>
-            <label className="label">確認時刻</label>
+            <label className="label">{t('insp.checkTime')}</label>
             <input type="time" value={startCheck.time}
               onChange={(e) => updateCheck('start', 'time', e.target.value)}
               className="input-field" />
@@ -350,11 +324,11 @@ export default function InspectionNewPage() {
                 onChange={(v) => updateCheck('start', 'nonFePassed', v)} />
             </div>
           ) : (
-            <CheckBtn label="検出確認" value={startCheck.fePassed}
+            <CheckBtn label={t('insp.detectCheck')} value={startCheck.fePassed}
               onChange={(v) => updateCheck('start', 'fePassed', v)} />
           )}
           <div>
-            <label className="label">備考</label>
+            <label className="label">{t('common.note')}</label>
             <input value={startCheck.note ?? ''} onChange={(e) => updateCheck('start', 'note', e.target.value)}
               className="input-field" placeholder="異常があれば記入" />
           </div>
@@ -363,15 +337,15 @@ export default function InspectionNewPage() {
         {/* 終業テストピース確認 */}
         <div className="card p-4 space-y-3 border-l-4 border-slate-400">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-600">🔴 終業テストピース確認</p>
+            <p className="text-xs font-bold text-slate-600">🔴 {t('insp.endCheck')}</p>
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
               endCheck.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
             }`}>
-              {endCheck.passed ? '合格' : '不合格'}
+              {endCheck.passed ? t('insp.pass') : t('insp.fail')}
             </span>
           </div>
           <div>
-            <label className="label">確認時刻</label>
+            <label className="label">{t('insp.checkTime')}</label>
             <input type="time" value={endCheck.time}
               onChange={(e) => updateCheck('end', 'time', e.target.value)}
               className="input-field" />
@@ -386,11 +360,11 @@ export default function InspectionNewPage() {
                 onChange={(v) => updateCheck('end', 'nonFePassed', v)} />
             </div>
           ) : (
-            <CheckBtn label="検出確認" value={endCheck.fePassed}
+            <CheckBtn label={t('insp.detectCheck')} value={endCheck.fePassed}
               onChange={(v) => updateCheck('end', 'fePassed', v)} />
           )}
           <div>
-            <label className="label">備考</label>
+            <label className="label">{t('common.note')}</label>
             <input value={endCheck.note ?? ''} onChange={(e) => updateCheck('end', 'note', e.target.value)}
               className="input-field" placeholder="異常があれば記入" />
           </div>
@@ -398,9 +372,9 @@ export default function InspectionNewPage() {
 
         {/* 排除記録 */}
         <div className="card p-4 space-y-3">
-          <p className="text-xs font-bold text-gray-500">⚠️ 異常排除記録</p>
+          <p className="text-xs font-bold text-gray-500">⚠️ {t('insp.rejectRecord')}</p>
           <div>
-            <label className="label">排除件数</label>
+            <label className="label">{t('insp.rejectCount')}</label>
             <div className="flex items-center gap-3">
               <button type="button" onClick={() => setRejectCount(Math.max(0, rejectCount - 1))}
                 className="w-10 h-10 rounded-xl bg-gray-100 text-gray-700 font-bold text-xl flex items-center justify-center hover:bg-gray-200">
@@ -411,12 +385,12 @@ export default function InspectionNewPage() {
                 className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 font-bold text-xl flex items-center justify-center hover:bg-teal-200">
                 ＋
               </button>
-              <span className="text-sm text-gray-500">件</span>
+              <span className="text-sm text-gray-500">{t('insp.unit')}</span>
             </div>
           </div>
           {rejectCount > 0 && (
             <div>
-              <label className="label">排除内容</label>
+              <label className="label">{t('insp.rejectDetails')}</label>
               <textarea value={rejectDetails} onChange={(e) => setRejectDetails(e.target.value)}
                 rows={2} className="input-field resize-none"
                 placeholder="例: ロット〇〇の製品5個を隔離・廃棄" />
@@ -426,7 +400,7 @@ export default function InspectionNewPage() {
 
         {/* 総合判定 */}
         <div className="card p-4 space-y-3">
-          <p className="text-xs font-bold text-gray-500">📋 総合判定</p>
+          <p className="text-xs font-bold text-gray-500">📋 {t('insp.overallResult')}</p>
           <div className="grid grid-cols-3 gap-2">
             {(['pass', 'fail', 'adjusted'] as InspectionResult[]).map((r) => {
               const cfg = {
@@ -447,21 +421,20 @@ export default function InspectionNewPage() {
           </div>
           {(result === 'fail' || result === 'adjusted') && (
             <div>
-              <label className="label">是正処置内容</label>
+              <label className="label">{t('record.corrective')}</label>
               <textarea value={correctionAction} onChange={(e) => setCorrectionAction(e.target.value)}
                 rows={3} className="input-field resize-none"
                 placeholder="例: 感度再調整・再テストピース確認後、製造再開" />
             </div>
           )}
           <div>
-            <label className="label">コメント</label>
+            <label className="label">{t('common.comment')}</label>
             <textarea value={comment} onChange={(e) => setComment(e.target.value)}
               rows={2} className="input-field resize-none" placeholder="特記事項など" />
           </div>
         </div>
       </div>
 
-      {/* 登録ボタン */}
       <div className="fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-teal-100 p-4 shadow-[0_-4px_20px_rgba(20,184,166,0.08)]">
         <div className="max-w-2xl mx-auto">
           <button onClick={handleSubmit} disabled={submitting}
@@ -469,10 +442,10 @@ export default function InspectionNewPage() {
             {submitting ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                保存中...
+                {t('common.saving')}
               </span>
             ) : (
-              '✅ 検査記録を保存する'
+              t('insp.saveBtn')
             )}
           </button>
         </div>

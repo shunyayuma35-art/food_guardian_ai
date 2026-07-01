@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
@@ -17,6 +18,7 @@ const RESULT_BADGE: Record<string, string> = {
 
 export default function InspectionListPage() {
   const { user, loading } = useAuth()
+  const { t } = useLang()
   const router = useRouter()
   const [records, setRecords] = useState<InspectionRecord[]>([])
   const [fetching, setFetching] = useState(true)
@@ -61,37 +63,35 @@ export default function InspectionListPage() {
       <header className="bg-white/85 backdrop-blur-xl border-b border-teal-100 shadow-sm px-5 py-4 sticky top-0 z-40">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <button onClick={() => router.push('/')} className="back-btn">←</button>
-          <h1 className="font-extrabold text-gray-800 text-base">検査記録 一覧</h1>
+          <h1 className="font-extrabold text-gray-800 text-base">{t('insp.title')}</h1>
           <Link href="/inspection/new">
             <button className="px-3 py-1.5 bg-teal-500 text-white text-xs font-bold rounded-xl shadow-sm shadow-teal-200 hover:bg-teal-600 transition-all">
-              ＋ 新規
+              ＋ {t('common.new')}
             </button>
           </Link>
         </div>
       </header>
 
       <div className="max-w-2xl mx-auto px-5 py-5 space-y-4">
-        {/* 使い方ガイド */}
         <UsageGuide
           title="📖 検査記録一覧の使い方"
           color="teal"
           steps={[
-            { icon: '➕', title: '「＋ 新規」で検査記録を登録', desc: '右上の「＋ 新規」ボタンから、金属探知機・X線検査機の記録を登録します。毎日の始業・終業確認結果を記録してください。' },
-            { icon: '🔍', title: 'フィルターで絞り込む', desc: '「全機種」「金属探知機」「X線」や、「正常」「異常」「調整後OK」で絞り込みができます。日付指定も可能です。' },
-            { icon: '📋', title: 'カードをタップして詳細・出力', desc: '各カードをタップすると詳細画面が開きます。CSV出力・印刷（PDF）ができます。' },
+            { icon: '➕', title: `「＋ ${t('common.new')}」で検査記録を登録`, desc: '右上の「＋ 新規」ボタンから、金属探知機・X線検査機の記録を登録します。' },
+            { icon: '🔍', title: 'フィルターで絞り込む', desc: '機種・結果・日付で絞り込みができます。' },
+            { icon: '📋', title: 'カードをタップして詳細・出力', desc: '各カードをタップすると詳細画面が開きます。' },
           ]}
           tips={[
             '上部の統計カードで今日の検査件数・異常件数・累計排除件数を確認できます',
-            '異常・調整後OKの記録は必ず是正処置を入力してください（審査時に確認されます）',
           ]}
         />
 
         {/* 統計 */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { value: todayCount, label: '今日の検査', color: 'text-teal-600', bg: 'bg-teal-50' },
-            { value: failCount, label: '異常・調整', color: 'text-red-500', bg: 'bg-red-50' },
-            { value: totalReject, label: '累計排除件数', color: 'text-amber-600', bg: 'bg-amber-50' },
+            { value: todayCount, label: t('home.stats.todayInsp'), color: 'text-teal-600', bg: 'bg-teal-50' },
+            { value: failCount, label: t('home.stats.fail'), color: 'text-red-500', bg: 'bg-red-50' },
+            { value: totalReject, label: t('insp.totalReject'), color: 'text-amber-600', bg: 'bg-amber-50' },
           ].map(({ value, label, color, bg }) => (
             <div key={label} className={`${bg} rounded-2xl border border-teal-100 p-3 text-center`}>
               <p className={`text-2xl font-extrabold ${color}`}>{value}</p>
@@ -103,15 +103,15 @@ export default function InspectionListPage() {
         {/* フィルター */}
         <div className="card p-3 space-y-2">
           <div className="flex gap-2 flex-wrap">
-            {(['all', 'metal_detector', 'xray'] as const).map((t) => (
-              <button key={t} onClick={() => setFilterType(t)}
+            {(['all', 'metal_detector', 'xray'] as const).map((type) => (
+              <button key={type} onClick={() => setFilterType(type)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                  filterType === t
+                  filterType === type
                     ? 'bg-teal-500 border-teal-500 text-white'
                     : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300'
                 }`}
               >
-                {t === 'all' ? '全機種' : DEVICE_TYPE_LABELS[t]}
+                {type === 'all' ? t('insp.allDevices') : DEVICE_TYPE_LABELS[type]}
               </button>
             ))}
             {(['all', 'pass', 'fail', 'adjusted'] as const).map((r) => (
@@ -122,12 +122,12 @@ export default function InspectionListPage() {
                     : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
                 }`}
               >
-                {r === 'all' ? '全結果' : INSPECTION_RESULT_LABELS[r]}
+                {r === 'all' ? t('insp.allResults') : INSPECTION_RESULT_LABELS[r]}
               </button>
             ))}
           </div>
           <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)}
-            className="input-field text-sm" placeholder="日付で絞り込み" />
+            className="input-field text-sm" />
         </div>
 
         {/* 一覧 */}
@@ -138,10 +138,10 @@ export default function InspectionListPage() {
         ) : filtered.length === 0 ? (
           <div className="card p-10 text-center">
             <div className="text-4xl mb-3">🔍</div>
-            <p className="text-gray-500 text-sm font-medium">検査記録がありません</p>
+            <p className="text-gray-500 text-sm font-medium">{t('insp.noRecords')}</p>
             <Link href="/inspection/new">
               <button className="mt-4 px-5 py-2.5 bg-teal-500 text-white text-sm font-bold rounded-2xl shadow-md shadow-teal-200">
-                最初の検査記録を登録する
+                {t('insp.firstRecord')}
               </button>
             </Link>
           </div>
@@ -161,11 +161,11 @@ export default function InspectionListPage() {
                       )}
                     </div>
                     <p className="text-xs text-gray-500 truncate">
-                      {rec.productName || '製品名未入力'}{rec.lotNumber ? ` · ${rec.lotNumber}` : ''}
+                      {rec.productName || t('insp.noProductName')}{rec.lotNumber ? ` · ${rec.lotNumber}` : ''}
                     </p>
                     <p className="text-xs text-gray-400">{rec.inspectionDate} · {rec.inspector}</p>
                     {rec.rejectCount > 0 && (
-                      <p className="text-xs text-red-500 font-semibold mt-0.5">排除 {rec.rejectCount}件</p>
+                      <p className="text-xs text-red-500 font-semibold mt-0.5">{t('insp.rejected')} {rec.rejectCount}{t('insp.unit')}</p>
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">

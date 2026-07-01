@@ -22,18 +22,6 @@ type AiIncident = {
   image_url: string | null
 }
 
-const AI_STATUS_LABELS: Record<string, string> = {
-  investigating: '調査中',
-  resolved: '完了',
-  pending: '未対応',
-}
-
-const AI_STATUS_COLORS: Record<string, string> = {
-  investigating: 'bg-yellow-100 text-yellow-700',
-  resolved: 'bg-green-100 text-green-700',
-  pending: 'bg-red-100 text-red-700',
-}
-
 export default function ListPage() {
   const { user, loading } = useAuth()
   const { t } = useLang()
@@ -49,6 +37,18 @@ export default function ListPage() {
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const uploadTargetId = useRef<number | null>(null)
+
+  const AI_STATUS_LABELS: Record<string, string> = {
+    investigating: t('list.status.investigating'),
+    resolved: t('list.status.resolved'),
+    pending: t('list.status.open'),
+  }
+
+  const AI_STATUS_COLORS: Record<string, string> = {
+    investigating: 'bg-yellow-100 text-yellow-700',
+    resolved: 'bg-green-100 text-green-700',
+    pending: 'bg-red-100 text-red-700',
+  }
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
@@ -134,7 +134,6 @@ export default function ListPage() {
 
   return (
     <div className="min-h-screen pb-24">
-      {/* ライトボックス */}
       {lightboxPhoto && (
         <div
           className="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center p-4"
@@ -146,7 +145,6 @@ export default function ListPage() {
         </div>
       )}
 
-      {/* 隠しファイル入力 */}
       <input
         ref={fileInputRef}
         type="file"
@@ -161,41 +159,38 @@ export default function ListPage() {
         }}
       />
 
-      {/* ヘッダー */}
       <header className="bg-white/85 backdrop-blur-xl border-b border-orange-100 shadow-sm px-5 py-4 sticky top-0 z-40">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
-            <button onClick={() => router.push('/')} className="back-btn shrink-0" aria-label="ホームに戻る">
+            <button onClick={() => router.push('/')} className="back-btn shrink-0" aria-label={t('common.back')}>
               ←
             </button>
             <div className="flex-1">
-              <h1 className="font-extrabold text-gray-800 text-lg leading-tight">事故一覧</h1>
+              <h1 className="font-extrabold text-gray-800 text-lg leading-tight">{t('list.pageTitle')}</h1>
               <p className="text-xs text-gray-500 font-medium">全 {totalCount} 件</p>
             </div>
             <button
               onClick={() => router.push('/record')}
               className="text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 px-3 py-2 rounded-xl transition-all shadow-md shadow-orange-200"
             >
-              ＋ 新規
+              ＋ {t('common.new')}
             </button>
           </div>
 
-          {/* 検索 */}
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input-field text-sm mb-2"
-            placeholder="🔍 商品名・ロット・工場・担当者で検索"
+            placeholder={`🔍 ${t('record.productName')}・${t('record.lotNo')}・${t('record.factory')}・${t('record.operator')}`}
           />
 
-          {/* フィルター */}
           <div className="flex gap-2 overflow-x-auto pb-0.5">
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as IncidentStatus | '')}
               className="text-xs bg-white border border-orange-200 text-gray-600 rounded-xl px-3 py-2 shrink-0 focus:border-orange-400 focus:outline-none font-medium"
             >
-              <option value="">すべての状態</option>
+              <option value="">{t('list.allStatus')}</option>
               {Object.entries(INCIDENT_STATUS_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}
@@ -206,7 +201,7 @@ export default function ListPage() {
               onChange={(e) => setFilterProcess(e.target.value as DiscoveryProcess | '')}
               className="text-xs bg-white border border-orange-200 text-gray-600 rounded-xl px-3 py-2 shrink-0 focus:border-orange-400 focus:outline-none font-medium"
             >
-              <option value="">すべての工程</option>
+              <option value="">{t('list.allProcess')}</option>
               {Object.entries(DISCOVERY_PROCESS_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}
@@ -217,7 +212,7 @@ export default function ListPage() {
                 onClick={() => { setSearch(''); setFilterStatus(''); setFilterProcess('') }}
                 className="text-xs text-orange-500 hover:text-orange-600 font-bold px-2 py-2 shrink-0"
               >
-                ✕ クリア
+                ✕ {t('common.clear')}
               </button>
             )}
           </div>
@@ -230,20 +225,18 @@ export default function ListPage() {
           color="orange"
           steps={[
             { icon: '🔍', title: 'キーワード検索', desc: '上の検索欄に製品名・ロット番号・担当者名などを入力すると、一致する記録だけが表示されます。' },
-            { icon: '📌', title: 'フィルターで絞り込む', desc: '「未対応」「調査中」「完了」のステータスや、発見工程（受入・製造・出荷前など）で絞り込みができます。' },
-            { icon: '📋', title: 'カードをタップして詳細を確認', desc: '各カードをタップすると詳細画面が開きます。ステータス変更・報告書生成・CSV出力ができます。' },
-            { icon: '🔄', title: 'PDCA進捗を更新', desc: '詳細画面の「是正処置 PDCA」セクションで進捗（計画中→実施中→確認中→完了）を記録できます。' },
+            { icon: '📌', title: 'フィルターで絞り込む', desc: 'ステータスや発見工程で絞り込みができます。' },
+            { icon: '📋', title: 'カードをタップして詳細を確認', desc: '各カードをタップすると詳細画面が開きます。' },
           ]}
           tips={[
             '同じロット番号の事故をまとめて確認したい場合は、ロット番号で検索してください',
-            '「完了」になった事故も記録として残り、月次レポートに集計されます',
           ]}
         />
 
-        {/* AI解析・異物記録セクション */}
+        {/* AI解析セクション */}
         <div>
           <h2 className="text-sm font-bold text-gray-600 mb-3 flex items-center gap-2">
-            <span className="text-base">🤖</span> AI解析・異物記録
+            <span className="text-base">🤖</span> {t('list.aiSection')}
             <span className="text-xs font-normal text-gray-400">（Supabase保存）</span>
           </h2>
           {aiFetching ? (
@@ -267,7 +260,6 @@ export default function ListPage() {
                   )}
                   <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{inc.description}</p>
 
-                  {/* 写真エリア */}
                   {inc.image_url ? (
                     <button
                       type="button"
@@ -288,7 +280,7 @@ export default function ListPage() {
                       className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-blue-200 text-blue-400 text-xs font-semibold hover:border-blue-400 hover:text-blue-600 transition-all disabled:opacity-50"
                     >
                       {uploadingId === inc.id ? (
-                        <><span className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> アップロード中...</>
+                        <><span className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /> {t('list.uploading')}</>
                       ) : (
                         <><span>📷</span> {t('list.addPhoto').replace('📷 ', '')}</>
                       )}
@@ -304,10 +296,10 @@ export default function ListPage() {
           )}
         </div>
 
-        {/* 従来の異物事故記録セクション */}
+        {/* 異物事故記録セクション */}
         <div>
           <h2 className="text-sm font-bold text-gray-600 mb-3 flex items-center gap-2">
-            <span className="text-base">📋</span> 異物事故記録
+            <span className="text-base">📋</span> {t('list.incidentSection')}
           </h2>
           {fetching ? (
             <div className="flex justify-center py-12">
@@ -317,11 +309,11 @@ export default function ListPage() {
             <div className="text-center py-16">
               <div className="text-6xl mb-4">🔍</div>
               <p className="text-gray-500 font-medium text-base">
-                {incidents.length === 0 ? '記録がありません' : '条件に一致する記録がありません'}
+                {incidents.length === 0 ? t('list.noRecords') : t('list.noFiltered')}
               </p>
               {incidents.length === 0 && (
                 <button onClick={() => router.push('/record')} className="btn-primary mt-5 text-sm px-6">
-                  最初の異物を登録する
+                  {t('home.firstRecord')}
                 </button>
               )}
             </div>
@@ -331,7 +323,7 @@ export default function ListPage() {
                 <IncidentCard key={inc.id} incident={inc} />
               ))}
               <p className="text-xs text-gray-400 text-center pt-2 font-medium">
-                {filtered.length} 件を表示
+                {t('list.showing').replace('{n}', String(filtered.length))}
                 {filtered.length !== incidents.length && `（全 ${incidents.length} 件）`}
               </p>
             </div>

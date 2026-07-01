@@ -35,6 +35,34 @@ export type TranslationKey =
   | 'insp.title'
   | 'qr.title' | 'qr.subtitle' | 'qr.download' | 'qr.share'
   | 'disclaimer'
+  | 'lock.tap'
+  // common extras
+  | 'common.note' | 'common.comment' | 'common.new' | 'common.clear' | 'common.saving' | 'common.next'
+  // record page
+  | 'record.step.product' | 'record.step.photo' | 'record.step.features' | 'record.step.detail'
+  | 'record.occurrenceType' | 'record.claimInfo' | 'record.claimSource' | 'record.claimDate' | 'record.claimContent'
+  | 'record.scanQR' | 'record.productName' | 'record.lotNo' | 'record.mfgDate' | 'record.expiryDate'
+  | 'record.lineNo' | 'record.factory' | 'record.operator'
+  | 'record.claimRoute' | 'record.discoveryProcess' | 'record.discoveryDate' | 'record.comment'
+  | 'record.corrective' | 'record.preventive' | 'record.submit' | 'record.submitting'
+  | 'record.featureHint' | 'record.normalPhoto' | 'record.microscopePhoto' | 'record.claimPhoto'
+  // inspection (new) page
+  | 'insp.deviceType' | 'insp.deviceInfo' | 'insp.deviceName'
+  | 'insp.sensitivity' | 'insp.xrayThreshold' | 'insp.productInfo' | 'insp.productName' | 'insp.date' | 'insp.inspector'
+  | 'insp.startCheck' | 'insp.endCheck' | 'insp.pass' | 'insp.fail' | 'insp.checkTime' | 'insp.detectCheck'
+  | 'insp.rejectRecord' | 'insp.rejectCount' | 'insp.unit' | 'insp.rejectDetails' | 'insp.overallResult' | 'insp.saveBtn'
+  // inspection list page
+  | 'insp.totalReject' | 'insp.allDevices' | 'insp.allResults' | 'insp.noRecords' | 'insp.firstRecord'
+  | 'insp.noProductName' | 'insp.rejected'
+  // list page
+  | 'list.pageTitle' | 'list.allStatus' | 'list.allProcess' | 'list.noRecords' | 'list.noFiltered'
+  | 'list.showing' | 'list.aiSection' | 'list.incidentSection' | 'list.uploading'
+  // report page
+  | 'report.title' | 'report.print' | 'report.monthly' | 'report.yearly' | 'report.period'
+  | 'report.incidentSummary' | 'report.total' | 'report.open' | 'report.closed' | 'report.internal' | 'report.external'
+  | 'report.categoryRanking' | 'report.byProcess' | 'report.monthlyTrend' | 'report.inspSummary'
+  | 'report.totalInsp' | 'report.normal' | 'report.abnormal' | 'report.adjusted' | 'report.abnormalRate'
+  | 'report.noData' | 'report.printTitle'
 
 type Dict = Record<TranslationKey, string>
 
@@ -97,6 +125,23 @@ const ja: Dict = {
   'qr.download': 'QRコードを保存',
   'qr.share': 'URLをコピー',
   'disclaimer': 'AI一次判定・仮説支援システム。確定分析は外部機関の鑑定が必要。',
+  'lock.tap': '画面をタップして解除',
+  'common.note': '備考', 'common.comment': 'コメント', 'common.new': '新規', 'common.clear': 'クリア', 'common.saving': '保存中...', 'common.next': '次へ',
+  'record.step.product': '商品情報', 'record.step.photo': '写真', 'record.step.features': '異物特徴', 'record.step.detail': '詳細情報',
+  'record.occurrenceType': '発生区分', 'record.claimInfo': 'クレーム情報', 'record.claimSource': 'クレーム元', 'record.claimDate': 'クレーム受付日', 'record.claimContent': 'クレーム内容',
+  'record.scanQR': 'QR / バーコードをスキャン', 'record.productName': '商品名', 'record.lotNo': 'ロット番号', 'record.mfgDate': '製造日', 'record.expiryDate': '賞味・消費期限', 'record.lineNo': 'ライン番号', 'record.factory': '工場名', 'record.operator': '担当者名',
+  'record.claimRoute': 'クレーム経路', 'record.discoveryProcess': '発見工程', 'record.discoveryDate': '発見日時', 'record.comment': '状況コメント', 'record.corrective': '是正処置', 'record.preventive': '再発防止策',
+  'record.submit': '🔍 登録 & AI推定を実行', 'record.submitting': '登録・AI解析中...',
+  'record.featureHint': '特徴を選択するとAI推定精度が上がります', 'record.normalPhoto': '通常写真（全体・拡大）', 'record.microscopePhoto': '顕微鏡写真', 'record.claimPhoto': 'クレーム写真',
+  'insp.deviceType': '検査機器種別', 'insp.deviceInfo': '機器・ライン情報', 'insp.deviceName': '機器名',
+  'insp.sensitivity': '検出感度設定値', 'insp.xrayThreshold': 'X線検出閾値', 'insp.productInfo': '製品情報', 'insp.productName': '製品名', 'insp.date': '検査日', 'insp.inspector': '検査担当者',
+  'insp.startCheck': '始業前テストピース確認', 'insp.endCheck': '終業テストピース確認', 'insp.pass': '合格', 'insp.fail': '不合格', 'insp.checkTime': '確認時刻', 'insp.detectCheck': '検出確認',
+  'insp.rejectRecord': '異常排除記録', 'insp.rejectCount': '排除件数', 'insp.unit': '件', 'insp.rejectDetails': '排除内容', 'insp.overallResult': '総合判定', 'insp.saveBtn': '✅ 検査記録を保存する',
+  'insp.totalReject': '累計排除件数', 'insp.allDevices': '全機種', 'insp.allResults': '全結果', 'insp.noRecords': '検査記録がありません', 'insp.firstRecord': '最初の検査記録を登録する', 'insp.noProductName': '製品名未入力', 'insp.rejected': '排除',
+  'list.pageTitle': '事故一覧', 'list.allStatus': 'すべての状態', 'list.allProcess': 'すべての工程', 'list.noRecords': '記録がありません', 'list.noFiltered': '条件に一致する記録がありません', 'list.showing': '{n}件を表示', 'list.aiSection': 'AI解析・異物記録', 'list.incidentSection': '異物事故記録', 'list.uploading': 'アップロード中...',
+  'report.title': '月次・年次レポート', 'report.print': '🖨️ 印刷', 'report.monthly': '月次', 'report.yearly': '年次', 'report.period': '集計期間',
+  'report.incidentSummary': '異物事故サマリー', 'report.total': '総件数', 'report.open': '未処理', 'report.closed': '完了', 'report.internal': '社内発見', 'report.external': '外部クレーム',
+  'report.categoryRanking': '異物種別ランキング', 'report.byProcess': '発見工程別', 'report.monthlyTrend': '月別推移', 'report.inspSummary': '検査記録サマリー', 'report.totalInsp': '総検査件数', 'report.normal': '正常', 'report.abnormal': '異常', 'report.adjusted': '調整後OK', 'report.abnormalRate': '異常率', 'report.noData': 'この期間のデータがありません', 'report.printTitle': '食品安全 集計レポート',
 }
 
 const en: Dict = {
@@ -158,6 +203,23 @@ const en: Dict = {
   'qr.download': 'Save QR Code',
   'qr.share': 'Copy URL',
   'disclaimer': 'AI primary analysis & hypothesis support. Final analysis requires external examination.',
+  'lock.tap': 'Tap the screen to unlock',
+  'common.note': 'Notes', 'common.comment': 'Comment', 'common.new': '+ New', 'common.clear': 'Clear', 'common.saving': 'Saving...', 'common.next': 'Next',
+  'record.step.product': 'Product', 'record.step.photo': 'Photo', 'record.step.features': 'Features', 'record.step.detail': 'Details',
+  'record.occurrenceType': 'Occurrence Type', 'record.claimInfo': 'Claim Info', 'record.claimSource': 'Claim Source', 'record.claimDate': 'Claim Date', 'record.claimContent': 'Claim Details',
+  'record.scanQR': 'Scan QR / Barcode', 'record.productName': 'Product Name', 'record.lotNo': 'Lot Number', 'record.mfgDate': 'Manufacturing Date', 'record.expiryDate': 'Expiry Date', 'record.lineNo': 'Line Number', 'record.factory': 'Factory', 'record.operator': 'Operator',
+  'record.claimRoute': 'Claim Route', 'record.discoveryProcess': 'Discovery Process', 'record.discoveryDate': 'Discovery Date/Time', 'record.comment': 'Situation Notes', 'record.corrective': 'Corrective Action', 'record.preventive': 'Preventive Measure',
+  'record.submit': '🔍 Register & Run AI Analysis', 'record.submitting': 'Registering & Analyzing...',
+  'record.featureHint': 'Selecting features improves AI accuracy', 'record.normalPhoto': 'Standard Photos', 'record.microscopePhoto': 'Microscope Photos', 'record.claimPhoto': 'Claim Photos',
+  'insp.deviceType': 'Device Type', 'insp.deviceInfo': 'Device & Line Info', 'insp.deviceName': 'Device Name',
+  'insp.sensitivity': 'Detection Sensitivity', 'insp.xrayThreshold': 'X-ray Threshold', 'insp.productInfo': 'Product Info', 'insp.productName': 'Product Name', 'insp.date': 'Inspection Date', 'insp.inspector': 'Inspector',
+  'insp.startCheck': 'Start-of-Day Test Piece Check', 'insp.endCheck': 'End-of-Day Test Piece Check', 'insp.pass': 'Pass', 'insp.fail': 'Fail', 'insp.checkTime': 'Check Time', 'insp.detectCheck': 'Detection Check',
+  'insp.rejectRecord': 'Reject Record', 'insp.rejectCount': 'Reject Count', 'insp.unit': 'items', 'insp.rejectDetails': 'Reject Details', 'insp.overallResult': 'Overall Result', 'insp.saveBtn': '✅ Save Inspection Record',
+  'insp.totalReject': 'Total Rejected', 'insp.allDevices': 'All Devices', 'insp.allResults': 'All Results', 'insp.noRecords': 'No inspection records', 'insp.firstRecord': 'Register first inspection record', 'insp.noProductName': 'No product name', 'insp.rejected': 'Rejected',
+  'list.pageTitle': 'Incident List', 'list.allStatus': 'All Status', 'list.allProcess': 'All Processes', 'list.noRecords': 'No records found', 'list.noFiltered': 'No matching records', 'list.showing': '{n} shown', 'list.aiSection': 'AI Analysis Records', 'list.incidentSection': 'Incident Records', 'list.uploading': 'Uploading...',
+  'report.title': 'Monthly / Annual Report', 'report.print': '🖨️ Print', 'report.monthly': 'Monthly', 'report.yearly': 'Annual', 'report.period': 'Period',
+  'report.incidentSummary': 'Incident Summary', 'report.total': 'Total', 'report.open': 'Open', 'report.closed': 'Closed', 'report.internal': 'Internal', 'report.external': 'External Claim',
+  'report.categoryRanking': 'Category Ranking', 'report.byProcess': 'By Process', 'report.monthlyTrend': 'Monthly Trend', 'report.inspSummary': 'Inspection Summary', 'report.totalInsp': 'Total Inspections', 'report.normal': 'Normal', 'report.abnormal': 'Abnormal', 'report.adjusted': 'Adjusted OK', 'report.abnormalRate': 'Abnormal Rate', 'report.noData': 'No data for this period', 'report.printTitle': 'Food Safety Summary Report',
 }
 
 const zh: Dict = {
@@ -219,6 +281,23 @@ const zh: Dict = {
   'qr.download': '保存QR码',
   'qr.share': '复制链接',
   'disclaimer': 'AI初步判定·假设支援系统。最终分析需外部机构鉴定。',
+  'lock.tap': '点击屏幕解锁',
+  'common.note': '备注', 'common.comment': '评论', 'common.new': '新建', 'common.clear': '清除', 'common.saving': '保存中...', 'common.next': '下一步',
+  'record.step.product': '商品信息', 'record.step.photo': '照片', 'record.step.features': '异物特征', 'record.step.detail': '详细信息',
+  'record.occurrenceType': '发生区分', 'record.claimInfo': '投诉信息', 'record.claimSource': '投诉来源', 'record.claimDate': '投诉日期', 'record.claimContent': '投诉内容',
+  'record.scanQR': '扫描 QR / 条形码', 'record.productName': '商品名', 'record.lotNo': '批号', 'record.mfgDate': '生产日期', 'record.expiryDate': '保质期', 'record.lineNo': '生产线编号', 'record.factory': '工厂名', 'record.operator': '负责人',
+  'record.claimRoute': '投诉路径', 'record.discoveryProcess': '发现工序', 'record.discoveryDate': '发现日期/时间', 'record.comment': '情况说明', 'record.corrective': '纠正措施', 'record.preventive': '预防措施',
+  'record.submit': '🔍 登记 & 执行AI推定', 'record.submitting': '登记·AI解析中...',
+  'record.featureHint': '选择特征可提高AI推定精度', 'record.normalPhoto': '普通照片', 'record.microscopePhoto': '显微镜照片', 'record.claimPhoto': '投诉照片',
+  'insp.deviceType': '检查机器种类', 'insp.deviceInfo': '机器·生产线信息', 'insp.deviceName': '机器名',
+  'insp.sensitivity': '检出灵敏度', 'insp.xrayThreshold': 'X射线检出阈值', 'insp.productInfo': '产品信息', 'insp.productName': '产品名', 'insp.date': '检查日', 'insp.inspector': '检查负责人',
+  'insp.startCheck': '开班前测试片确认', 'insp.endCheck': '收班测试片确认', 'insp.pass': '合格', 'insp.fail': '不合格', 'insp.checkTime': '确认时刻', 'insp.detectCheck': '检出确认',
+  'insp.rejectRecord': '异常排除记录', 'insp.rejectCount': '排除件数', 'insp.unit': '件', 'insp.rejectDetails': '排除内容', 'insp.overallResult': '综合判定', 'insp.saveBtn': '✅ 保存检查记录',
+  'insp.totalReject': '累计排除件数', 'insp.allDevices': '全机种', 'insp.allResults': '全结果', 'insp.noRecords': '没有检查记录', 'insp.firstRecord': '登记第一条检查记录', 'insp.noProductName': '未输入产品名', 'insp.rejected': '排除',
+  'list.pageTitle': '事故一览', 'list.allStatus': '全部状态', 'list.allProcess': '全部工序', 'list.noRecords': '没有记录', 'list.noFiltered': '无符合条件的记录', 'list.showing': '显示{n}件', 'list.aiSection': 'AI解析·异物记录', 'list.incidentSection': '异物事故记录', 'list.uploading': '上传中...',
+  'report.title': '月次·年次报告', 'report.print': '🖨️ 打印', 'report.monthly': '月次', 'report.yearly': '年次', 'report.period': '统计期间',
+  'report.incidentSummary': '异物事故汇总', 'report.total': '总件数', 'report.open': '未处理', 'report.closed': '完成', 'report.internal': '内部发现', 'report.external': '外部投诉',
+  'report.categoryRanking': '异物种类排行', 'report.byProcess': '按发现工序', 'report.monthlyTrend': '月别趋势', 'report.inspSummary': '检查记录汇总', 'report.totalInsp': '总检查件数', 'report.normal': '正常', 'report.abnormal': '异常', 'report.adjusted': '调整后OK', 'report.abnormalRate': '异常率', 'report.noData': '此期间无数据', 'report.printTitle': '食品安全集计报告',
 }
 
 const ko: Dict = {
@@ -280,6 +359,23 @@ const ko: Dict = {
   'qr.download': 'QR코드 저장',
   'qr.share': 'URL 복사',
   'disclaimer': 'AI 1차 판정·가설 지원 시스템. 최종 분석은 외부 기관 감정 필요.',
+  'lock.tap': '화면을 탭하여 잠금 해제',
+  'common.note': '비고', 'common.comment': '코멘트', 'common.new': '신규', 'common.clear': '초기화', 'common.saving': '저장 중...', 'common.next': '다음',
+  'record.step.product': '상품 정보', 'record.step.photo': '사진', 'record.step.features': '이물 특징', 'record.step.detail': '상세 정보',
+  'record.occurrenceType': '발생 구분', 'record.claimInfo': '클레임 정보', 'record.claimSource': '클레임 출처', 'record.claimDate': '클레임 접수일', 'record.claimContent': '클레임 내용',
+  'record.scanQR': 'QR / 바코드 스캔', 'record.productName': '상품명', 'record.lotNo': '로트 번호', 'record.mfgDate': '제조일', 'record.expiryDate': '소비기한', 'record.lineNo': '라인 번호', 'record.factory': '공장명', 'record.operator': '담당자명',
+  'record.claimRoute': '클레임 경로', 'record.discoveryProcess': '발견 공정', 'record.discoveryDate': '발견 일시', 'record.comment': '상황 코멘트', 'record.corrective': '시정 조치', 'record.preventive': '재발 방지책',
+  'record.submit': '🔍 등록 & AI 추정 실행', 'record.submitting': '등록·AI 분석 중...',
+  'record.featureHint': '특징을 선택하면 AI 추정 정확도가 높아집니다', 'record.normalPhoto': '일반 사진', 'record.microscopePhoto': '현미경 사진', 'record.claimPhoto': '클레임 사진',
+  'insp.deviceType': '검사 기기 종별', 'insp.deviceInfo': '기기·라인 정보', 'insp.deviceName': '기기명',
+  'insp.sensitivity': '검출 감도 설정값', 'insp.xrayThreshold': 'X선 검출 임계값', 'insp.productInfo': '제품 정보', 'insp.productName': '제품명', 'insp.date': '검사일', 'insp.inspector': '검사 담당자',
+  'insp.startCheck': '시업 전 테스트 피스 확인', 'insp.endCheck': '종업 테스트 피스 확인', 'insp.pass': '합격', 'insp.fail': '불합격', 'insp.checkTime': '확인 시각', 'insp.detectCheck': '검출 확인',
+  'insp.rejectRecord': '이상 배제 기록', 'insp.rejectCount': '배제 건수', 'insp.unit': '건', 'insp.rejectDetails': '배제 내용', 'insp.overallResult': '종합 판정', 'insp.saveBtn': '✅ 검사 기록 저장',
+  'insp.totalReject': '누적 배제 건수', 'insp.allDevices': '전 기종', 'insp.allResults': '전 결과', 'insp.noRecords': '검사 기록이 없습니다', 'insp.firstRecord': '첫 번째 검사 기록 등록하기', 'insp.noProductName': '제품명 미입력', 'insp.rejected': '배제',
+  'list.pageTitle': '사고 목록', 'list.allStatus': '모든 상태', 'list.allProcess': '모든 공정', 'list.noRecords': '기록이 없습니다', 'list.noFiltered': '조건에 맞는 기록이 없습니다', 'list.showing': '{n}건 표시', 'list.aiSection': 'AI 분석·이물 기록', 'list.incidentSection': '이물 사고 기록', 'list.uploading': '업로드 중...',
+  'report.title': '월별·연별 보고서', 'report.print': '🖨️ 인쇄', 'report.monthly': '월별', 'report.yearly': '연별', 'report.period': '집계 기간',
+  'report.incidentSummary': '이물 사고 요약', 'report.total': '총 건수', 'report.open': '미처리', 'report.closed': '완료', 'report.internal': '사내 발견', 'report.external': '외부 클레임',
+  'report.categoryRanking': '이물 종별 순위', 'report.byProcess': '발견 공정별', 'report.monthlyTrend': '월별 추이', 'report.inspSummary': '검사 기록 요약', 'report.totalInsp': '총 검사 건수', 'report.normal': '정상', 'report.abnormal': '이상', 'report.adjusted': '조정 후 OK', 'report.abnormalRate': '이상률', 'report.noData': '이 기간의 데이터가 없습니다', 'report.printTitle': '식품 안전 집계 보고서',
 }
 
 const vi: Dict = {
@@ -341,6 +437,23 @@ const vi: Dict = {
   'qr.download': 'Lưu mã QR',
   'qr.share': 'Sao chép URL',
   'disclaimer': 'Hệ thống phân tích sơ bộ AI. Phân tích cuối cần cơ quan kiểm định.',
+  'lock.tap': 'Chạm vào màn hình để mở khóa',
+  'common.note': 'Ghi chú', 'common.comment': 'Bình luận', 'common.new': 'Mới', 'common.clear': 'Xóa', 'common.saving': 'Đang lưu...', 'common.next': 'Tiếp theo',
+  'record.step.product': 'Sản phẩm', 'record.step.photo': 'Ảnh', 'record.step.features': 'Đặc điểm', 'record.step.detail': 'Chi tiết',
+  'record.occurrenceType': 'Loại phát sinh', 'record.claimInfo': 'Thông tin khiếu nại', 'record.claimSource': 'Nguồn khiếu nại', 'record.claimDate': 'Ngày nhận khiếu nại', 'record.claimContent': 'Nội dung khiếu nại',
+  'record.scanQR': 'Quét QR / Mã vạch', 'record.productName': 'Tên sản phẩm', 'record.lotNo': 'Số lô', 'record.mfgDate': 'Ngày sản xuất', 'record.expiryDate': 'Hạn sử dụng', 'record.lineNo': 'Số dây chuyền', 'record.factory': 'Nhà máy', 'record.operator': 'Người phụ trách',
+  'record.claimRoute': 'Kênh khiếu nại', 'record.discoveryProcess': 'Công đoạn phát hiện', 'record.discoveryDate': 'Ngày/giờ phát hiện', 'record.comment': 'Ghi chú tình huống', 'record.corrective': 'Hành động khắc phục', 'record.preventive': 'Biện pháp phòng ngừa',
+  'record.submit': '🔍 Đăng ký & Phân tích AI', 'record.submitting': 'Đang đăng ký & phân tích...',
+  'record.featureHint': 'Chọn đặc điểm để tăng độ chính xác AI', 'record.normalPhoto': 'Ảnh thông thường', 'record.microscopePhoto': 'Ảnh kính hiển vi', 'record.claimPhoto': 'Ảnh khiếu nại',
+  'insp.deviceType': 'Loại thiết bị', 'insp.deviceInfo': 'Thiết bị & dây chuyền', 'insp.deviceName': 'Tên thiết bị',
+  'insp.sensitivity': 'Độ nhạy cảm biến', 'insp.xrayThreshold': 'Ngưỡng X-ray', 'insp.productInfo': 'Thông tin sản phẩm', 'insp.productName': 'Tên sản phẩm', 'insp.date': 'Ngày kiểm tra', 'insp.inspector': 'Người kiểm tra',
+  'insp.startCheck': 'Kiểm tra mẫu thử đầu ca', 'insp.endCheck': 'Kiểm tra mẫu thử cuối ca', 'insp.pass': 'Đạt', 'insp.fail': 'Không đạt', 'insp.checkTime': 'Giờ kiểm tra', 'insp.detectCheck': 'Xác nhận phát hiện',
+  'insp.rejectRecord': 'Ghi nhận từ chối', 'insp.rejectCount': 'Số lượng bị loại', 'insp.unit': 'cái', 'insp.rejectDetails': 'Chi tiết loại bỏ', 'insp.overallResult': 'Kết quả tổng thể', 'insp.saveBtn': '✅ Lưu ghi nhật ký kiểm tra',
+  'insp.totalReject': 'Tổng số bị loại', 'insp.allDevices': 'Tất cả thiết bị', 'insp.allResults': 'Tất cả kết quả', 'insp.noRecords': 'Không có ghi nhật ký kiểm tra', 'insp.firstRecord': 'Đăng ký ghi nhật ký kiểm tra đầu tiên', 'insp.noProductName': 'Chưa nhập tên sản phẩm', 'insp.rejected': 'Bị loại',
+  'list.pageTitle': 'Danh sách sự cố', 'list.allStatus': 'Tất cả trạng thái', 'list.allProcess': 'Tất cả công đoạn', 'list.noRecords': 'Không có hồ sơ', 'list.noFiltered': 'Không có hồ sơ phù hợp', 'list.showing': 'Hiển thị {n}', 'list.aiSection': 'Hồ sơ phân tích AI', 'list.incidentSection': 'Hồ sơ sự cố', 'list.uploading': 'Đang tải lên...',
+  'report.title': 'Báo cáo hàng tháng / hàng năm', 'report.print': '🖨️ In', 'report.monthly': 'Hàng tháng', 'report.yearly': 'Hàng năm', 'report.period': 'Kỳ tổng hợp',
+  'report.incidentSummary': 'Tóm tắt sự cố', 'report.total': 'Tổng số', 'report.open': 'Chưa xử lý', 'report.closed': 'Hoàn thành', 'report.internal': 'Phát hiện nội bộ', 'report.external': 'Khiếu nại bên ngoài',
+  'report.categoryRanking': 'Xếp hạng loại tạp chất', 'report.byProcess': 'Theo công đoạn', 'report.monthlyTrend': 'Xu hướng theo tháng', 'report.inspSummary': 'Tóm tắt kiểm tra', 'report.totalInsp': 'Tổng số kiểm tra', 'report.normal': 'Bình thường', 'report.abnormal': 'Bất thường', 'report.adjusted': 'Đã điều chỉnh', 'report.abnormalRate': 'Tỷ lệ bất thường', 'report.noData': 'Không có dữ liệu kỳ này', 'report.printTitle': 'Báo cáo an toàn thực phẩm',
 }
 
 const id: Dict = {
@@ -402,6 +515,23 @@ const id: Dict = {
   'qr.download': 'Simpan QR Code',
   'qr.share': 'Salin URL',
   'disclaimer': 'Sistem analisis primer AI. Analisis final memerlukan lembaga eksternal.',
+  'lock.tap': 'Ketuk layar untuk membuka kunci',
+  'common.note': 'Catatan', 'common.comment': 'Komentar', 'common.new': 'Baru', 'common.clear': 'Hapus', 'common.saving': 'Menyimpan...', 'common.next': 'Berikutnya',
+  'record.step.product': 'Info Produk', 'record.step.photo': 'Foto', 'record.step.features': 'Karakteristik', 'record.step.detail': 'Detail',
+  'record.occurrenceType': 'Jenis Kejadian', 'record.claimInfo': 'Info Klaim', 'record.claimSource': 'Sumber Klaim', 'record.claimDate': 'Tanggal Klaim', 'record.claimContent': 'Isi Klaim',
+  'record.scanQR': 'Pindai QR / Barcode', 'record.productName': 'Nama Produk', 'record.lotNo': 'Nomor Lot', 'record.mfgDate': 'Tanggal Produksi', 'record.expiryDate': 'Tanggal Kedaluwarsa', 'record.lineNo': 'Nomor Lini', 'record.factory': 'Pabrik', 'record.operator': 'Penanggung Jawab',
+  'record.claimRoute': 'Jalur Klaim', 'record.discoveryProcess': 'Proses Penemuan', 'record.discoveryDate': 'Tanggal/Waktu Penemuan', 'record.comment': 'Catatan Situasi', 'record.corrective': 'Tindakan Korektif', 'record.preventive': 'Tindakan Pencegahan',
+  'record.submit': '🔍 Daftarkan & Jalankan Analisis AI', 'record.submitting': 'Mendaftarkan & Menganalisis...',
+  'record.featureHint': 'Memilih fitur meningkatkan akurasi AI', 'record.normalPhoto': 'Foto Biasa', 'record.microscopePhoto': 'Foto Mikroskop', 'record.claimPhoto': 'Foto Klaim',
+  'insp.deviceType': 'Jenis Alat', 'insp.deviceInfo': 'Info Alat & Lini', 'insp.deviceName': 'Nama Alat',
+  'insp.sensitivity': 'Sensitivitas Deteksi', 'insp.xrayThreshold': 'Ambang Batas X-ray', 'insp.productInfo': 'Info Produk', 'insp.productName': 'Nama Produk', 'insp.date': 'Tanggal Inspeksi', 'insp.inspector': 'Petugas Inspeksi',
+  'insp.startCheck': 'Pemeriksaan Test Piece Awal Shift', 'insp.endCheck': 'Pemeriksaan Test Piece Akhir Shift', 'insp.pass': 'Lulus', 'insp.fail': 'Gagal', 'insp.checkTime': 'Waktu Pemeriksaan', 'insp.detectCheck': 'Konfirmasi Deteksi',
+  'insp.rejectRecord': 'Catatan Penolakan', 'insp.rejectCount': 'Jumlah Ditolak', 'insp.unit': 'buah', 'insp.rejectDetails': 'Detail Penolakan', 'insp.overallResult': 'Hasil Keseluruhan', 'insp.saveBtn': '✅ Simpan Catatan Inspeksi',
+  'insp.totalReject': 'Total Ditolak', 'insp.allDevices': 'Semua Alat', 'insp.allResults': 'Semua Hasil', 'insp.noRecords': 'Tidak ada catatan inspeksi', 'insp.firstRecord': 'Daftarkan catatan inspeksi pertama', 'insp.noProductName': 'Nama produk belum diisi', 'insp.rejected': 'Ditolak',
+  'list.pageTitle': 'Daftar Insiden', 'list.allStatus': 'Semua Status', 'list.allProcess': 'Semua Proses', 'list.noRecords': 'Tidak ada catatan', 'list.noFiltered': 'Tidak ada catatan yang sesuai', 'list.showing': 'Menampilkan {n}', 'list.aiSection': 'Catatan Analisis AI', 'list.incidentSection': 'Catatan Insiden', 'list.uploading': 'Sedang mengunggah...',
+  'report.title': 'Laporan Bulanan / Tahunan', 'report.print': '🖨️ Cetak', 'report.monthly': 'Bulanan', 'report.yearly': 'Tahunan', 'report.period': 'Periode',
+  'report.incidentSummary': 'Ringkasan Insiden', 'report.total': 'Total', 'report.open': 'Belum Ditangani', 'report.closed': 'Selesai', 'report.internal': 'Temuan Internal', 'report.external': 'Klaim Eksternal',
+  'report.categoryRanking': 'Peringkat Kategori', 'report.byProcess': 'Per Proses', 'report.monthlyTrend': 'Tren Bulanan', 'report.inspSummary': 'Ringkasan Inspeksi', 'report.totalInsp': 'Total Inspeksi', 'report.normal': 'Normal', 'report.abnormal': 'Tidak Normal', 'report.adjusted': 'Disesuaikan', 'report.abnormalRate': 'Tingkat Ketidaknormalan', 'report.noData': 'Tidak ada data untuk periode ini', 'report.printTitle': 'Laporan Keamanan Pangan',
 }
 
 const ne: Dict = {
@@ -463,6 +593,23 @@ const ne: Dict = {
   'qr.download': 'QR कोड बचत गर्नुहोस्',
   'qr.share': 'URL कपी',
   'disclaimer': 'AI प्राथमिक विश्लेषण प्रणाली। अन्तिम विश्लेषण बाह्य संस्था आवश्यक।',
+  'lock.tap': 'अनलक गर्न स्क्रिनमा ट्याप गर्नुहोस्',
+  'common.note': 'टिप्पणी', 'common.comment': 'टिप्पणी', 'common.new': 'नयाँ', 'common.clear': 'खाली गर्नुहोस्', 'common.saving': 'सेभ हुँदैछ...', 'common.next': 'अर्को',
+  'record.step.product': 'उत्पाद जानकारी', 'record.step.photo': 'फोटो', 'record.step.features': 'विशेषताहरू', 'record.step.detail': 'विस्तृत जानकारी',
+  'record.occurrenceType': 'घटना प्रकार', 'record.claimInfo': 'उजुरी जानकारी', 'record.claimSource': 'उजुरी स्रोत', 'record.claimDate': 'उजुरी मिति', 'record.claimContent': 'उजुरी विवरण',
+  'record.scanQR': 'QR / बारकोड स्क्यान', 'record.productName': 'उत्पाद नाम', 'record.lotNo': 'लट नम्बर', 'record.mfgDate': 'उत्पादन मिति', 'record.expiryDate': 'म्याद सकिने मिति', 'record.lineNo': 'लाइन नम्बर', 'record.factory': 'कारखाना', 'record.operator': 'जिम्मेवार व्यक्ति',
+  'record.claimRoute': 'उजुरी मार्ग', 'record.discoveryProcess': 'पत्ता लगाउने प्रक्रिया', 'record.discoveryDate': 'पत्ता लगाएको मिति/समय', 'record.comment': 'स्थिति टिप्पणी', 'record.corrective': 'सुधारात्मक कार्य', 'record.preventive': 'रोकथाम उपाय',
+  'record.submit': '🔍 दर्ता र AI अनुमान चलाउनुहोस्', 'record.submitting': 'दर्ता र AI विश्लेषण हुँदैछ...',
+  'record.featureHint': 'विशेषताहरू छनोट गर्दा AI सटीकता बढ्छ', 'record.normalPhoto': 'सामान्य फोटो', 'record.microscopePhoto': 'माइक्रोस्कोप फोटो', 'record.claimPhoto': 'उजुरी फोटो',
+  'insp.deviceType': 'उपकरण प्रकार', 'insp.deviceInfo': 'उपकरण र लाइन जानकारी', 'insp.deviceName': 'उपकरण नाम',
+  'insp.sensitivity': 'पत्ता लगाउने संवेदनशीलता', 'insp.xrayThreshold': 'X-ray थ्रेसहोल्ड', 'insp.productInfo': 'उत्पाद जानकारी', 'insp.productName': 'उत्पाद नाम', 'insp.date': 'निरीक्षण मिति', 'insp.inspector': 'निरीक्षण जिम्मेवार',
+  'insp.startCheck': 'शुरुवात परीक्षण जाँच', 'insp.endCheck': 'समाप्ति परीक्षण जाँच', 'insp.pass': 'उत्तीर्ण', 'insp.fail': 'अनुत्तीर्ण', 'insp.checkTime': 'जाँच समय', 'insp.detectCheck': 'पत्ता लगाउने पुष्टि',
+  'insp.rejectRecord': 'अस्वीकृति रेकर्ड', 'insp.rejectCount': 'अस्वीकृत संख्या', 'insp.unit': 'वटा', 'insp.rejectDetails': 'अस्वीकृत विवरण', 'insp.overallResult': 'समग्र परिणाम', 'insp.saveBtn': '✅ निरीक्षण रेकर्ड सेभ',
+  'insp.totalReject': 'कुल अस्वीकृत', 'insp.allDevices': 'सबै उपकरण', 'insp.allResults': 'सबै परिणाम', 'insp.noRecords': 'निरीक्षण रेकर्ड छैन', 'insp.firstRecord': 'पहिलो निरीक्षण रेकर्ड दर्ता गर्नुहोस्', 'insp.noProductName': 'उत्पाद नाम नभरेको', 'insp.rejected': 'अस्वीकृत',
+  'list.pageTitle': 'घटना सूची', 'list.allStatus': 'सबै अवस्था', 'list.allProcess': 'सबै प्रक्रिया', 'list.noRecords': 'कुनै रेकर्ड छैन', 'list.noFiltered': 'शर्त मिल्ने रेकर्ड छैन', 'list.showing': '{n} रेकर्ड', 'list.aiSection': 'AI विश्लेषण रेकर्ड', 'list.incidentSection': 'घटना रेकर्ड', 'list.uploading': 'अपलोड हुँदैछ...',
+  'report.title': 'मासिक / वार्षिक रिपोर्ट', 'report.print': '🖨️ छाप्नुहोस्', 'report.monthly': 'मासिक', 'report.yearly': 'वार्षिक', 'report.period': 'सङ्कलन अवधि',
+  'report.incidentSummary': 'घटना सारांश', 'report.total': 'कुल', 'report.open': 'अनुपचारित', 'report.closed': 'सम्पन्न', 'report.internal': 'आन्तरिक पत्ता', 'report.external': 'बाह्य उजुरी',
+  'report.categoryRanking': 'श्रेणी क्रम', 'report.byProcess': 'प्रक्रिया अनुसार', 'report.monthlyTrend': 'मासिक प्रवृत्ति', 'report.inspSummary': 'निरीक्षण सारांश', 'report.totalInsp': 'कुल निरीक्षण', 'report.normal': 'सामान्य', 'report.abnormal': 'असामान्य', 'report.adjusted': 'समायोजन पछि OK', 'report.abnormalRate': 'असामान्य दर', 'report.noData': 'यस अवधिको डेटा छैन', 'report.printTitle': 'खाद्य सुरक्षा रिपोर्ट',
 }
 
 const km: Dict = {
@@ -524,6 +671,23 @@ const km: Dict = {
   'qr.download': 'រក្សាទុក QR Code',
   'qr.share': 'ចម្លង URL',
   'disclaimer': 'ប្រព័ន្ធវិភាគបឋម AI ។ ការវិភាគចុងក្រោយត្រូវការស្ថាប័នខាងក្រៅ។',
+  'lock.tap': 'ចុចលើអេក្រង់ដើម្បីដោះសោ',
+  'common.note': 'ចំណាំ', 'common.comment': 'មតិ', 'common.new': 'ថ្មី', 'common.clear': 'លុប', 'common.saving': 'កំពុងរក្សាទុក...', 'common.next': 'បន្ទាប់',
+  'record.step.product': 'ព័ត៌មានផលិតផល', 'record.step.photo': 'រូបភាព', 'record.step.features': 'លក្ខណៈ', 'record.step.detail': 'ព័ត៌មានលម្អិត',
+  'record.occurrenceType': 'ប្រភេទឧប្បត្តិហេតុ', 'record.claimInfo': 'ព័ត៌មានបណ្តឹង', 'record.claimSource': 'ប្រភពបណ្តឹង', 'record.claimDate': 'ថ្ងៃទទួលបណ្តឹង', 'record.claimContent': 'មាតិកាបណ្តឹង',
+  'record.scanQR': 'ស្កែន QR / Barcode', 'record.productName': 'ឈ្មោះផលិតផល', 'record.lotNo': 'លេខ Lot', 'record.mfgDate': 'ថ្ងៃផលិត', 'record.expiryDate': 'ថ្ងៃផុតកំណត់', 'record.lineNo': 'លេខខ្សែ', 'record.factory': 'រោងចក្រ', 'record.operator': 'អ្នកទទួលខុសត្រូវ',
+  'record.claimRoute': 'ចំណងបណ្តឹង', 'record.discoveryProcess': 'ដំណើរការរកឃើញ', 'record.discoveryDate': 'ថ្ងៃ/ម៉ោងរកឃើញ', 'record.comment': 'ចំណាំស្ថានការណ៍', 'record.corrective': 'វិធានការកែតម្រូវ', 'record.preventive': 'វិធានការការពារ',
+  'record.submit': '🔍 ចុះឈ្មោះ & ដំណើរការ AI', 'record.submitting': 'កំពុងចុះឈ្មោះ & វិភាគ...',
+  'record.featureHint': 'ការជ្រើសលក្ខណៈបង្កើនភាពត្រឹមត្រូវ AI', 'record.normalPhoto': 'រូបភាពធម្មតា', 'record.microscopePhoto': 'រូបភាពមីក្រូស្កុប', 'record.claimPhoto': 'រូបភាពបណ្តឹង',
+  'insp.deviceType': 'ប្រភេទឧបករណ៍', 'insp.deviceInfo': 'ព័ត៌មានឧបករណ៍', 'insp.deviceName': 'ឈ្មោះឧបករណ៍',
+  'insp.sensitivity': 'ភាពប្រែប្រួលការរកឃើញ', 'insp.xrayThreshold': 'ទ្រនិច X-ray', 'insp.productInfo': 'ព័ត៌មានផលិតផល', 'insp.productName': 'ឈ្មោះផលិតផល', 'insp.date': 'ថ្ងៃត្រួតពិនិត្យ', 'insp.inspector': 'អ្នកត្រួតពិនិត្យ',
+  'insp.startCheck': 'ពិនិត្យ Test Piece ចាប់ផ្តើម', 'insp.endCheck': 'ពិនិត្យ Test Piece បញ្ចប់', 'insp.pass': 'ជាប់', 'insp.fail': 'ធ្លាក់', 'insp.checkTime': 'ម៉ោងពិនិត្យ', 'insp.detectCheck': 'បញ្ជាក់ការរកឃើញ',
+  'insp.rejectRecord': 'កំណត់ត្រាការបដិសេធ', 'insp.rejectCount': 'ចំនួនបដិសេធ', 'insp.unit': 'ចំនួន', 'insp.rejectDetails': 'ព័ត៌មានការបដិសេធ', 'insp.overallResult': 'លទ្ធផលសរុប', 'insp.saveBtn': '✅ រក្សាទុកកំណត់ត្រាត្រួតពិនិត្យ',
+  'insp.totalReject': 'សរុបបដិសេធ', 'insp.allDevices': 'ឧបករណ៍ទាំងអស់', 'insp.allResults': 'លទ្ធផលទាំងអស់', 'insp.noRecords': 'គ្មានកំណត់ត្រាត្រួតពិនិត្យ', 'insp.firstRecord': 'ចុះឈ្មោះកំណត់ត្រាដំបូង', 'insp.noProductName': 'មិនទាន់វាយឈ្មោះ', 'insp.rejected': 'បដិសេធ',
+  'list.pageTitle': 'បញ្ជីឧប្បត្តិហេតុ', 'list.allStatus': 'ស្ថានភាពទាំងអស់', 'list.allProcess': 'ដំណើរការទាំងអស់', 'list.noRecords': 'គ្មានកំណត់ត្រា', 'list.noFiltered': 'គ្មានកំណត់ត្រាស្ថិតក្នុងលក្ខខណ្ឌ', 'list.showing': 'បង្ហាញ {n}', 'list.aiSection': 'កំណត់ត្រាវិភាគ AI', 'list.incidentSection': 'កំណត់ត្រាឧប្បត្តិហេតុ', 'list.uploading': 'កំពុងផ្ទុកឡើង...',
+  'report.title': 'របាយការណ៍ប្រចាំខែ/ឆ្នាំ', 'report.print': '🖨️ បោះពុម្ព', 'report.monthly': 'ប្រចាំខែ', 'report.yearly': 'ប្រចាំឆ្នាំ', 'report.period': 'រយៈពេល',
+  'report.incidentSummary': 'សង្ខេបឧប្បត្តិហេតុ', 'report.total': 'សរុប', 'report.open': 'មិនទាន់ដោះស្រាយ', 'report.closed': 'បានបញ្ចប់', 'report.internal': 'រកឃើញខាងក្នុង', 'report.external': 'បណ្តឹងខាងក្រៅ',
+  'report.categoryRanking': 'ចំណាត់ថ្នាក់ប្រភេទ', 'report.byProcess': 'តាមដំណើរការ', 'report.monthlyTrend': 'និន្នាការប្រចាំខែ', 'report.inspSummary': 'សង្ខេបការត្រួតពិនិត្យ', 'report.totalInsp': 'ការត្រួតពិនិត្យសរុប', 'report.normal': 'ធម្មតា', 'report.abnormal': 'មិនធម្មតា', 'report.adjusted': 'បានកែតម្រូវ', 'report.abnormalRate': 'អត្រាមិនធម្មតា', 'report.noData': 'គ្មានទិន្នន័យ', 'report.printTitle': 'របាយការណ៍សុវត្ថិភាពអាហារ',
 }
 
 const my: Dict = {
@@ -585,6 +749,23 @@ const my: Dict = {
   'qr.download': 'QR Code သိမ်းရန်',
   'qr.share': 'URL ကူးယူ',
   'disclaimer': 'AI ပဦးစွာခွဲခြမ်းစနစ်။ အတည်ပြုခွဲခြမ်းမှုအတွက် ပြင်ပအဖွဲ့အစည်း လိုအပ်သည်။',
+  'lock.tap': 'လော့ခ်ဖွင့်ရန် မျက်နှာပြင်ကို တို့ပါ',
+  'common.note': 'မှတ်ချက်', 'common.comment': 'မှတ်ချက်', 'common.new': 'အသစ်', 'common.clear': 'ရှင်းရန်', 'common.saving': 'သိမ်းဆည်းနေသည်...', 'common.next': 'နောက်တစ်ဆင့်',
+  'record.step.product': 'ထုတ်ကုန်သတင်း', 'record.step.photo': 'ဓာတ်ပုံ', 'record.step.features': 'လက္ခဏာများ', 'record.step.detail': 'အသေးစိတ်',
+  'record.occurrenceType': 'ဖြစ်ပွားမှုအမျိုးအစား', 'record.claimInfo': 'တိုင်ကြားချက်သတင်း', 'record.claimSource': 'တိုင်ကြားရင်းမြစ်', 'record.claimDate': 'တိုင်ကြားသောနေ့', 'record.claimContent': 'တိုင်ကြားချက်အကြောင်းအရာ',
+  'record.scanQR': 'QR / Barcode စကင်ဖတ်ရန်', 'record.productName': 'ထုတ်ကုန်အမည်', 'record.lotNo': 'လော့နံပါတ်', 'record.mfgDate': 'ထုတ်လုပ်သောနေ့', 'record.expiryDate': 'သက်တမ်းကုန်မည့်နေ့', 'record.lineNo': 'လိုင်းနံပါတ်', 'record.factory': 'စက်ရုံ', 'record.operator': 'တာဝန်ခံ',
+  'record.claimRoute': 'တိုင်ကြားလမ်းကြောင်း', 'record.discoveryProcess': 'တွေ့ရှိသောဖြစ်စဉ်', 'record.discoveryDate': 'တွေ့ရှိသောနေ့/အချိန်', 'record.comment': 'အခြေအနေမှတ်ချက်', 'record.corrective': 'ပြုပြင်ဆောင်ရွက်မှု', 'record.preventive': 'ကာကွယ်ရေးနည်းလမ်း',
+  'record.submit': '🔍 မှတ်ပုံတင်ပြီး AI ခန့်မှန်းရန်', 'record.submitting': 'မှတ်ပုံတင်ပြီး AI စစ်ဆေးနေသည်...',
+  'record.featureHint': 'လက္ခဏာများရွေးချယ်ခြင်းဖြင့် AI တိကျမှုတိုးသည်', 'record.normalPhoto': 'ပုံမှန်ဓာတ်ပုံ', 'record.microscopePhoto': 'မိုက်ခရိုစကုပ်ဓာတ်ပုံ', 'record.claimPhoto': 'တိုင်ကြားဓာတ်ပုံ',
+  'insp.deviceType': 'စစ်ဆေးကိရိယာအမျိုးအစား', 'insp.deviceInfo': 'ကိရိယာနှင့်လိုင်းသတင်း', 'insp.deviceName': 'ကိရိယာအမည်',
+  'insp.sensitivity': 'ထောက်လှမ်းနိုင်မှုစိတ်ကြည်ညိုမှု', 'insp.xrayThreshold': 'X-ray ခလုတ်ချက်', 'insp.productInfo': 'ထုတ်ကုန်သတင်း', 'insp.productName': 'ထုတ်ကုန်အမည်', 'insp.date': 'စစ်ဆေးသောနေ့', 'insp.inspector': 'စစ်ဆေးတာဝန်ခံ',
+  'insp.startCheck': 'အလုပ်စချိန် Test Piece စစ်ဆေးမှု', 'insp.endCheck': 'အလုပ်ပြီးချိန် Test Piece စစ်ဆေးမှု', 'insp.pass': 'အောင်', 'insp.fail': 'မအောင်', 'insp.checkTime': 'စစ်ဆေးချိန်', 'insp.detectCheck': 'ထောက်လှမ်းမှုအတည်ပြု',
+  'insp.rejectRecord': 'ငြင်းပယ်မှတ်တမ်း', 'insp.rejectCount': 'ငြင်းပယ်အရေအတွက်', 'insp.unit': 'ခု', 'insp.rejectDetails': 'ငြင်းပယ်အသေးစိတ်', 'insp.overallResult': 'အလုံးစုံရလဒ်', 'insp.saveBtn': '✅ စစ်ဆေးမှတ်တမ်းသိမ်းဆည်း',
+  'insp.totalReject': 'ငြင်းပယ်မှုစုစုပေါင်း', 'insp.allDevices': 'ကိရိယာအားလုံး', 'insp.allResults': 'ရလဒ်အားလုံး', 'insp.noRecords': 'စစ်ဆေးမှတ်တမ်းမရှိ', 'insp.firstRecord': 'ပထမဆုံးစစ်ဆေးမှတ်တမ်းမှတ်ပုံတင်ရန်', 'insp.noProductName': 'ထုတ်ကုန်အမည်မဖြည့်ထားသေး', 'insp.rejected': 'ငြင်းပယ်',
+  'list.pageTitle': 'ဖြစ်ရပ်စာရင်း', 'list.allStatus': 'အခြေအနေအားလုံး', 'list.allProcess': 'ဖြစ်စဉ်အားလုံး', 'list.noRecords': 'မှတ်တမ်းမရှိ', 'list.noFiltered': 'သတ်မှတ်ချက်နှင့်ကိုက်ညီသောမှတ်တမ်းမရှိ', 'list.showing': '{n}ခု ပြသနေသည်', 'list.aiSection': 'AI စစ်ဆေးမှတ်တမ်း', 'list.incidentSection': 'ဖြစ်ရပ်မှတ်တမ်း', 'list.uploading': 'တင်ပေးနေသည်...',
+  'report.title': 'လစဉ် / နှစ်စဉ်အစီရင်ခံစာ', 'report.print': '🖨️ ပုံနှိပ်', 'report.monthly': 'လစဉ်', 'report.yearly': 'နှစ်စဉ်', 'report.period': 'ကာလ',
+  'report.incidentSummary': 'ဖြစ်ရပ်အကျဉ်းချုပ်', 'report.total': 'စုစုပေါင်း', 'report.open': 'မကုသရသေး', 'report.closed': 'ပြီးဆုံး', 'report.internal': 'အတွင်းပိုင်းတွေ့ရှိ', 'report.external': 'ပြင်ပတိုင်ကြားချက်',
+  'report.categoryRanking': 'အမျိုးအစားအဆင့်', 'report.byProcess': 'ဖြစ်စဉ်အလိုက်', 'report.monthlyTrend': 'လစဉ်ကြောင်းကြောင်', 'report.inspSummary': 'စစ်ဆေးမှုအကျဉ်းချုပ်', 'report.totalInsp': 'စစ်ဆေးမှုစုစုပေါင်း', 'report.normal': 'ပုံမှန်', 'report.abnormal': 'မပုံမှန်', 'report.adjusted': 'ချိန်ညှိပြီး OK', 'report.abnormalRate': 'မပုံမှန်နှုန်း', 'report.noData': 'ဤကာလအတွက်ဒေတာမရှိ', 'report.printTitle': 'အစားအသောက်ဘေးကင်းရေးအစီရင်ခံစာ',
 }
 
 const th: Dict = {
@@ -646,6 +827,23 @@ const th: Dict = {
   'qr.download': 'บันทึก QR Code',
   'qr.share': 'คัดลอก URL',
   'disclaimer': 'ระบบวิเคราะห์เบื้องต้น AI การวิเคราะห์สุดท้ายต้องใช้หน่วยงานภายนอก',
+  'lock.tap': 'แตะหน้าจอเพื่อปลดล็อก',
+  'common.note': 'หมายเหตุ', 'common.comment': 'ความคิดเห็น', 'common.new': 'ใหม่', 'common.clear': 'ล้าง', 'common.saving': 'กำลังบันทึก...', 'common.next': 'ถัดไป',
+  'record.step.product': 'ข้อมูลสินค้า', 'record.step.photo': 'รูปภาพ', 'record.step.features': 'คุณลักษณะ', 'record.step.detail': 'รายละเอียด',
+  'record.occurrenceType': 'ประเภทการเกิดขึ้น', 'record.claimInfo': 'ข้อมูลการร้องเรียน', 'record.claimSource': 'แหล่งร้องเรียน', 'record.claimDate': 'วันที่รับเรื่องร้องเรียน', 'record.claimContent': 'เนื้อหาการร้องเรียน',
+  'record.scanQR': 'สแกน QR / บาร์โค้ด', 'record.productName': 'ชื่อสินค้า', 'record.lotNo': 'หมายเลขล็อต', 'record.mfgDate': 'วันที่ผลิต', 'record.expiryDate': 'วันหมดอายุ', 'record.lineNo': 'หมายเลขไลน์', 'record.factory': 'ชื่อโรงงาน', 'record.operator': 'ชื่อผู้รับผิดชอบ',
+  'record.claimRoute': 'ช่องทางการร้องเรียน', 'record.discoveryProcess': 'กระบวนการค้นพบ', 'record.discoveryDate': 'วันที่/เวลาค้นพบ', 'record.comment': 'หมายเหตุสถานการณ์', 'record.corrective': 'มาตรการแก้ไข', 'record.preventive': 'มาตรการป้องกัน',
+  'record.submit': '🔍 ลงทะเบียน & วิเคราะห์ AI', 'record.submitting': 'กำลังลงทะเบียนและวิเคราะห์...',
+  'record.featureHint': 'การเลือกคุณลักษณะเพิ่มความแม่นยำ AI', 'record.normalPhoto': 'ภาพถ่ายปกติ', 'record.microscopePhoto': 'ภาพถ่ายกล้องจุลทรรศน์', 'record.claimPhoto': 'ภาพถ่ายการร้องเรียน',
+  'insp.deviceType': 'ประเภทอุปกรณ์', 'insp.deviceInfo': 'ข้อมูลอุปกรณ์และไลน์', 'insp.deviceName': 'ชื่ออุปกรณ์',
+  'insp.sensitivity': 'ค่าความไวในการตรวจจับ', 'insp.xrayThreshold': 'ค่าขีดจำกัด X-ray', 'insp.productInfo': 'ข้อมูลผลิตภัณฑ์', 'insp.productName': 'ชื่อผลิตภัณฑ์', 'insp.date': 'วันที่ตรวจสอบ', 'insp.inspector': 'ผู้รับผิดชอบตรวจสอบ',
+  'insp.startCheck': 'ตรวจสอบ Test Piece ก่อนเริ่มงาน', 'insp.endCheck': 'ตรวจสอบ Test Piece หลังงาน', 'insp.pass': 'ผ่าน', 'insp.fail': 'ไม่ผ่าน', 'insp.checkTime': 'เวลาตรวจสอบ', 'insp.detectCheck': 'ยืนยันการตรวจจับ',
+  'insp.rejectRecord': 'บันทึกการปฏิเสธ', 'insp.rejectCount': 'จำนวนที่ถูกปฏิเสธ', 'insp.unit': 'ชิ้น', 'insp.rejectDetails': 'รายละเอียดการปฏิเสธ', 'insp.overallResult': 'ผลลัพธ์รวม', 'insp.saveBtn': '✅ บันทึกการตรวจสอบ',
+  'insp.totalReject': 'ปฏิเสธสะสม', 'insp.allDevices': 'อุปกรณ์ทั้งหมด', 'insp.allResults': 'ผลลัพธ์ทั้งหมด', 'insp.noRecords': 'ไม่มีบันทึกการตรวจสอบ', 'insp.firstRecord': 'ลงทะเบียนบันทึกการตรวจสอบแรก', 'insp.noProductName': 'ยังไม่ได้กรอกชื่อผลิตภัณฑ์', 'insp.rejected': 'ปฏิเสธ',
+  'list.pageTitle': 'รายการเหตุการณ์', 'list.allStatus': 'ทุกสถานะ', 'list.allProcess': 'ทุกกระบวนการ', 'list.noRecords': 'ไม่มีบันทึก', 'list.noFiltered': 'ไม่มีบันทึกที่ตรงเงื่อนไข', 'list.showing': 'แสดง {n}', 'list.aiSection': 'บันทึกวิเคราะห์ AI', 'list.incidentSection': 'บันทึกเหตุการณ์', 'list.uploading': 'กำลังอัปโหลด...',
+  'report.title': 'รายงานรายเดือน / รายปี', 'report.print': '🖨️ พิมพ์', 'report.monthly': 'รายเดือน', 'report.yearly': 'รายปี', 'report.period': 'ช่วงเวลา',
+  'report.incidentSummary': 'สรุปเหตุการณ์', 'report.total': 'ทั้งหมด', 'report.open': 'ยังไม่ได้จัดการ', 'report.closed': 'เสร็จสิ้น', 'report.internal': 'พบภายใน', 'report.external': 'การร้องเรียนจากภายนอก',
+  'report.categoryRanking': 'อันดับประเภท', 'report.byProcess': 'แยกตามกระบวนการ', 'report.monthlyTrend': 'แนวโน้มรายเดือน', 'report.inspSummary': 'สรุปการตรวจสอบ', 'report.totalInsp': 'ตรวจสอบทั้งหมด', 'report.normal': 'ปกติ', 'report.abnormal': 'ผิดปกติ', 'report.adjusted': 'ปรับแล้ว OK', 'report.abnormalRate': 'อัตราผิดปกติ', 'report.noData': 'ไม่มีข้อมูลในช่วงนี้', 'report.printTitle': 'รายงานสรุปความปลอดภัยอาหาร',
 }
 
 const TRANSLATIONS: Record<LangCode, Dict> = { ja, en, zh, ko, vi, id, ne, km, my, th }
