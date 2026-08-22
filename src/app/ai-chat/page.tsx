@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Navigation from '@/components/Navigation'
 import { useLang } from '@/context/LanguageContext'
+import ImageEnhancer from '@/components/ImageEnhancer'
+import ForeignMatterVisualizer from '@/components/ForeignMatterVisualizer'
+import ComparisonPanel from '@/components/ComparisonPanel'
 import toast from 'react-hot-toast'
 
 interface AnalysisResult {
@@ -133,7 +136,7 @@ function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (tex
         {msg.searchResult && (
           <div className="mt-2 rounded-xl border border-blue-200 bg-blue-50 p-3">
             <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide mb-2">{t('aichat.searchResult')}</p>
-            <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap line-clamp-4">
+            <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap">
               {msg.searchResult.result}
             </div>
           </div>
@@ -143,7 +146,7 @@ function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (tex
         {msg.imageAnalysis && (
           <div className="mt-2 rounded-xl border border-orange-200 bg-orange-50 p-3">
             <p className="text-[10px] font-semibold text-orange-700 uppercase tracking-wide mb-2">{t('aichat.imageAnalysis')}</p>
-            <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap line-clamp-6">
+            <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap">
               {msg.imageAnalysis.result}
             </div>
           </div>
@@ -196,7 +199,11 @@ export default function AiChatPage() {
   const [loading, setLoading] = useState(false)
   const [imageBase64, setImageBase64] = useState<string | null>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [imageOriginalDataUrl, setImageOriginalDataUrl] = useState<string | null>(null)
+  const [imageEnhancedDataUrl, setImageEnhancedDataUrl] = useState<string | null>(null)
   const [mimeType, setMimeType] = useState('image/jpeg')
+  const [visualizerDataUrl, setVisualizerDataUrl] = useState<string | null>(null)
+  const [showVisualizer, setShowVisualizer] = useState(false)
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
@@ -204,7 +211,10 @@ export default function AiChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
 
-  const QUICK_SUGGESTIONS = ['チョウバエ', 'カツオブシムシ', 'コクゾウムシ', '金属片', 'プラスチック片', '毛髪']
+  const QUICK_SUGGESTIONS = [
+    '虫類', '金属片', '針金・金属線', 'プラスチック片', 'ゴム片',
+    'ガラス片', '毛髪・体毛', '骨片', '木片・紙片', '種・核', '植物片',
+  ]
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -242,9 +252,10 @@ export default function AiChatPage() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
-      // data:image/jpeg;base64,XXXX → XXXX の部分だけ抽出
-      const base64 = result.split(',')[1];
-      setImageBase64(base64);
+      setImageOriginalDataUrl(result);
+      setVisualizerDataUrl(result);  // persists after analysis for visualizer
+      // fallback: raw base64 until ImageEnhancer calls onEnhanced
+      setImageBase64(result.split(',')[1]);
     };
     reader.readAsDataURL(file);
   }, [])
@@ -254,6 +265,11 @@ export default function AiChatPage() {
     if (file) handleImage(file)
     e.target.value = ''
   }, [handleImage])
+
+  const handleEnhanced = useCallback((base64: string, dataUrl: string) => {
+    setImageBase64(base64)
+    setImageEnhancedDataUrl(dataUrl)
+  }, [])
 
   const handleClaudeSearch = useCallback(async () => {
     const query = searchQuery.trim();
@@ -350,6 +366,8 @@ export default function AiChatPage() {
       setMessages((prev) => [...prev, analysisMsg]);
       setImageBase64(null);
       setImageUrl(null);
+      setImageOriginalDataUrl(null);
+      setImageEnhancedDataUrl(null);
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
@@ -433,6 +451,8 @@ export default function AiChatPage() {
       // 最初の解析後、画像は保持しつつ新規メッセージでは送らない
       if (isFirstMessage) {
         setImageBase64(null)
+        setImageOriginalDataUrl(null)
+        setImageEnhancedDataUrl(null)
       }
     } catch {
       toast.error(t('toast.networkError'))
@@ -544,6 +564,10 @@ export default function AiChatPage() {
     }])
     setImageBase64(null)
     setImageUrl(null)
+    setImageOriginalDataUrl(null)
+    setImageEnhancedDataUrl(null)
+    setVisualizerDataUrl(null)
+    setShowVisualizer(false)
     setInput('')
   }, [t])
 
@@ -569,6 +593,15 @@ export default function AiChatPage() {
           <div className="flex items-center gap-2">
             {hasAnalysis && (
               <>
+                {visualizerDataUrl && (
+                  <button
+                    onClick={() => setShowVisualizer(true)}
+                    className="text-xs px-3 py-1.5 bg-teal-600 text-white rounded-lg font-medium active:scale-95 transition-all shadow-sm"
+                    title="異物ビジュアライザーで開く"
+                  >
+                    🔬
+                  </button>
+                )}
                 <button
                   onClick={handlePrint}
                   className="text-xs px-3 py-1.5 bg-gray-500 text-white rounded-lg font-medium active:scale-95 transition-all shadow-sm"
@@ -664,14 +697,24 @@ export default function AiChatPage() {
                 <span>📸</span> {t('aichat.photoReady')}
               </p>
               <button
-                onClick={() => { setImageUrl(null); setImageBase64(null) }}
+                onClick={() => { setImageUrl(null); setImageBase64(null); setImageOriginalDataUrl(null); setImageEnhancedDataUrl(null) }}
                 className="text-[10px] text-gray-400 hover:text-red-400"
               >
                 {t('aichat.deletePhoto')}
               </button>
             </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt="異物写真" className="w-full max-h-52 object-contain rounded-xl bg-gray-50 mb-2" />
+            {imageOriginalDataUrl && (
+              <ImageEnhancer
+                imageDataUrl={imageOriginalDataUrl}
+                onEnhanced={handleEnhanced}
+              />
+            )}
+            {imageOriginalDataUrl && (
+              <ComparisonPanel
+                originalDataUrl={imageOriginalDataUrl}
+                enhancedDataUrl={imageEnhancedDataUrl}
+              />
+            )}
             <button
               onClick={() => handleImageUploadAnalysis(new File([imageBase64!], 'image.jpg', { type: mimeType }))}
               disabled={loading}
@@ -740,6 +783,27 @@ export default function AiChatPage() {
       />
 
       <Navigation />
+
+      {/* Forensic visualizer modal */}
+      {showVisualizer && visualizerDataUrl && (
+        <div
+          className="fixed inset-0 z-[300] bg-black/85 flex items-start justify-center overflow-y-auto p-3"
+          onClick={e => { if (e.target === e.currentTarget) setShowVisualizer(false) }}
+        >
+          <div className="w-full max-w-2xl my-4">
+            <div className="flex items-center justify-between px-3 py-2 bg-gray-950 rounded-t-2xl border border-b-0 border-gray-700">
+              <span className="text-xs font-bold text-[#6dd39b] font-mono tracking-wider">🔬 異物ビジュアライザー</span>
+              <button
+                onClick={() => setShowVisualizer(false)}
+                className="text-gray-400 hover:text-white text-sm px-2 py-0.5 rounded transition-colors"
+              >
+                ✕ 閉じる
+              </button>
+            </div>
+            <ForeignMatterVisualizer imageDataUrl={visualizerDataUrl} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
