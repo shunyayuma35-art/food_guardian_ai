@@ -22,6 +22,7 @@ import QRScanner from '@/components/QRScanner'
 import PhotoUpload from '@/components/PhotoUpload'
 import FeatureChecklistComponent from '@/components/FeatureChecklist'
 import UsageGuide from '@/components/UsageGuide'
+import ForensicEnhancer from '@/components/ForensicEnhancer'
 import toast from 'react-hot-toast'
 
 const STEP_ICONS = ['📦', '📸', '🔍', '📝']
@@ -56,6 +57,97 @@ export default function RecordPage() {
   const [photos, setPhotos] = useState<File[]>([])
   const [microscopePhotos, setMicroscopePhotos] = useState<File[]>([])
   const [features, setFeatures] = useState(createEmptyFeatures())
+
+  interface AiQuickResult {
+    name: string
+    category: string
+    confidence: string
+    urgency: 'high' | 'medium' | 'low'
+    size_estimate?: string
+    color?: string[]
+    shape?: string[]
+    magnet?: string
+    route?: string[]
+    action?: string
+    colorKeys?: string[]
+    textureKeys?: string[]
+    appearanceKeys?: string[]
+    sizeKey?: string
+  }
+
+  const [aiQuickResult, setAiQuickResult] = useState<AiQuickResult | null>(null)
+  const [aiEstimating, setAiEstimating] = useState(false)
+
+  // 異物写真がアップロードされたら自動でAI即時判定
+  useEffect(() => {
+    const file = photos[0]
+    if (!file) { setAiQuickResult(null); return }
+
+    let cancelled = false
+    setAiEstimating(true)
+    setAiQuickResult(null)
+
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const dataUrl = e.target?.result as string
+      if (!dataUrl || cancelled) return
+      const base64 = dataUrl.split(',')[1]
+      const mediaType = file.type || 'image/jpeg'
+
+      try {
+        const res = await fetch('/api/analyze-foreign-matter', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64, mediaType, structured: true }),
+        })
+        if (cancelled) return
+        if (res.status === 429) return // 上限超過は静かに無視
+        const data = await res.json()
+        if (!res.ok) return
+        if (data.quickResult) {
+          if (!cancelled) setAiQuickResult(data.quickResult as AiQuickResult)
+        }
+      } catch {
+        // ネットワークエラーは静かに無視
+      } finally {
+        if (!cancelled) setAiEstimating(false)
+      }
+    }
+    reader.readAsDataURL(file)
+
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photos[0]?.name, photos[0]?.size])
+
+  function applyAIToFeatures() {
+    if (!aiQuickResult) return
+    setFeatures(prev => {
+      const next = {
+        texture:  { ...prev.texture },
+        appearance: { ...prev.appearance },
+        color:    { ...prev.color },
+        smell:    { ...prev.smell },
+        waterTest: { ...prev.waterTest },
+        size:     { ...prev.size },
+        magnetTest: { ...prev.magnetTest },
+        weight:   { ...prev.weight },
+      }
+      aiQuickResult.colorKeys?.forEach(k => { if (k in next.color) (next.color as Record<string, boolean>)[k] = true })
+      aiQuickResult.textureKeys?.forEach(k => { if (k in next.texture) (next.texture as Record<string, boolean>)[k] = true })
+      aiQuickResult.appearanceKeys?.forEach(k => { if (k in next.appearance) (next.appearance as Record<string, boolean>)[k] = true })
+      if (aiQuickResult.sizeKey && aiQuickResult.sizeKey in next.size) {
+        (next.size as Record<string, boolean>)[aiQuickResult.sizeKey] = true
+      }
+      // 磁石反応の自動入力
+      if (aiQuickResult.magnet === '磁石につく') {
+        next.magnetTest.sticks = true; next.magnetTest.notTested = false
+      } else if (aiQuickResult.magnet === '磁石につかない') {
+        next.magnetTest.noStick = true; next.magnetTest.notTested = false
+      }
+      return next
+    })
+    toast.success('✅ 特徴チェックにAI推定を反映しました')
+  }
 
   const [discoveryProcess, setDiscoveryProcess] = useState<DiscoveryProcess>('after_packaging')
   const [discoveryDate, setDiscoveryDate] = useState(() => new Date().toISOString().slice(0, 16))
@@ -322,8 +414,109 @@ export default function RecordPage() {
             )}
 
             <PhotoUpload label={t('record.normalPhoto')} photos={photos} onChange={setPhotos} icon="📸" />
+
+            {/* ── AI即時判定カード ── */}
+            {aiEstimating && (
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl text-sm text-orange-600 font-semibold">
+                <span className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin shrink-0" />
+                🔍 AI解析中...
+              </div>
+            )}
+            {aiQuickResult && !aiEstimating && (() => {
+              const urgencyMap = {
+                high:   { label: '🔴 高', bg: 'bg-red-50',    border: 'border-red-300',    text: 'text-red-700' },
+                medium: { label: '🟡 中', bg: 'bg-amber-50',  border: 'border-amber-300',  text: 'text-amber-700' },
+                low:    { label: '🟢 低', bg: 'bg-green-50',  border: 'border-green-300',  text: 'text-green-700' },
+              }
+              const u = urgencyMap[aiQuickResult.urgency] ?? urgencyMap.medium
+              return (
+                <div className={`rounded-2xl border-2 ${u.border} ${u.bg} p-4 space-y-3 shadow-sm`}>
+                  {/* ヘッダー */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-500 tracking-wide">🤖 AI即時判定</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-white border ${u.border} ${u.text}`}>
+                      {u.label}
+                    </span>
+                  </div>
+
+                  {/* 異物名 */}
+                  <div>
+                    <p className={`text-lg font-extrabold ${u.text} leading-tight`}>
+                      {aiQuickResult.name}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-0.5">
+                      <span className="font-semibold">{aiQuickResult.category}</span>
+                      　信頼度：<span className="font-bold">{aiQuickResult.confidence}</span>
+                    </p>
+                  </div>
+
+                  {/* サイズ・緊急度 */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white/70 rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-gray-400 font-semibold mb-0.5">📏 サイズ推定</p>
+                      <p className="text-sm font-bold text-gray-800">{aiQuickResult.size_estimate || '不明'}</p>
+                    </div>
+                    <div className="bg-white/70 rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-gray-400 font-semibold mb-0.5">🚨 緊急度</p>
+                      <p className={`text-sm font-bold ${u.text}`}>{u.label}</p>
+                    </div>
+                  </div>
+
+                  {/* 混入経路 */}
+                  {aiQuickResult.route && aiQuickResult.route.length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-gray-400 font-semibold mb-1">🔍 推定混入経路</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {aiQuickResult.route.map((r, i) => (
+                          <span key={i} className="text-xs bg-white border border-gray-200 text-gray-700 rounded-full px-2.5 py-0.5 font-medium">
+                            {r}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 磁石反応 */}
+                  {aiQuickResult.magnet && aiQuickResult.magnet !== '不明' && (
+                    <p className="text-xs text-gray-600">🧲 {aiQuickResult.magnet}</p>
+                  )}
+
+                  {/* 推奨対応 */}
+                  {aiQuickResult.action && (
+                    <div className="bg-white/70 rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-gray-400 font-semibold mb-0.5">⚡ 推奨対応</p>
+                      <p className="text-xs text-gray-700 font-medium">{aiQuickResult.action}</p>
+                    </div>
+                  )}
+
+                  {/* 特徴を自動入力ボタン */}
+                  <button
+                    type="button"
+                    onClick={applyAIToFeatures}
+                    className="w-full py-2 text-xs font-bold text-white bg-orange-500 rounded-xl hover:bg-orange-600 active:scale-95 transition-all"
+                  >
+                    ✅ 異物特徴チェックにAI推定を自動入力
+                  </button>
+
+                  <p className="text-[9px] text-gray-400 text-center">
+                    ⚠️ 確定診断には外部専門機関の鑑定が必要です
+                  </p>
+                </div>
+              )
+            })()}
+
+            {/* 鑑識画像解析 – 異物写真がある場合に表示 */}
+            {photos.length > 0 && (
+              <ForensicEnhancer file={photos[0]} />
+            )}
+
             <div className="border-t border-orange-100" />
             <PhotoUpload label={t('record.microscopePhoto')} photos={microscopePhotos} onChange={setMicroscopePhotos} icon="🔬" />
+
+            {/* 顕微鏡写真の鑑識解析 */}
+            {microscopePhotos.length > 0 && (
+              <ForensicEnhancer file={microscopePhotos[0]} />
+            )}
           </div>
         )}
 

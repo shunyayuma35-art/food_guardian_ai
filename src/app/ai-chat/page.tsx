@@ -207,6 +207,9 @@ export default function AiChatPage() {
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
+  const [usageRemaining, setUsageRemaining] = useState<number | null>(null)
+  const [userHint, setUserHint] = useState('')
+  const [showLimitModal, setShowLimitModal] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
@@ -340,6 +343,7 @@ export default function AiChatPage() {
         body: JSON.stringify({
           imageBase64,
           mediaType: mimeType,
+          userHint: userHint.trim() || undefined,
         }),
         signal: AbortSignal.timeout(30000), // 30秒でAPI呼び出しをキャンセル
       });
@@ -348,11 +352,19 @@ export default function AiChatPage() {
 
       const data = await res.json();
 
+      if (res.status === 429) {
+        setShowLimitModal(true)
+        setLoading(false)
+        return
+      }
+
       if (!res.ok || data.error) {
         toast.error(data.error ?? t('toast.analysisFailed'));
         setLoading(false);
         return;
       }
+
+      if (data.remaining !== undefined) setUsageRemaining(data.remaining)
 
       const analysisMsg: Message = {
         id: Date.now().toString(),
@@ -378,7 +390,7 @@ export default function AiChatPage() {
     } finally {
       setLoading(false);
     }
-  }, [imageBase64, imageUrl, mimeType])
+  }, [imageBase64, imageUrl, mimeType, userHint])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -425,16 +437,25 @@ export default function AiChatPage() {
           messages: chatHistoryRef.current,
           imageBase64: isFirstMessage ? imageBase64 : undefined,
           mimeType,
+          userHint: isFirstMessage && userHint.trim() ? userHint.trim() : undefined,
         }),
       })
 
       const data = await res.json()
+
+      if (res.status === 429) {
+        setShowLimitModal(true)
+        setLoading(false)
+        return
+      }
 
       if (!res.ok || data.error) {
         toast.error(data.error ?? t('toast.aiFailed'))
         setLoading(false)
         return
       }
+
+      if (data.remaining !== undefined) setUsageRemaining(data.remaining)
 
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -459,7 +480,7 @@ export default function AiChatPage() {
     } finally {
       setLoading(false)
     }
-  }, [input, imageBase64, imageUrl, mimeType, loading])
+  }, [input, imageBase64, imageUrl, mimeType, loading, userHint])
 
   const handleQuickReply = useCallback((text: string) => {
     sendMessage(text)
@@ -715,6 +736,19 @@ export default function AiChatPage() {
                 enhancedDataUrl={imageEnhancedDataUrl}
               />
             )}
+            {/* 心当たり入力欄 */}
+            <div className="mb-2">
+              <label className="block text-[10px] font-semibold text-gray-500 mb-1">
+                💡 異物の心当たり（任意）
+              </label>
+              <input
+                type="text"
+                value={userHint}
+                onChange={e => setUserHint(e.target.value)}
+                placeholder="例：赤いパレットの破片の可能性あり"
+                className="w-full text-xs px-3 py-2 rounded-xl border border-orange-200 bg-orange-50/50 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:bg-white transition-all placeholder:text-gray-300"
+              />
+            </div>
             <button
               onClick={() => handleImageUploadAnalysis(new File([imageBase64!], 'image.jpg', { type: mimeType }))}
               disabled={loading}
@@ -722,6 +756,11 @@ export default function AiChatPage() {
             >
               {loading ? t('aichat.analyzing') : t('aichat.analyzeBtn')}
             </button>
+            {usageRemaining !== null && (
+              <p className="text-[10px] text-gray-400 text-center mt-1">
+                今月残り {usageRemaining} 回（無料枠）
+              </p>
+            )}
           </div>
         )}
 
@@ -783,6 +822,46 @@ export default function AiChatPage() {
       />
 
       <Navigation />
+
+      {/* 使用制限モーダル */}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-[400] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div className="text-5xl text-center">🔒</div>
+            <h2 className="text-base font-bold text-center text-gray-800">今月の無料解析上限に達しました</h2>
+            <p className="text-sm text-gray-600 text-center leading-relaxed">
+              無料プランは月3回まで利用できます。<br />
+              お問い合わせはXまたはnoteの<br />
+              <span className="font-bold text-orange-600">@hapifoodlab</span> までご連絡ください。
+            </p>
+            <div className="flex gap-2">
+              <a
+                href="https://x.com/hapifoodlab"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 text-center text-sm font-bold text-white bg-gray-900 rounded-xl hover:bg-gray-700 transition-colors"
+              >
+                𝕏 フォロー・DM
+              </a>
+              <a
+                href="https://note.com/hapifoodlab"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 text-center text-sm font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors"
+              >
+                📝 note
+              </a>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLimitModal(false)}
+              className="block w-full py-2 text-center text-sm text-gray-400 hover:text-gray-600"
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Forensic visualizer modal */}
       {showVisualizer && visualizerDataUrl && (

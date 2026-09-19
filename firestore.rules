@@ -15,19 +15,35 @@ service cloud.firestore {
              request.auth.uid == request.resource.data.createdBy;
     }
 
+    // 異物インシデント
     match /incidents/{docId} {
       allow read, update, delete: if isOwner(resource.data);
       allow create: if isAuthenticated() && isCreator();
     }
 
+    // 異物検査記録
+    match /inspections/{docId} {
+      allow read, update, delete: if isOwner(resource.data);
+      allow create: if isAuthenticated() && isCreator();
+    }
+
+    // 官能評価
     match /sensory_evaluations/{docId} {
       allow read, update, delete: if isOwner(resource.data);
       allow create: if isAuthenticated() && isCreator();
     }
 
+    // 報告書
     match /reports/{docId} {
       allow read, update, delete: if isOwner(resource.data);
       allow create: if isAuthenticated() && isCreator();
+    }
+
+    // マスタデータ（品名・仕入先など）— 認証済みユーザー全員が読み書き可
+    // 将来的にテナント分離が必要になれば companyId を追加すること
+    match /masters/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
   }
 }

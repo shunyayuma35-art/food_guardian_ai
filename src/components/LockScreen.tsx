@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
 import FoodEyeLogo from './FoodEyeLogo'
@@ -12,10 +13,12 @@ const LOCALE_MAP: Record<string, string> = {
 }
 
 export default function LockScreen() {
+  const pathname = usePathname()
   const { locked, unlock } = useAuth()
   const { lang, t } = useLang()
   const [now, setNow] = useState<Date | null>(null)
   const [unlocking, setUnlocking] = useState(false)
+  const triggeredRef = useRef(false)
 
   useEffect(() => {
     setNow(new Date())
@@ -23,15 +26,16 @@ export default function LockScreen() {
     return () => clearInterval(id)
   }, [])
 
-  if (!locked) return null
+  if (!locked || pathname === '/demo-login') return null
 
   const locale = LOCALE_MAP[lang] ?? 'ja-JP'
   const timeStr = now?.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false }) ?? '--:--'
   const dateStr = now?.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }) ?? ''
 
   function handleUnlock() {
+    if (triggeredRef.current) return
+    triggeredRef.current = true
     setUnlocking(true)
-    setTimeout(unlock, 280)
   }
 
   return (
@@ -39,11 +43,10 @@ export default function LockScreen() {
       className={`fixed inset-0 z-[9999] flex flex-col overflow-hidden select-none cursor-pointer transition-opacity duration-300 ${
         unlocking ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
-      style={{
-        touchAction: 'none',
-        background: 'linear-gradient(160deg, #fff7e0 0%, #ffeec2 35%, #ffe3cf 70%, #fff3e8 100%)',
-      }}
+      style={{ background: 'linear-gradient(160deg, #fff7e0 0%, #ffeec2 35%, #ffe3cf 70%, #fff3e8 100%)' }}
       onClick={handleUnlock}
+      onTouchEnd={(e) => { e.preventDefault(); handleUnlock() }}
+      onTransitionEnd={() => { if (triggeredRef.current) unlock() }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleUnlock() }}
       role="button"
       tabIndex={0}
@@ -64,6 +67,7 @@ export default function LockScreen() {
       <div
         className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20"
         onClick={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
       >
         <LanguageSelector />
       </div>
