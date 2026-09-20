@@ -1,0 +1,16 @@
+.gcloudignore
+.git
+.gitignore
+node_modules/
+.next/
+out/
+dist/
+electron/
+.env.local
+.env*.local
+.vercel/
+public/uploads/
+data/
+npm-debug.log*
+yarn-debug.log*
+*.tsbuildinfo

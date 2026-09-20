@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+dist
+electron
+.env.local
+.env*.local
+.vercel
+public/uploads
+data
+.git
+npm-debug.log*
+yarn-debug.log*
+*.tsbuildinfo
