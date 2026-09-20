@@ -1,7 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
-const client = new Anthropic();
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const VALID_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -190,6 +189,7 @@ const FOREIGN_MATTER_DB = `## 食品異物データベース
 🟢 低（記録のみ）：添加物かたまり・自社原料由来`
 
 export async function POST(req: NextRequest) {
+  const client = new Anthropic();
   const usage = parseUsage(req.cookies.get(USAGE_COOKIE)?.value)
   if (usage.count >= MAX_MONTHLY) {
     return NextResponse.json(

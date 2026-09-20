@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 // Claude APIの解析結果をincidentsテーブルに自動保存するエンドポイント
 // 使用例: POST /api/claude-save
@@ -22,7 +22,8 @@ export async function POST(req: NextRequest) {
       ...(source ? { source } : {}),
     }
 
-    const { data, error } = await supabaseAdmin
+    const db = getSupabaseAdmin()
+    const { data, error } = await db
       .from('incidents')
       .insert([record])
       .select()
@@ -39,7 +40,8 @@ export async function POST(req: NextRequest) {
 // 保存済み記録の一覧取得
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
+    const db = getSupabaseAdmin()
+    const { data, error } = await db
       .from('incidents')
       .select('*')
       .order('created_at', { ascending: false })

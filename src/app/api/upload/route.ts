@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,13 +14,14 @@ export async function POST(req: NextRequest) {
     const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
     const safeName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
 
-    const { error: uploadError } = await supabaseAdmin.storage
+    const db = getSupabaseAdmin()
+    const { error: uploadError } = await db.storage
       .from('incident-images')
       .upload(safeName, buffer, { contentType: file.type, upsert: false })
 
     if (uploadError) throw uploadError
 
-    const { data: { publicUrl } } = supabaseAdmin.storage
+    const { data: { publicUrl } } = db.storage
       .from('incident-images')
       .getPublicUrl(safeName)
 
