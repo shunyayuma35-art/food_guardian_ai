@@ -109,7 +109,7 @@ function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (tex
           <span className="text-white text-xs font-bold">AI</span>
         </div>
       )}
-      <div className={`max-w-[85%] ${isAI ? '' : ''}`}>
+      <div className={`${msg.imageAnalysis ? 'w-full' : 'max-w-[85%]'}`}>
         {/* ユーザーが送った画像 */}
         {msg.imageUrl && (
           <div className="mb-2 rounded-xl overflow-hidden border-2 border-orange-200 shadow-sm">
@@ -142,11 +142,11 @@ function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (tex
           </div>
         )}
 
-        {/* 画像解析結果 */}
+        {/* 画像解析結果（スマホ全幅・text-sm で読みやすく） */}
         {msg.imageAnalysis && (
           <div className="mt-2 rounded-xl border border-orange-200 bg-orange-50 p-3">
             <p className="text-[10px] font-semibold text-orange-700 uppercase tracking-wide mb-2">{t('aichat.imageAnalysis')}</p>
-            <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap">
+            <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
               {msg.imageAnalysis.result}
             </div>
           </div>
@@ -210,6 +210,7 @@ export default function AiChatPage() {
   const [usageRemaining, setUsageRemaining] = useState<number | null>(null)
   const [userHint, setUserHint] = useState('')
   const [showLimitModal, setShowLimitModal] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
@@ -369,7 +370,7 @@ export default function AiChatPage() {
       const analysisMsg: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: data.result ?? '',
+        content: '',          // カード側(imageAnalysis)にのみ表示するため空に
         imageAnalysis: data,
         imageUrl: imageUrl ?? undefined,
         timestamp: new Date(),
@@ -661,54 +662,59 @@ export default function AiChatPage() {
 
       {/* 入力エリア */}
       <div className="bg-white border-t border-gray-100 px-3 pt-2 pb-[calc(theme(spacing.16)+env(safe-area-inset-bottom,0px)+8px)] max-w-2xl w-full mx-auto space-y-3">
-        {/* Claude 検索セクション */}
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 space-y-2">
-          <p className="text-xs font-semibold text-blue-700">{t('aichat.searchSection')}</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleClaudeSearch()}
-              placeholder="キーワードを入力..."
-              className="flex-1 bg-white rounded-lg px-3 py-2 text-xs border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
-              disabled={searchLoading}
-            />
-            <button
-              onClick={handleClaudeSearch}
-              disabled={searchLoading || !searchQuery.trim()}
-              className="px-3 py-2 bg-blue-500 text-white text-xs font-medium rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {searchLoading ? t('aichat.searching') : t('aichat.searchBtn')}
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {QUICK_SUGGESTIONS.map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => {
-                  setSearchQuery(suggestion)
-                }}
-                className="text-[10px] px-2 py-1 bg-white border border-blue-200 text-blue-600 rounded-full hover:bg-blue-50 active:scale-95 transition-all font-medium"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
+        {/* Claude 検索セクション（折りたたみ式・初期は閉じている） */}
+        <div className="bg-blue-50 border border-blue-200 rounded-2xl overflow-hidden">
+          <button
+            onClick={() => setShowSearch(v => !v)}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-blue-700 active:bg-blue-100 transition-colors"
+          >
+            <span>{t('aichat.searchSection')}</span>
+            <span className="text-blue-400 text-[10px]">{showSearch ? '▲ 閉じる' : '▼ 開く'}</span>
+          </button>
+          {showSearch && (
+            <div className="px-3 pb-3 space-y-2 border-t border-blue-200">
+              <div className="flex gap-2 pt-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleClaudeSearch()}
+                  placeholder="キーワードを入力..."
+                  className="flex-1 bg-white rounded-lg px-3 py-2 text-xs border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+                  disabled={searchLoading}
+                />
+                <button
+                  onClick={handleClaudeSearch}
+                  disabled={searchLoading || !searchQuery.trim()}
+                  className="px-3 py-2 bg-blue-500 text-white text-xs font-medium rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {searchLoading ? t('aichat.searching') : t('aichat.searchBtn')}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {QUICK_SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => setSearchQuery(suggestion)}
+                    className="text-[10px] px-2 py-1 bg-white border border-blue-200 text-blue-600 rounded-full hover:bg-blue-50 active:scale-95 transition-all font-medium"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 画像解析セクション */}
         {!imageBase64 && (
-          <div
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
+          <button
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-orange-200 rounded-2xl p-5 flex flex-col items-center gap-2 bg-orange-50/50 active:bg-orange-50 cursor-pointer transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-orange-300 rounded-xl text-sm font-medium text-orange-500 bg-orange-50/50 active:bg-orange-100 transition-colors"
           >
-            <span className="text-3xl">📷</span>
-            <p className="text-sm font-semibold text-orange-600">{t('aichat.addPhoto')}</p>
-            <p className="text-xs text-gray-400">{t('aichat.tapOrDrop')}</p>
-          </div>
+            <span>📷</span>
+            <span>{t('aichat.addPhoto')}</span>
+          </button>
         )}
 
         {imageUrl && (
