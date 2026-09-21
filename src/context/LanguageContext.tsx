@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import type { LangCode, TranslationKey } from '@/lib/i18n'
-import { t as translate } from '@/lib/i18n'
+import { t as translate, ENABLED_LANG_CODES } from '@/lib/i18n'
 
 interface LanguageContextType {
   lang: LangCode
@@ -21,7 +21,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('foodeye_lang') as LangCode | null
-    if (saved) setLangState(saved)
+    if (saved && ENABLED_LANG_CODES.includes(saved)) setLangState(saved)
   }, [])
 
   useEffect(() => {

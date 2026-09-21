@@ -13,6 +13,10 @@ export const LANGUAGES: { code: LangCode; name: string; flag: string }[] = [
   { code: 'th', name: 'ภาษาไทย',         flag: '🇹🇭' },
 ]
 
+/** メニューに表示する言語。ここを変えるだけで切替可能。辞書は削除しない。 */
+export const ENABLED_LANG_CODES: LangCode[] = ['ja', 'en']
+export const ENABLED_LANGUAGES = LANGUAGES.filter((l) => ENABLED_LANG_CODES.includes(l.code))
+
 export type TranslationKey =
   | 'nav.home' | 'nav.record' | 'nav.inspection' | 'nav.list' | 'nav.qr' | 'nav.ai'
   | 'login.start' | 'login.loading' | 'login.subtitle' | 'login.tap'

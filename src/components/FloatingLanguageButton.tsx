@@ -3,14 +3,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { useLang } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
-import { LANGUAGES } from '@/lib/i18n'
+import { ENABLED_LANGUAGES } from '@/lib/i18n'
 
 export default function FloatingLanguageButton() {
   const { lang, setLang, t } = useLang()
   const { lock } = useAuth()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0]
+  const current = ENABLED_LANGUAGES.find((l) => l.code === lang) ?? ENABLED_LANGUAGES[0]
 
   useEffect(() => {
     function onOutside(e: MouseEvent) {
@@ -29,7 +29,7 @@ export default function FloatingLanguageButton() {
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Language / 言語</p>
           </div>
           <div className="max-h-80 overflow-y-auto">
-            {LANGUAGES.map((l) => (
+            {ENABLED_LANGUAGES.map((l) => (
               <button
                 key={l.code}
                 type="button"
