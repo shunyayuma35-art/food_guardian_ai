@@ -12,7 +12,6 @@ import {
   createEmptyFeatures,
   DISCOVERY_PROCESS_LABELS,
   CLAIM_ROUTE_LABELS,
-  OCCURRENCE_TYPE_LABELS,
   type DiscoveryProcess,
   type OccurrenceType,
   type ClaimRoute,
@@ -308,7 +307,7 @@ export default function RecordPage() {
                       }`}
                     >
                       <div className="text-2xl mb-1">{cfg.icon}</div>
-                      <div>{OCCURRENCE_TYPE_LABELS[type]}</div>
+                      <div>{type === 'internal' ? t('record.occurrenceType.internal') : t('record.occurrenceType.external')}</div>
                       <p className={`text-[10px] mt-0.5 font-normal ${occurrenceType === type ? 'text-white/80' : 'text-gray-400'}`}>
                         {cfg.desc}
                       </p>

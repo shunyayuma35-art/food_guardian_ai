@@ -7,7 +7,7 @@ import { useLang } from '@/context/LanguageContext'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
-import { DEVICE_TYPE_LABELS, INSPECTION_RESULT_LABELS, type InspectionRecord, type DeviceType } from '@/lib/types'
+import { type InspectionRecord, type DeviceType } from '@/lib/types'
 import { listInspections } from '@/lib/firestore'
 
 const RESULT_BADGE: Record<string, string> = {
@@ -111,7 +111,7 @@ export default function InspectionListPage() {
                     : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300'
                 }`}
               >
-                {type === 'all' ? t('insp.allDevices') : DEVICE_TYPE_LABELS[type]}
+                {type === 'all' ? t('insp.allDevices') : type === 'metal_detector' ? t('insp.device.metalDetector') : t('insp.device.xray')}
               </button>
             ))}
             {(['all', 'pass', 'fail', 'adjusted'] as const).map((r) => (
@@ -122,7 +122,7 @@ export default function InspectionListPage() {
                     : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
                 }`}
               >
-                {r === 'all' ? t('insp.allResults') : INSPECTION_RESULT_LABELS[r]}
+                {r === 'all' ? t('insp.allResults') : r === 'pass' ? t('insp.result.pass') : r === 'fail' ? t('insp.result.fail') : t('insp.result.adjusted')}
               </button>
             ))}
           </div>
@@ -170,7 +170,7 @@ export default function InspectionListPage() {
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${RESULT_BADGE[rec.result]}`}>
-                      {INSPECTION_RESULT_LABELS[rec.result]}
+                      {rec.result === 'pass' ? t('insp.result.pass') : rec.result === 'fail' ? t('insp.result.fail') : t('insp.result.adjusted')}
                     </span>
                     <span className="text-[10px] text-gray-400">
                       {rec.startCheck.passed ? '✅始' : '❌始'} {rec.endCheck.passed ? '✅終' : '❌終'}

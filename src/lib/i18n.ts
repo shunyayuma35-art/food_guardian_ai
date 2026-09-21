@@ -131,6 +131,32 @@ export type TranslationKey =
   | 'home.alert.restoreOk' | 'home.alert.restoreFail' | 'home.confirm.restore'
   // list page
   | 'list.supabaseSaved' | 'list.photoAlt'
+  // qr page
+  | 'qr.pageTitle' | 'qr.pageSubtitle'
+  | 'qr.banner.desc'
+  | 'qr.cloud.status' | 'qr.cloud.desc'
+  | 'qr.local.status' | 'qr.local.pcIs' | 'qr.local.pcAt' | 'qr.local.restartGuide'
+  | 'qr.local.fixTitle' | 'qr.local.fix1' | 'qr.local.fix2' | 'qr.local.fix3'
+  | 'qr.wifi.status' | 'qr.wifi.serverIp' | 'qr.wifi.wifiDesc'
+  | 'qr.error.title' | 'qr.error.desc'
+  | 'qr.scan'
+  | 'qr.url.label' | 'qr.url.loading'
+  | 'qr.copy.btn' | 'qr.copy.done'
+  | 'qr.toast.copied'
+  | 'qr.guide.title'
+  | 'qr.guide.step1.title' | 'qr.guide.step1.desc'
+  | 'qr.guide.step2.title' | 'qr.guide.step2.desc'
+  | 'qr.guide.step3.title' | 'qr.guide.step3.desc'
+  | 'qr.guide.step4.title' | 'qr.guide.step4.desc'
+  | 'qr.guide.tip1' | 'qr.guide.tip2' | 'qr.guide.tip3'
+  | 'qr.phone.title'
+  | 'qr.phone.step1' | 'qr.phone.step2' | 'qr.phone.step3' | 'qr.phone.step4'
+  | 'qr.caution.title' | 'qr.caution.1' | 'qr.caution.2' | 'qr.caution.3'
+  // occurrence types (record page)
+  | 'record.occurrenceType.internal' | 'record.occurrenceType.external'
+  // device types and inspection results (inspection page)
+  | 'insp.device.metalDetector' | 'insp.device.xray'
+  | 'insp.result.pass' | 'insp.result.fail' | 'insp.result.adjusted'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -324,6 +350,61 @@ const ja: Dict = {
   // list
   'list.supabaseSaved': '（Supabase保存）',
   'list.photoAlt': '調査写真',
+  // qr page
+  'qr.pageTitle': 'QRコード共有',
+  'qr.pageSubtitle': 'スタッフのスマホ・タブレットに展開',
+  'qr.banner.desc': '同じ Wi-Fi のスマホ・タブレットから\nすぐにアクセスできます',
+  'qr.cloud.status': '✅ スマホ・タブレット・PC どこからでも接続できます',
+  'qr.cloud.desc': 'インターネット接続があれば、Wi-Fi不要でどの端末からでもアクセスできます。',
+  'qr.local.status': '⚠️ スマホから接続できない状態です',
+  'qr.local.pcIs': 'サーバーPCが',
+  'qr.local.pcAt': 'で認識されています。',
+  'qr.local.restartGuide': '下記の手順でサーバーを正しく起動してください。',
+  'qr.local.fixTitle': '【解決手順】',
+  'qr.local.fix1': '① 現在のサーバーを停止（Ctrl+C）',
+  'qr.local.fix2': '② FoodEye起動.bat をダブルクリック',
+  'qr.local.fix3': '③ 表示されたIPアドレスでQRを再生成',
+  'qr.wifi.status': '✅ スマホから接続できます',
+  'qr.wifi.serverIp': 'サーバーIP:',
+  'qr.wifi.wifiDesc': '同じ Wi-Fi に接続したすべての端末でアクセスできます。',
+  'qr.error.title': 'QRコードを生成できません',
+  'qr.error.desc': '上記の手順で再起動してください',
+  'qr.scan': 'カメラを向けてスキャン 📷',
+  'qr.url.label': 'アクセスURL（タップでコピー）',
+  'qr.url.loading': '取得中...',
+  'qr.copy.btn': 'コピー',
+  'qr.copy.done': '✓ コピー済',
+  'qr.toast.copied': 'URLをコピーしました 📋',
+  'qr.guide.title': '📖 QR共有・スマホ接続の手順',
+  'qr.guide.step1.title': 'スマホを同じWi-Fiに接続する',
+  'qr.guide.step1.desc': 'サーバーPCと同じWi-Fiネットワークにスマホ・タブレットを接続してください。別のネットワークでは接続できません。',
+  'qr.guide.step2.title': 'カメラでQRコードをスキャン',
+  'qr.guide.step2.desc': 'スマホの標準カメラアプリでQRコードを読み取ります。QRリーダーアプリは不要です。',
+  'qr.guide.step3.title': '表示されたリンクをタップ',
+  'qr.guide.step3.desc': '「http://10.x.x.x:3001」のようなURLが表示されます。タップするとFoodEyeが開きます。',
+  'qr.guide.step4.title': 'ブックマーク登録で次回から簡単に',
+  'qr.guide.step4.desc': 'ブラウザの「ブックマーク追加」でURLを保存しておくと、次回からQRスキャンなしでアクセスできます。',
+  'qr.guide.tip1': 'URLをコピーして社内グループLINEに貼り付けると全員に共有できます',
+  'qr.guide.tip2': 'QRコードを印刷して作業場の壁に貼っておくと現場での利用が便利です',
+  'qr.guide.tip3': 'サーバーPCを再起動するとIPアドレスが変わる場合があります。変わった場合はこの画面で新しいQRを確認してください',
+  'qr.phone.title': '📱 スマホでの使い方',
+  'qr.phone.step1': 'サーバーPC と同じ Wi-Fi に接続する',
+  'qr.phone.step2': 'スマホのカメラでQRコードをスキャン',
+  'qr.phone.step3': '表示されたリンクをタップ',
+  'qr.phone.step4': 'ログインして使い始める',
+  'qr.caution.title': '⚠️ 注意事項',
+  'qr.caution.1': 'スマホとサーバーPCが同じ Wi-Fi に接続していること',
+  'qr.caution.2': 'サーバーPCのファイアウォールでポート3001を開放済みであること',
+  'qr.caution.3': 'サーバーPCがスリープしていないこと',
+  // occurrence types
+  'record.occurrenceType.internal': '社内発見',
+  'record.occurrenceType.external': '外部クレーム',
+  // device types and inspection results
+  'insp.device.metalDetector': '金属探知機',
+  'insp.device.xray': 'X線検査機',
+  'insp.result.pass': '正常',
+  'insp.result.fail': '異常',
+  'insp.result.adjusted': '調整後OK',
 }
 
 const en: Dict = {
@@ -516,6 +597,61 @@ const en: Dict = {
   // list
   'list.supabaseSaved': '(Supabase)',
   'list.photoAlt': 'Investigation photo',
+  // qr page
+  'qr.pageTitle': 'QR Code Share',
+  'qr.pageSubtitle': 'Deploy to staff smartphones & tablets',
+  'qr.banner.desc': 'Access instantly from smartphones\n& tablets on the same Wi-Fi',
+  'qr.cloud.status': '✅ Accessible from anywhere — phone, tablet, or PC',
+  'qr.cloud.desc': 'Any device with an internet connection can access — no Wi-Fi required.',
+  'qr.local.status': '⚠️ Cannot connect from smartphone',
+  'qr.local.pcIs': 'Server PC is recognized as',
+  'qr.local.pcAt': '.',
+  'qr.local.restartGuide': 'Please restart the server with the correct settings.',
+  'qr.local.fixTitle': '[Fix Steps]',
+  'qr.local.fix1': '① Stop the current server (Ctrl+C)',
+  'qr.local.fix2': '② Double-click FoodEye起動.bat',
+  'qr.local.fix3': '③ Regenerate QR with the displayed IP address',
+  'qr.wifi.status': '✅ Accessible from smartphone',
+  'qr.wifi.serverIp': 'Server IP:',
+  'qr.wifi.wifiDesc': 'All devices on the same Wi-Fi can access.',
+  'qr.error.title': 'Cannot generate QR code',
+  'qr.error.desc': 'Please restart using the steps above',
+  'qr.scan': 'Point camera to scan 📷',
+  'qr.url.label': 'Access URL (tap to copy)',
+  'qr.url.loading': 'Loading...',
+  'qr.copy.btn': 'Copy',
+  'qr.copy.done': '✓ Copied',
+  'qr.toast.copied': 'URL copied 📋',
+  'qr.guide.title': '📖 QR Share & Smartphone Setup',
+  'qr.guide.step1.title': 'Connect phone to same Wi-Fi',
+  'qr.guide.step1.desc': 'Connect your smartphone or tablet to the same Wi-Fi network as the server PC. Different networks will not work.',
+  'qr.guide.step2.title': 'Scan QR code with camera',
+  'qr.guide.step2.desc': 'Use the built-in camera app to scan the QR code. No QR reader app needed.',
+  'qr.guide.step3.title': 'Tap the displayed link',
+  'qr.guide.step3.desc': 'A URL like "http://10.x.x.x:3001" will appear. Tap it to open FoodEye.',
+  'qr.guide.step4.title': 'Bookmark for easy access next time',
+  'qr.guide.step4.desc': 'Save the URL to browser bookmarks to access without scanning QR next time.',
+  'qr.guide.tip1': 'Copy the URL and paste it in your company LINE group to share with everyone',
+  'qr.guide.tip2': 'Print the QR code and post it on the workshop wall for easy on-site use',
+  'qr.guide.tip3': 'Restarting the server PC may change the IP address. Check this screen for the new QR if it changes.',
+  'qr.phone.title': '📱 How to use on smartphone',
+  'qr.phone.step1': 'Connect to the same Wi-Fi as the server PC',
+  'qr.phone.step2': 'Scan QR code with your phone camera',
+  'qr.phone.step3': 'Tap the displayed link',
+  'qr.phone.step4': 'Log in and start using',
+  'qr.caution.title': '⚠️ Notes',
+  'qr.caution.1': 'Smartphone and server PC must be on the same Wi-Fi',
+  'qr.caution.2': 'Port 3001 must be open in the server PC firewall',
+  'qr.caution.3': 'Server PC must not be in sleep mode',
+  // occurrence types
+  'record.occurrenceType.internal': 'Internal',
+  'record.occurrenceType.external': 'External Complaint',
+  // device types and inspection results
+  'insp.device.metalDetector': 'Metal Detector',
+  'insp.device.xray': 'X-ray Inspector',
+  'insp.result.pass': 'Pass',
+  'insp.result.fail': 'Fail',
+  'insp.result.adjusted': 'Adjusted OK',
 }
 
 const zh: Dict = {

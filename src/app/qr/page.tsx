@@ -6,10 +6,12 @@ import { QRCodeSVG } from 'qrcode.react'
 import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
 import FoodEyeLogo from '@/components/FoodEyeLogo'
+import { useLang } from '@/context/LanguageContext'
 import toast from 'react-hot-toast'
 
 export default function QRPage() {
   const router = useRouter()
+  const { t } = useLang()
   const [serverUrl, setServerUrl] = useState('')
   const [serverIp, setServerIp] = useState('')
   const [copied, setCopied] = useState(false)
@@ -49,7 +51,7 @@ export default function QRPage() {
     try {
       await navigator.clipboard.writeText(serverUrl)
       setCopied(true)
-      toast.success('URLをコピーしました 📋')
+      toast.success(t('qr.toast.copied'))
       setTimeout(() => setCopied(false), 2500)
     } catch {
       const el = document.createElement('textarea')
@@ -61,7 +63,7 @@ export default function QRPage() {
       document.execCommand('copy')
       document.body.removeChild(el)
       setCopied(true)
-      toast.success('URLをコピーしました 📋')
+      toast.success(t('qr.toast.copied'))
       setTimeout(() => setCopied(false), 2500)
     }
   }
@@ -75,8 +77,8 @@ export default function QRPage() {
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <button onClick={() => router.push('/')} className="back-btn shrink-0">←</button>
           <div>
-            <h1 className="font-extrabold text-gray-800 text-lg leading-tight">QRコード共有</h1>
-            <p className="text-xs text-gray-500">スタッフのスマホ・タブレットに展開</p>
+            <h1 className="font-extrabold text-gray-800 text-lg leading-tight">{t('qr.pageTitle')}</h1>
+            <p className="text-xs text-gray-500">{t('qr.pageSubtitle')}</p>
           </div>
         </div>
       </header>
@@ -91,8 +93,8 @@ export default function QRPage() {
             </div>
           </div>
           <h2 className="text-white text-xl font-extrabold">FoodEye を共有</h2>
-          <p className="text-white/80 text-sm mt-1">
-            同じ Wi-Fi のスマホ・タブレットから<br />すぐにアクセスできます
+          <p className="text-white/80 text-sm mt-1 whitespace-pre-line">
+            {t('qr.banner.desc')}
           </p>
         </div>
 
@@ -100,32 +102,32 @@ export default function QRPage() {
         {!loading && (
           isCloud ? (
             <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-4">
-              <p className="text-green-700 text-sm font-bold">✅ スマホ・タブレット・PC どこからでも接続できます</p>
+              <p className="text-green-700 text-sm font-bold">{t('qr.cloud.status')}</p>
               <p className="text-gray-600 text-xs mt-1 leading-relaxed">
-                インターネット接続があれば、Wi-Fi不要でどの端末からでもアクセスできます。<br />
+                {t('qr.cloud.desc')}<br />
                 <span className="font-mono font-bold text-green-700 break-all">{serverUrl}</span>
               </p>
             </div>
           ) : isLocalhost ? (
             <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-4">
-              <p className="text-red-700 text-sm font-bold">⚠️ スマホから接続できない状態です</p>
+              <p className="text-red-700 text-sm font-bold">{t('qr.local.status')}</p>
               <p className="text-gray-700 text-xs mt-2 leading-relaxed">
-                サーバーPCが <span className="font-mono font-bold text-red-600">localhost</span> で認識されています。<br />
-                下記の手順でサーバーを正しく起動してください。
+                {t('qr.local.pcIs')} <span className="font-mono font-bold text-red-600">localhost</span>{t('qr.local.pcAt')}<br />
+                {t('qr.local.restartGuide')}
               </p>
               <div className="mt-3 bg-red-100 rounded-xl p-3 space-y-1">
-                <p className="text-xs font-bold text-red-800">【解決手順】</p>
-                <p className="text-xs text-red-700">① 現在のサーバーを停止（Ctrl+C）</p>
-                <p className="text-xs text-red-700">② <span className="font-mono bg-red-200 px-1 rounded">FoodEye起動.bat</span> をダブルクリック</p>
-                <p className="text-xs text-red-700">③ 表示されたIPアドレスでQRを再生成</p>
+                <p className="text-xs font-bold text-red-800">{t('qr.local.fixTitle')}</p>
+                <p className="text-xs text-red-700">{t('qr.local.fix1')}</p>
+                <p className="text-xs text-red-700">{t('qr.local.fix2')}</p>
+                <p className="text-xs text-red-700">{t('qr.local.fix3')}</p>
               </div>
             </div>
           ) : (
             <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-4">
-              <p className="text-green-700 text-sm font-bold">✅ スマホから接続できます</p>
+              <p className="text-green-700 text-sm font-bold">{t('qr.wifi.status')}</p>
               <p className="text-gray-600 text-xs mt-1 leading-relaxed">
-                サーバーIP: <span className="font-mono font-bold text-green-700">{serverIp}</span><br />
-                同じ Wi-Fi に接続したすべての端末でアクセスできます。
+                {t('qr.wifi.serverIp')} <span className="font-mono font-bold text-green-700">{serverIp}</span><br />
+                {t('qr.wifi.wifiDesc')}
               </p>
             </div>
           )
@@ -141,7 +143,7 @@ export default function QRPage() {
             <div className="w-[210px] h-[210px] bg-red-50 rounded-2xl flex flex-col items-center justify-center gap-2 border-2 border-dashed border-red-300">
               <span className="text-4xl">⚠️</span>
               <p className="text-xs text-red-600 font-bold text-center px-3">
-                QRコードを生成できません<br />上記の手順で再起動してください
+                {t('qr.error.title')}<br />{t('qr.error.desc')}
               </p>
             </div>
           ) : serverUrl ? (
@@ -164,21 +166,21 @@ export default function QRPage() {
           ) : null}
           {!loading && !isLocalhost && serverUrl && (
             <p className="text-xs text-gray-500 mt-3 font-medium text-center">
-              カメラを向けてスキャン 📷
+              {t('qr.scan')}
             </p>
           )}
         </div>
 
         {/* URL表示 */}
         <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-4">
-          <p className="text-xs text-gray-500 font-semibold mb-2">アクセスURL（タップでコピー）</p>
+          <p className="text-xs text-gray-500 font-semibold mb-2">{t('qr.url.label')}</p>
           <div className="flex items-center gap-2">
             <button
               onClick={copyUrl}
               className="flex-1 bg-violet-50 border border-violet-200 rounded-xl px-3 py-2.5 text-left overflow-hidden active:bg-violet-100 transition-all"
             >
               <p className="text-xs text-violet-700 font-mono truncate font-bold">
-                {loading ? '取得中...' : serverUrl}
+                {loading ? t('qr.url.loading') : serverUrl}
               </p>
             </button>
             <button
@@ -190,38 +192,38 @@ export default function QRPage() {
                   : 'bg-violet-500 hover:bg-violet-600 text-white shadow-md shadow-violet-200'
               }`}
             >
-              {copied ? '✓ コピー済' : 'コピー'}
+              {copied ? t('qr.copy.done') : t('qr.copy.btn')}
             </button>
           </div>
         </div>
 
         {/* 使い方ガイド */}
         <UsageGuide
-          title="📖 QR共有・スマホ接続の手順"
+          title={t('qr.guide.title')}
           color="purple"
           steps={[
-            { icon: '📶', title: 'スマホを同じWi-Fiに接続する', desc: 'サーバーPCと同じWi-Fiネットワークにスマホ・タブレットを接続してください。別のネットワークでは接続できません。' },
-            { icon: '📷', title: 'カメラでQRコードをスキャン', desc: 'スマホの標準カメラアプリでQRコードを読み取ります。QRリーダーアプリは不要です。' },
-            { icon: '🔗', title: '表示されたリンクをタップ', desc: '「http://10.x.x.x:3001」のようなURLが表示されます。タップするとFoodEyeが開きます。' },
-            { icon: '📌', title: 'ブックマーク登録で次回から簡単に', desc: 'ブラウザの「ブックマーク追加」でURLを保存しておくと、次回からQRスキャンなしでアクセスできます。' },
+            { icon: '📶', title: t('qr.guide.step1.title'), desc: t('qr.guide.step1.desc') },
+            { icon: '📷', title: t('qr.guide.step2.title'), desc: t('qr.guide.step2.desc') },
+            { icon: '🔗', title: t('qr.guide.step3.title'), desc: t('qr.guide.step3.desc') },
+            { icon: '📌', title: t('qr.guide.step4.title'), desc: t('qr.guide.step4.desc') },
           ]}
           tips={[
-            'URLをコピーして社内グループLINEに貼り付けると全員に共有できます',
-            'QRコードを印刷して作業場の壁に貼っておくと現場での利用が便利です',
-            'サーバーPCを再起動するとIPアドレスが変わる場合があります。変わった場合はこの画面で新しいQRを確認してください',
+            t('qr.guide.tip1'),
+            t('qr.guide.tip2'),
+            t('qr.guide.tip3'),
           ]}
         />
 
         {/* 使い方ステップ */}
         {!isLocalhost && (
           <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-4">
-            <p className="text-xs font-bold text-gray-600 mb-3">📱 スマホでの使い方</p>
+            <p className="text-xs font-bold text-gray-600 mb-3">{t('qr.phone.title')}</p>
             <div className="space-y-2.5">
               {[
-                'サーバーPC と同じ Wi-Fi に接続する',
-                'スマホのカメラでQRコードをスキャン',
-                '表示されたリンクをタップ',
-                'ログインして使い始める',
+                t('qr.phone.step1'),
+                t('qr.phone.step2'),
+                t('qr.phone.step3'),
+                t('qr.phone.step4'),
               ].map((text, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <span className="w-6 h-6 rounded-full bg-violet-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
@@ -236,12 +238,12 @@ export default function QRPage() {
 
         {/* 注意事項 */}
         <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4">
-          <p className="text-xs font-bold text-gray-600 mb-2">⚠️ 注意事項</p>
+          <p className="text-xs font-bold text-gray-600 mb-2">{t('qr.caution.title')}</p>
           <div className="space-y-1.5">
             {[
-              'スマホとサーバーPCが同じ Wi-Fi に接続していること',
-              'サーバーPCのファイアウォールでポート3001を開放済みであること',
-              'サーバーPCがスリープしていないこと',
+              t('qr.caution.1'),
+              t('qr.caution.2'),
+              t('qr.caution.3'),
             ].map((text, i) => (
               <p key={i} className="text-xs text-gray-500 leading-relaxed">・{text}</p>
             ))}
