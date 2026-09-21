@@ -90,8 +90,17 @@ export type TranslationKey =
   | 'common.anomalyNote' | 'common.specialNote'
   | 'list.totalCount'
   | 'aichat.welcome' | 'aichat.resetMsg'
+  // ai-chat: panel / photo / hint / limit / visualizer (new)
+  | 'aichat.panelOpen' | 'aichat.panelClose'
+  | 'aichat.searchLabel' | 'aichat.searchPlaceholder'
+  | 'aichat.photoAddDrop' | 'aichat.photoAddTitle'
+  | 'aichat.hintLabel' | 'aichat.hintPlaceholder'
+  | 'aichat.usageLeft'
+  | 'aichat.limitTitle' | 'aichat.limitDesc1' | 'aichat.limitDesc2' | 'aichat.limitDesc3' | 'aichat.limitFollow'
+  | 'aichat.vizTitle' | 'aichat.vizOpen' | 'aichat.vizClose'
+  | 'common.close'
 
-type Dict = Record<TranslationKey, string>
+type Dict = Partial<Record<TranslationKey, string>>
 
 const ja: Dict = {
   'nav.home': 'ホーム',
@@ -194,6 +203,18 @@ const ja: Dict = {
   'common.anomalyNote': '異常があれば記入', 'common.specialNote': '特記事項など', 'list.totalCount': '全 {n} 件',
   'aichat.welcome': '異物の写真を送ってください。\n\n📸 カメラ撮影・ギャラリーから選択できます。\n\n写真を解析して推定種別・緊急度・即時対応アドバイスをお伝えします。',
   'aichat.resetMsg': 'チャットをリセットしました。新しい異物写真を送ってください。',
+  'aichat.panelOpen': '▼ 検索・写真', 'aichat.panelClose': '▲ 閉じる',
+  'aichat.searchLabel': 'Claude 検索', 'aichat.searchPlaceholder': 'キーワードを入力...',
+  'aichat.photoAddDrop': '写真を追加（タップ・ドロップ）', 'aichat.photoAddTitle': '写真を追加',
+  'aichat.hintLabel': '💡 異物の心当たり（任意）', 'aichat.hintPlaceholder': '例：赤いパレットの破片の可能性あり',
+  'aichat.usageLeft': '今月残り {n} 回（無料枠）',
+  'aichat.limitTitle': '今月の無料解析上限に達しました',
+  'aichat.limitDesc1': '無料プランは月3回まで利用できます。',
+  'aichat.limitDesc2': 'お問い合わせはXまたはnoteの',
+  'aichat.limitDesc3': 'までご連絡ください。',
+  'aichat.limitFollow': '𝕏 フォロー・DM',
+  'aichat.vizTitle': '🔬 異物ビジュアライザー', 'aichat.vizOpen': '異物ビジュアライザーで開く', 'aichat.vizClose': '✕ 閉じる',
+  'common.close': '閉じる',
 }
 
 const en: Dict = {
@@ -297,6 +318,18 @@ const en: Dict = {
   'common.anomalyNote': 'Note if any anomaly', 'common.specialNote': 'Special notes', 'list.totalCount': '{n} total',
   'aichat.welcome': 'Send a photo of the foreign matter.\n\n📸 Take a photo or select from gallery.\n\nI will analyze it and provide estimated type, urgency level, and response advice.',
   'aichat.resetMsg': 'Chat reset. Please send a new photo of the foreign matter.',
+  'aichat.panelOpen': '▼ Search & Photo', 'aichat.panelClose': '▲ Close',
+  'aichat.searchLabel': 'Claude Search', 'aichat.searchPlaceholder': 'Enter keyword...',
+  'aichat.photoAddDrop': 'Add Photo (tap or drop)', 'aichat.photoAddTitle': 'Add Photo',
+  'aichat.hintLabel': '💡 Suspected cause (optional)', 'aichat.hintPlaceholder': 'e.g. Possible fragment from red pallet',
+  'aichat.usageLeft': '{n} free analyses left this month',
+  'aichat.limitTitle': 'Monthly free analysis limit reached',
+  'aichat.limitDesc1': 'The free plan allows 3 analyses per month.',
+  'aichat.limitDesc2': 'Contact us on X or note at',
+  'aichat.limitDesc3': 'for inquiries.',
+  'aichat.limitFollow': '𝕏 Follow / DM',
+  'aichat.vizTitle': '🔬 Foreign Matter Visualizer', 'aichat.vizOpen': 'Open in Visualizer', 'aichat.vizClose': '✕ Close',
+  'common.close': 'Close',
 }
 
 const zh: Dict = {

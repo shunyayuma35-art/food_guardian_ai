@@ -232,16 +232,15 @@ export default function AiChatPage() {
     }
   }, [messages, loading, searchLoading])
 
-  // 初回ウェルカムメッセージ
+  // 初回 + 言語変更時のウェルカムメッセージ（会話が始まっていない場合のみ更新）
   useEffect(() => {
-    setMessages([{
-      id: 'welcome',
-      role: 'assistant',
-      content: t('aichat.welcome'),
-      quickReplies: [],
-      timestamp: new Date(),
-    }])
-  }, [])
+    setMessages(prev => {
+      const isInitial = prev.length === 0 ||
+        (prev.length === 1 && (prev[0].id === 'welcome' || prev[0].id === 'welcome-reset'))
+      if (!isInitial) return prev
+      return [{ id: 'welcome', role: 'assistant' as const, content: t('aichat.welcome'), quickReplies: [], timestamp: new Date() }]
+    })
+  }, [t])
 
   const handleImage = useCallback((file: File) => {
     // ファイルサイズチェック（5MB以下）
@@ -651,7 +650,7 @@ export default function AiChatPage() {
                   <button
                     onClick={() => setShowVisualizer(true)}
                     className="text-xs px-3 py-1.5 bg-teal-600 text-white rounded-lg font-medium active:scale-95 transition-all shadow-sm"
-                    title="異物ビジュアライザーで開く"
+                    title={t('aichat.vizOpen')}
                   >
                     🔬
                   </button>
@@ -719,7 +718,7 @@ export default function AiChatPage() {
           onClick={() => setShowPanel(v => !v)}
           className="w-full flex items-center justify-center gap-1 py-1.5 text-[11px] font-semibold text-gray-400 hover:text-gray-600 active:bg-gray-50 transition-colors"
         >
-          {showPanel ? '▲ 閉じる' : '▼ 検索・写真'}
+          {showPanel ? t('aichat.panelClose') : t('aichat.panelOpen')}
         </button>
 
         {/* 折りたたみパネル */}
@@ -729,7 +728,7 @@ export default function AiChatPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-xl overflow-hidden mt-2">
               <div className="px-3 py-2 space-y-2">
                 <p className="text-[10px] font-semibold text-blue-700 flex items-center gap-1">
-                  <span>🔍</span> Claude 検索
+                  <span>🔍</span> {t('aichat.searchLabel')}
                 </p>
                 <div className="flex gap-2">
                   <input
@@ -737,7 +736,7 @@ export default function AiChatPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleClaudeSearch()}
-                    placeholder="キーワードを入力..."
+                    placeholder={t('aichat.searchPlaceholder')}
                     className="flex-1 bg-white rounded-lg px-3 py-1.5 text-xs border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
                     disabled={searchLoading}
                   />
@@ -770,7 +769,7 @@ export default function AiChatPage() {
                 className="w-full h-20 border-2 border-dashed border-orange-300 rounded-xl bg-orange-50/60 flex flex-col items-center justify-center gap-1 active:bg-orange-100 transition-colors"
               >
                 <span className="text-2xl">📷</span>
-                <span className="text-xs text-orange-500 font-medium">写真を追加（タップ・ドロップ）</span>
+                <span className="text-xs text-orange-500 font-medium">{t('aichat.photoAddDrop')}</span>
               </button>
             ) : (
               <div className="p-3 bg-white rounded-xl border-2 border-orange-200 shadow-sm">
@@ -793,13 +792,13 @@ export default function AiChatPage() {
                 )}
                 <div className="mb-2">
                   <label className="block text-[10px] font-semibold text-gray-500 mb-1">
-                    💡 異物の心当たり（任意）
+                    {t('aichat.hintLabel')}
                   </label>
                   <input
                     type="text"
                     value={userHint}
                     onChange={e => setUserHint(e.target.value)}
-                    placeholder="例：赤いパレットの破片の可能性あり"
+                    placeholder={t('aichat.hintPlaceholder')}
                     className="w-full text-xs px-3 py-2 rounded-xl border border-orange-200 bg-orange-50/50 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:bg-white transition-all placeholder:text-gray-300"
                   />
                 </div>
@@ -812,7 +811,7 @@ export default function AiChatPage() {
                 </button>
                 {usageRemaining !== null && (
                   <p className="text-[10px] text-gray-400 text-center mt-1">
-                    今月残り {usageRemaining} 回（無料枠）
+                    {t('aichat.usageLeft').replace('{n}', String(usageRemaining))}
                   </p>
                 )}
               </div>
@@ -826,7 +825,7 @@ export default function AiChatPage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               className="w-10 h-10 shrink-0 flex items-center justify-center bg-orange-50 border border-orange-200 rounded-xl text-lg active:scale-95 transition-all"
-              title="写真を追加"
+              title={t('aichat.photoAddTitle')}
             >
               📷
             </button>
@@ -879,11 +878,11 @@ export default function AiChatPage() {
         <div className="fixed inset-0 z-[400] bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
             <div className="text-5xl text-center">🔒</div>
-            <h2 className="text-base font-bold text-center text-gray-800">今月の無料解析上限に達しました</h2>
+            <h2 className="text-base font-bold text-center text-gray-800">{t('aichat.limitTitle')}</h2>
             <p className="text-sm text-gray-600 text-center leading-relaxed">
-              無料プランは月3回まで利用できます。<br />
-              お問い合わせはXまたはnoteの<br />
-              <span className="font-bold text-orange-600">@hapifoodlab</span> までご連絡ください。
+              {t('aichat.limitDesc1')}<br />
+              {t('aichat.limitDesc2')}<br />
+              <span className="font-bold text-orange-600">@hapifoodlab</span> {t('aichat.limitDesc3')}
             </p>
             <div className="flex gap-2">
               <a
@@ -892,7 +891,7 @@ export default function AiChatPage() {
                 rel="noopener noreferrer"
                 className="flex-1 py-2.5 text-center text-sm font-bold text-white bg-gray-900 rounded-xl hover:bg-gray-700 transition-colors"
               >
-                𝕏 フォロー・DM
+                {t('aichat.limitFollow')}
               </a>
               <a
                 href="https://note.com/hapifoodlab"
@@ -908,7 +907,7 @@ export default function AiChatPage() {
               onClick={() => setShowLimitModal(false)}
               className="block w-full py-2 text-center text-sm text-gray-400 hover:text-gray-600"
             >
-              閉じる
+              {t('common.close')}
             </button>
           </div>
         </div>
@@ -922,12 +921,12 @@ export default function AiChatPage() {
         >
           <div className="w-full max-w-2xl my-4">
             <div className="flex items-center justify-between px-3 py-2 bg-gray-950 rounded-t-2xl border border-b-0 border-gray-700">
-              <span className="text-xs font-bold text-[#6dd39b] font-mono tracking-wider">🔬 異物ビジュアライザー</span>
+              <span className="text-xs font-bold text-[#6dd39b] font-mono tracking-wider">{t('aichat.vizTitle')}</span>
               <button
                 onClick={() => setShowVisualizer(false)}
                 className="text-gray-400 hover:text-white text-sm px-2 py-0.5 rounded transition-colors"
               >
-                ✕ 閉じる
+                {t('aichat.vizClose')}
               </button>
             </div>
             <ForeignMatterVisualizer imageDataUrl={visualizerDataUrl} />
