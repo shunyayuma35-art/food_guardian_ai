@@ -58,6 +58,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.106.0",
+    "@google-cloud/vertexai": "^1.12.0",
     "@supabase/supabase-js": "^2.108.2",
     "date-fns": "^3.6.0",
     "firebase": "^10.12.5",
