@@ -3,6 +3,14 @@
 # 2. Runs gcloud run deploy
 # 3. Deletes .env.production after deploy
 # Values are never printed to the console.
+#
+# Usage:
+#   .\deploy-cloudrun.ps1            -- full deploy
+#   .\deploy-cloudrun.ps1 -DryRun    -- show var names only, no gcloud call
+
+param(
+    [switch]$DryRun
+)
 
 $envFile    = ".env.local"
 $buildEnv   = ".env.production"
@@ -18,8 +26,11 @@ if ($publicLines.Count -eq 0) {
     Write-Error "No NEXT_PUBLIC_* variables found in .env.local"
     exit 1
 }
-$publicLines | Set-Content -Encoding utf8 $buildEnv
-Write-Host "Created .env.production with $($publicLines.Count) NEXT_PUBLIC_* keys (values hidden)"
+
+if (-not $DryRun) {
+    $publicLines | Set-Content -Encoding utf8 $buildEnv
+}
+Write-Host "NEXT_PUBLIC_* keys for build: $($publicLines.Count) (values hidden)"
 
 # Extract non-NEXT_PUBLIC_* as runtime env vars
 $runtimeVars = [System.Collections.Generic.List[string]]::new()
@@ -39,8 +50,19 @@ $aiVars = @(
     "GOOGLE_CLOUD_LOCATION=global",
     "GEMINI_MODEL=gemini-3.8-flash"
 )
-$runtimeVars.AddRange($aiVars)
+foreach ($v in $aiVars) {
+    $runtimeVars.Add($v)
+}
 Write-Host "Added $($aiVars.Count) AI provider vars (non-secret)"
+
+# Show var names (values hidden)
+$varNames = $runtimeVars | ForEach-Object { ($_ -split '=')[0] }
+Write-Host "Runtime env vars ($($runtimeVars.Count) total): $($varNames -join ', ')"
+
+if ($DryRun) {
+    Write-Host "[DryRun] gcloud run deploy would be called with the above vars. Exiting without deploy."
+    exit 0
+}
 
 $deployArgs = [System.Collections.Generic.List[string]]@(
     "run", "deploy", "foodeye",
@@ -56,7 +78,7 @@ if ($runtimeVars.Count -gt 0) {
     $deployArgs.Add(($runtimeVars -join ','))
 }
 
-Write-Host "Running gcloud run deploy (runtime vars: $($runtimeVars.Count) keys, values hidden)..."
+Write-Host "Running gcloud run deploy..."
 
 try {
     & gcloud @deployArgs
