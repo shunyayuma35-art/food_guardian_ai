@@ -184,7 +184,10 @@ async function callGemini(opts: AiCallOptions): Promise<AiCallResult> {
     },
   })
 
-  // response.text は candidates[0].content.parts[0].text のショートハンド
-  const text = response.text ?? ''
+  // response.text はショートハンドだが null を返す場合があるため手動抽出でフォールバック
+  const text =
+    response.text
+    ?? response.candidates?.[0]?.content?.parts?.[0]?.text
+    ?? ''
   return { text, provider: 'gemini', model: GEMINI_MODEL }
 }
