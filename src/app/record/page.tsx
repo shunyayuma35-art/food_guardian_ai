@@ -146,7 +146,7 @@ export default function RecordPage() {
       }
       return next
     })
-    toast.success('✅ 特徴チェックにAI推定を反映しました')
+    toast.success(t('toast.aiApplied'))
   }
 
   const [discoveryProcess, setDiscoveryProcess] = useState<DiscoveryProcess>('after_packaging')
@@ -272,14 +272,14 @@ export default function RecordPage() {
               title={t('guide.record')}
               color="orange"
               steps={[
-                { icon: '📌', title: `STEP 1｜${t('record.step.product')}`, desc: '発生区分（社内発見 or お客様クレーム）を選び、製品名・ロット番号を入力します。' },
-                { icon: '📸', title: `STEP 2｜${t('record.step.photo')}`, desc: '異物の写真を撮ります。定規やコインを一緒に撮ると大きさが分かりやすくなります。' },
-                { icon: '🔍', title: `STEP 3｜${t('record.step.features')}`, desc: '触感・見た目・色・におい・水試験の項目から、当てはまるものを全てチェックします。' },
-                { icon: '📝', title: `STEP 4｜${t('record.step.detail')}`, desc: '発見工程・発見日時・是正処置・再発防止策を入力して登録ボタンを押します。' },
+                { icon: '📌', title: `STEP 1｜${t('record.step.product')}`, desc: t('record.guide.step1.desc') },
+                { icon: '📸', title: `STEP 2｜${t('record.step.photo')}`, desc: t('record.guide.step2.desc') },
+                { icon: '🔍', title: `STEP 3｜${t('record.step.features')}`, desc: t('record.guide.step3.desc') },
+                { icon: '📝', title: `STEP 4｜${t('record.step.detail')}`, desc: t('record.guide.step4.desc') },
               ]}
               tips={[
-                'ロット番号は必ず入力してください（後でトレース検索に使います）',
-                'AI推定はあくまで参考です。確定には外部機関の鑑定が必要です',
+                t('record.guide.tip1'),
+                t('record.guide.tip2'),
               ]}
             />
           </div>
@@ -419,7 +419,7 @@ export default function RecordPage() {
             {aiEstimating && (
               <div className="flex items-center gap-2.5 px-4 py-3 bg-orange-50 border border-orange-200 rounded-2xl text-sm text-orange-600 font-semibold">
                 <span className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin shrink-0" />
-                🔍 AI解析中...
+                {t('record.ai.estimating')}
               </div>
             )}
             {aiQuickResult && !aiEstimating && (() => {
@@ -433,7 +433,7 @@ export default function RecordPage() {
                 <div className={`rounded-2xl border-2 ${u.border} ${u.bg} p-4 space-y-3 shadow-sm`}>
                   {/* ヘッダー */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-500 tracking-wide">🤖 AI即時判定</span>
+                    <span className="text-xs font-bold text-gray-500 tracking-wide">{t('record.ai.quickTitle')}</span>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-white border ${u.border} ${u.text}`}>
                       {u.label}
                     </span>
@@ -446,18 +446,18 @@ export default function RecordPage() {
                     </p>
                     <p className="text-sm text-gray-600 mt-0.5">
                       <span className="font-semibold">{aiQuickResult.category}</span>
-                      　信頼度：<span className="font-bold">{aiQuickResult.confidence}</span>
+                      　{t('record.ai.confidence')}<span className="font-bold">{aiQuickResult.confidence}</span>
                     </p>
                   </div>
 
                   {/* サイズ・緊急度 */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-white/70 rounded-xl px-3 py-2">
-                      <p className="text-[10px] text-gray-400 font-semibold mb-0.5">📏 サイズ推定</p>
-                      <p className="text-sm font-bold text-gray-800">{aiQuickResult.size_estimate || '不明'}</p>
+                      <p className="text-[10px] text-gray-400 font-semibold mb-0.5">{t('record.ai.sizeLabel')}</p>
+                      <p className="text-sm font-bold text-gray-800">{aiQuickResult.size_estimate || t('record.ai.unknown')}</p>
                     </div>
                     <div className="bg-white/70 rounded-xl px-3 py-2">
-                      <p className="text-[10px] text-gray-400 font-semibold mb-0.5">🚨 緊急度</p>
+                      <p className="text-[10px] text-gray-400 font-semibold mb-0.5">{t('record.ai.urgencyLabel')}</p>
                       <p className={`text-sm font-bold ${u.text}`}>{u.label}</p>
                     </div>
                   </div>
@@ -465,7 +465,7 @@ export default function RecordPage() {
                   {/* 混入経路 */}
                   {aiQuickResult.route && aiQuickResult.route.length > 0 && (
                     <div>
-                      <p className="text-[10px] text-gray-400 font-semibold mb-1">🔍 推定混入経路</p>
+                      <p className="text-[10px] text-gray-400 font-semibold mb-1">{t('record.ai.routeLabel')}</p>
                       <div className="flex flex-wrap gap-1.5">
                         {aiQuickResult.route.map((r, i) => (
                           <span key={i} className="text-xs bg-white border border-gray-200 text-gray-700 rounded-full px-2.5 py-0.5 font-medium">
@@ -484,7 +484,7 @@ export default function RecordPage() {
                   {/* 推奨対応 */}
                   {aiQuickResult.action && (
                     <div className="bg-white/70 rounded-xl px-3 py-2">
-                      <p className="text-[10px] text-gray-400 font-semibold mb-0.5">⚡ 推奨対応</p>
+                      <p className="text-[10px] text-gray-400 font-semibold mb-0.5">{t('record.ai.actionLabel')}</p>
                       <p className="text-xs text-gray-700 font-medium">{aiQuickResult.action}</p>
                     </div>
                   )}
@@ -495,11 +495,11 @@ export default function RecordPage() {
                     onClick={applyAIToFeatures}
                     className="w-full py-2 text-xs font-bold text-white bg-orange-500 rounded-xl hover:bg-orange-600 active:scale-95 transition-all"
                   >
-                    ✅ 異物特徴チェックにAI推定を自動入力
+                    {t('record.ai.applyBtn')}
                   </button>
 
                   <p className="text-[9px] text-gray-400 text-center">
-                    ⚠️ 確定診断には外部専門機関の鑑定が必要です
+                    {t('record.ai.disclaimer')}
                   </p>
                 </div>
               )

@@ -99,6 +99,38 @@ export type TranslationKey =
   | 'aichat.limitTitle' | 'aichat.limitDesc1' | 'aichat.limitDesc2' | 'aichat.limitDesc3' | 'aichat.limitFollow'
   | 'aichat.vizTitle' | 'aichat.vizOpen' | 'aichat.vizClose'
   | 'common.close'
+  // record page – usage guide & AI quick card
+  | 'record.guide.step1.desc' | 'record.guide.step2.desc' | 'record.guide.step3.desc' | 'record.guide.step4.desc'
+  | 'record.guide.tip1' | 'record.guide.tip2'
+  | 'record.ai.estimating' | 'record.ai.quickTitle' | 'record.ai.confidence'
+  | 'record.ai.sizeLabel' | 'record.ai.unknown' | 'record.ai.urgencyLabel' | 'record.ai.routeLabel'
+  | 'record.ai.actionLabel' | 'record.ai.applyBtn' | 'record.ai.disclaimer'
+  | 'toast.aiApplied'
+  // home page – hero / guide / sections / charts / alerts
+  | 'home.demo' | 'home.internalBadge' | 'home.externalBadge'
+  | 'home.guide.title'
+  | 'home.guide.step1.title' | 'home.guide.step1.desc'
+  | 'home.guide.step2.title' | 'home.guide.step2.desc'
+  | 'home.guide.step3.title' | 'home.guide.step3.desc'
+  | 'home.guide.step4.title' | 'home.guide.step4.desc'
+  | 'home.guide.tip1' | 'home.guide.tip2' | 'home.guide.tip3'
+  | 'home.sectionIncident' | 'home.sectionInsp' | 'home.sectionQuickAction'
+  | 'home.backup.desc' | 'home.backup.autoInfo'
+  | 'home.reports' | 'home.generated' | 'home.caution' | 'home.web'
+  | 'home.noIncidentData' | 'home.analytics'
+  | 'home.report.title' | 'home.report.desc' | 'home.master.title' | 'home.master.desc'
+  | 'home.chart.noData' | 'home.chart.unit' | 'home.chart.internal' | 'home.chart.external'
+  | 'home.chart.category' | 'home.chart.internalHeader' | 'home.chart.externalHeader'
+  | 'home.chart.categoryRatio' | 'home.chart.totalNote' | 'home.chart.bySource'
+  | 'home.chart.internalProcess' | 'home.chart.externalRoute'
+  | 'home.chart.noRouteData' | 'home.chart.noExternalData'
+  | 'home.chart.trend' | 'home.chart.trend14days'
+  | 'home.chart.heatmapTitle' | 'home.chart.heatmapDesc'
+  | 'home.chart.matchAlert' | 'home.chart.matchSuffix'
+  | 'home.alert.backupOk' | 'home.alert.backupFail'
+  | 'home.alert.restoreOk' | 'home.alert.restoreFail' | 'home.confirm.restore'
+  // list page
+  | 'list.supabaseSaved' | 'list.photoAlt'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -215,6 +247,83 @@ const ja: Dict = {
   'aichat.limitFollow': '𝕏 フォロー・DM',
   'aichat.vizTitle': '🔬 異物ビジュアライザー', 'aichat.vizOpen': '異物ビジュアライザーで開く', 'aichat.vizClose': '✕ 閉じる',
   'common.close': '閉じる',
+  // record: usage guide + AI quick card
+  'record.guide.step1.desc': '発生区分（社内発見 or お客様クレーム）を選び、製品名・ロット番号を入力します。',
+  'record.guide.step2.desc': '異物の写真を撮ります。定規やコインを一緒に撮ると大きさが分かりやすくなります。',
+  'record.guide.step3.desc': '触感・見た目・色・におい・水試験の項目から、当てはまるものを全てチェックします。',
+  'record.guide.step4.desc': '発見工程・発見日時・是正処置・再発防止策を入力して登録ボタンを押します。',
+  'record.guide.tip1': 'ロット番号は必ず入力してください（後でトレース検索に使います）',
+  'record.guide.tip2': 'AI推定はあくまで参考です。確定には外部機関の鑑定が必要です',
+  'record.ai.estimating': '🔍 AI解析中...',
+  'record.ai.quickTitle': '🤖 AI即時判定',
+  'record.ai.confidence': '信頼度：',
+  'record.ai.sizeLabel': '📏 サイズ推定',
+  'record.ai.unknown': '不明',
+  'record.ai.urgencyLabel': '🚨 緊急度',
+  'record.ai.routeLabel': '🔍 推定混入経路',
+  'record.ai.actionLabel': '⚡ 推奨対応',
+  'record.ai.applyBtn': '✅ 異物特徴チェックにAI推定を自動入力',
+  'record.ai.disclaimer': '⚠️ 確定診断には外部専門機関の鑑定が必要です',
+  'toast.aiApplied': '✅ 特徴チェックにAI推定を反映しました',
+  // home
+  'home.demo': '（デモ）',
+  'home.internalBadge': '🏭 社内 {n}件',
+  'home.externalBadge': '📦 外部 {n}件',
+  'home.guide.title': '📖 FoodEye 使い方・操作手順',
+  'home.guide.step1.title': 'まず「マスターデータ」を設定する',
+  'home.guide.step1.desc': '担当者名・製品名・検査機器名を登録しておくと、各画面で選択式になり入力が速くなります。初回利用時に必ず設定してください。',
+  'home.guide.step2.title': '異物を発見したら「新規 異物登録」',
+  'home.guide.step2.desc': '工場内発見・お客様クレームどちらも登録できます。写真を撮影し、異物の特徴（触感・色・においなど）を選択するとAIが種類を自動推定します。',
+  'home.guide.step3.title': '毎日「検査記録を登録」する',
+  'home.guide.step3.desc': '金属探知機・X線検査機のテストピース確認結果を記録します。始業・終業の合否チェックと排除件数を入力してください。',
+  'home.guide.step4.title': '「月次・年次レポート」で傾向を確認',
+  'home.guide.step4.desc': '期間を選んで集計グラフを確認できます。監査・品質会議の資料として印刷もできます。',
+  'home.guide.tip1': '登録したデータはサーバーPCに自動保存されます（1日1回自動バックアップ）',
+  'home.guide.tip2': 'QRコードを印刷して壁に貼ると、スマホからすぐアクセスできます',
+  'home.guide.tip3': '同じWi-Fiに接続した全端末でデータを共有できます',
+  'home.sectionIncident': '異物事故',
+  'home.sectionInsp': '検査記録（金属探知・X線）',
+  'home.sectionQuickAction': 'クイックアクション',
+  'home.backup.desc': '保存先: data/backups/ （最大30世代）',
+  'home.backup.autoInfo': '✅ 自動バックアップ: 1日1回（アプリ起動時）',
+  'home.reports': '📁 報告書フォルダ',
+  'home.generated': '生成',
+  'home.caution': 'ご利用上の注意',
+  'home.web': 'Web版',
+  'home.noIncidentData': '異物登録データがありません',
+  'home.analytics': '📊 統合分析ダッシュボード',
+  'home.report.title': '月次・年次レポート',
+  'home.report.desc': '傾向分析・審査用印刷',
+  'home.master.title': 'マスターデータ',
+  'home.master.desc': '担当者・製品・機器登録',
+  'home.chart.noData': 'データなし',
+  'home.chart.unit': '件',
+  'home.chart.internal': '社内',
+  'home.chart.external': '外部',
+  'home.chart.category': '異物カテゴリ',
+  'home.chart.internalHeader': '🏭 社内',
+  'home.chart.externalHeader': '📦 外部',
+  'home.chart.categoryRatio': '🥧 異物種類の割合',
+  'home.chart.totalNote': '（社内 + 外部クレーム合計）',
+  'home.chart.bySource': '📊 発生源別 異物分布',
+  'home.chart.internalProcess': '🏭 社内発見 — 工程別',
+  'home.chart.externalRoute': '📦 外部クレーム — 経路別',
+  'home.chart.noRouteData': 'クレーム経路データなし',
+  'home.chart.noExternalData': '外部クレームの登録データがありません',
+  'home.chart.trend': '📈 異物推移',
+  'home.chart.trend14days': '（直近14日間）',
+  'home.chart.heatmapTitle': '🔥 社内 vs 外部 — 異物カテゴリ一致率',
+  'home.chart.heatmapDesc': '同カテゴリが内外に出現する場合、製造起因の可能性があります',
+  'home.chart.matchAlert': '⚠️ 一致カテゴリ検出',
+  'home.chart.matchSuffix': 'が社内・外部の両方に存在します。製造工程の精査を推奨します。',
+  'home.alert.backupOk': '✅ バックアップを作成しました',
+  'home.alert.backupFail': '❌ バックアップに失敗しました',
+  'home.alert.restoreOk': '✅ 復元しました。ページを再読み込みします。',
+  'home.alert.restoreFail': '❌ 復元に失敗しました',
+  'home.confirm.restore': 'のデータに復元しますか？\n現在のデータは自動バックアップされてから上書きされます。',
+  // list
+  'list.supabaseSaved': '（Supabase保存）',
+  'list.photoAlt': '調査写真',
 }
 
 const en: Dict = {
@@ -330,6 +439,83 @@ const en: Dict = {
   'aichat.limitFollow': '𝕏 Follow / DM',
   'aichat.vizTitle': '🔬 Foreign Matter Visualizer', 'aichat.vizOpen': 'Open in Visualizer', 'aichat.vizClose': '✕ Close',
   'common.close': 'Close',
+  // record: usage guide + AI quick card
+  'record.guide.step1.desc': 'Select occurrence type (internal / external claim), then enter product name and lot number.',
+  'record.guide.step2.desc': 'Photograph the foreign matter. Include a ruler or coin to show scale.',
+  'record.guide.step3.desc': 'Check all applicable characteristics: texture, appearance, color, smell, and water test.',
+  'record.guide.step4.desc': 'Enter discovery process, date/time, corrective action, and preventive measure, then submit.',
+  'record.guide.tip1': 'Always enter the lot number (used later for trace searches).',
+  'record.guide.tip2': 'AI estimates are for reference only. Final identification requires external examination.',
+  'record.ai.estimating': '🔍 Analyzing with AI...',
+  'record.ai.quickTitle': '🤖 AI Quick Result',
+  'record.ai.confidence': 'Confidence: ',
+  'record.ai.sizeLabel': '📏 Size Estimate',
+  'record.ai.unknown': 'Unknown',
+  'record.ai.urgencyLabel': '🚨 Urgency',
+  'record.ai.routeLabel': '🔍 Estimated Entry Route',
+  'record.ai.actionLabel': '⚡ Recommended Action',
+  'record.ai.applyBtn': '✅ Auto-fill Feature Checklist with AI Estimate',
+  'record.ai.disclaimer': '⚠️ Final diagnosis requires external laboratory examination.',
+  'toast.aiApplied': '✅ AI estimate applied to feature checklist',
+  // home
+  'home.demo': '(Demo)',
+  'home.internalBadge': '🏭 Internal {n}',
+  'home.externalBadge': '📦 External {n}',
+  'home.guide.title': '📖 FoodEye – How to Use',
+  'home.guide.step1.title': 'Set up Master Data first',
+  'home.guide.step1.desc': 'Register operators, products, and inspection equipment. They become dropdowns throughout the app, speeding up entry. Do this on first use.',
+  'home.guide.step2.title': 'Use "New Incident Report" when foreign matter is found',
+  'home.guide.step2.desc': 'Works for factory-found incidents and customer complaints. Take a photo and select material characteristics (texture, color, smell, etc.) for AI estimation.',
+  'home.guide.step3.title': 'Log "Inspection Record" every day',
+  'home.guide.step3.desc': 'Record metal detector and X-ray test-piece results. Enter pass/fail for start- and end-of-day checks plus any reject counts.',
+  'home.guide.step4.title': 'Review trends in "Monthly/Annual Reports"',
+  'home.guide.step4.desc': 'Select a period to view summary charts. Reports can be printed for audits and quality meetings.',
+  'home.guide.tip1': 'All data is auto-saved to the server (automatic daily backup).',
+  'home.guide.tip2': 'Print a QR code and post it on the wall for instant phone access.',
+  'home.guide.tip3': 'All devices on the same Wi-Fi share the same data.',
+  'home.sectionIncident': 'Incidents',
+  'home.sectionInsp': 'Inspections (Metal / X-ray)',
+  'home.sectionQuickAction': 'Quick Actions',
+  'home.backup.desc': 'Storage: data/backups/ (up to 30 versions)',
+  'home.backup.autoInfo': '✅ Auto backup: once daily (on app launch)',
+  'home.reports': '📁 Report Folder',
+  'home.generated': 'Generated',
+  'home.caution': 'Usage Notice',
+  'home.web': 'Web',
+  'home.noIncidentData': 'No incident data registered',
+  'home.analytics': '📊 Analytics Dashboard',
+  'home.report.title': 'Monthly / Annual Reports',
+  'home.report.desc': 'Trend analysis & audit printouts',
+  'home.master.title': 'Master Data',
+  'home.master.desc': 'Operators, products & equipment',
+  'home.chart.noData': 'No data',
+  'home.chart.unit': 'items',
+  'home.chart.internal': 'Internal',
+  'home.chart.external': 'External',
+  'home.chart.category': 'Category',
+  'home.chart.internalHeader': '🏭 Internal',
+  'home.chart.externalHeader': '📦 External',
+  'home.chart.categoryRatio': '🥧 Incident Type Breakdown',
+  'home.chart.totalNote': '(Internal + External combined)',
+  'home.chart.bySource': '📊 Incidents by Source',
+  'home.chart.internalProcess': '🏭 Internal – by Process',
+  'home.chart.externalRoute': '📦 External Claims – by Route',
+  'home.chart.noRouteData': 'No claim route data',
+  'home.chart.noExternalData': 'No external claim data',
+  'home.chart.trend': '📈 Incident Trend',
+  'home.chart.trend14days': '(Last 14 days)',
+  'home.chart.heatmapTitle': '🔥 Internal vs External – Category Match',
+  'home.chart.heatmapDesc': 'Categories in both may indicate a manufacturing source.',
+  'home.chart.matchAlert': '⚠️ Matching Categories Detected',
+  'home.chart.matchSuffix': ' found in both internal and external records. Recommend reviewing the manufacturing process.',
+  'home.alert.backupOk': '✅ Backup created',
+  'home.alert.backupFail': '❌ Backup failed',
+  'home.alert.restoreOk': '✅ Restored. Reloading page.',
+  'home.alert.restoreFail': '❌ Restore failed',
+  'home.confirm.restore': ' data?\nCurrent data will be auto-backed up before being overwritten.',
+  // list
+  'list.supabaseSaved': '(Supabase)',
+  'list.photoAlt': 'Investigation photo',
 }
 
 const zh: Dict = {
@@ -1159,5 +1345,5 @@ const th: Dict = {
 const TRANSLATIONS: Record<LangCode, Dict> = { ja, en, zh, ko, vi, id, ne, km, my, th }
 
 export function t(lang: LangCode, key: TranslationKey): string {
-  return TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS['ja'][key] ?? key
+  return TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS['en'][key] ?? TRANSLATIONS['ja'][key] ?? key
 }

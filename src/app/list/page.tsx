@@ -237,7 +237,7 @@ export default function ListPage() {
         <div>
           <h2 className="text-sm font-bold text-gray-600 mb-3 flex items-center gap-2">
             <span className="text-base">🤖</span> {t('list.aiSection')}
-            <span className="text-xs font-normal text-gray-400">（Supabase保存）</span>
+            <span className="text-xs font-normal text-gray-400">{t('list.supabaseSaved')}</span>
           </h2>
           {aiFetching ? (
             <div className="flex justify-center py-6">
@@ -267,7 +267,7 @@ export default function ListPage() {
                       onClick={() => setLightboxPhoto(inc.image_url!)}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={inc.image_url} alt="調査写真" className="w-full h-full object-cover" />
+                      <img src={inc.image_url} alt={t('list.photoAlt')} className="w-full h-full object-cover" />
                     </button>
                   ) : (
                     <button
@@ -324,7 +324,7 @@ export default function ListPage() {
               ))}
               <p className="text-xs text-gray-400 text-center pt-2 font-medium">
                 {t('list.showing').replace('{n}', String(filtered.length))}
-                {filtered.length !== incidents.length && `（全 ${incidents.length} 件）`}
+                {filtered.length !== incidents.length && `（${t('list.totalCount').replace('{n}', String(incidents.length))}）`}
               </p>
             </div>
           )}
