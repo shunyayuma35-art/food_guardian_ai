@@ -37,7 +37,7 @@ $aiVars = @(
     "AI_PROVIDER=gemini",
     "GOOGLE_CLOUD_PROJECT=project-66aee540-552a-4a95-b80",
     "GOOGLE_CLOUD_LOCATION=global",
-    "GEMINI_MODEL=gemini-2.5-flash"
+    "GEMINI_MODEL=gemini-3.8-flash"
 )
 $runtimeVars.AddRange($aiVars)
 Write-Host "Added $($aiVars.Count) AI provider vars (non-secret)"

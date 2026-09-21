@@ -73,7 +73,7 @@ export interface AiCallResult {
 const PROVIDER = (process.env.AI_PROVIDER ?? 'anthropic') as 'anthropic' | 'gemini'
 const GCP_PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? ''
 const GCP_LOCATION = process.env.GOOGLE_CLOUD_LOCATION ?? 'asia-northeast1'
-const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash'
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.8-flash'
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6'
 
 // ---------------------------------------------------------------------------

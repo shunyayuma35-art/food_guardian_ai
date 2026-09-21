@@ -1,5 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { callAI, type MediaType } from '@/lib/ai-provider';
 
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -189,7 +189,6 @@ const FOREIGN_MATTER_DB = `## 食品異物データベース
 🟢 低（記録のみ）：添加物かたまり・自社原料由来`
 
 export async function POST(req: NextRequest) {
-  const client = new Anthropic();
   const usage = parseUsage(req.cookies.get(USAGE_COOKIE)?.value)
   if (usage.count >= MAX_MONTHLY) {
     return NextResponse.json(
@@ -268,34 +267,22 @@ ${FOREIGN_MATTER_DB}
 
 末尾：確定診断には外部専門機関の鑑定が必要です`
 
-    const response = await Promise.race([
-      client.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: structured ? 600 : 700,
+    const userText = structured
+      ? `この異物を分析してJSON形式で回答してください。${userHint ? `ユーザー提供情報：${userHint}` : ''}`
+      : `異物を特定してください。種類・材質・経路・緊急度を必ず含めてください。${userHint ? `\n\nユーザー提供情報：${userHint}` : ''}`
+
+    // maxTokens: 2048 — thinking モデル(gemini-3.8-flash)は thinking + output の合計で消費するため大きめに設定
+    const aiResult = await Promise.race([
+      callAI({
         system: systemPrompt,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: imageBase64 } },
-            { type: 'text', text: structured
-                ? `この異物を分析してJSON形式で回答してください。${userHint ? `ユーザー提供情報：${userHint}` : ''}`
-                : `異物を特定してください。種類・材質・経路・緊急度を必ず含めてください。${userHint ? `\n\nユーザー提供情報：${userHint}` : ''}` }
-          ]
-        }]
+        userText,
+        images: [{ base64: imageBase64, mediaType: mediaType as MediaType }],
+        maxTokens: 2048,
       }),
-      timeoutPromise
-    ]) as any;
+      timeoutPromise,
+    ]) as Awaited<ReturnType<typeof callAI>>;
 
-    if (!response.content || !Array.isArray(response.content) || response.content.length === 0) {
-      return NextResponse.json({ error: '予期しないレスポンス形式です。' }, { status: 500 });
-    }
-
-    const textContent = response.content.find((c: { type: string }) => c.type === 'text');
-    if (!textContent || typeof (textContent as { text?: string }).text !== 'string') {
-      return NextResponse.json({ error: '画像解析結果が無効です。' }, { status: 500 });
-    }
-
-    const text = ((textContent as { text: string }).text).trim();
+    const text = aiResult.text.trim();
     if (text.length === 0) {
       return NextResponse.json({ error: '画像を解析できませんでした。より明確な画像をお試しください。' }, { status: 422 });
     }
