@@ -210,11 +210,13 @@ export default function AiChatPage() {
   const [usageRemaining, setUsageRemaining] = useState<number | null>(null)
   const [userHint, setUserHint] = useState('')
   const [showLimitModal, setShowLimitModal] = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
+  const [showPanel, setShowPanel] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const lastAnalysisRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
+  const dragCounterRef = useRef(0)
 
   const QUICK_SUGGESTIONS = [
     '虫類', '金属片', '針金・金属線', 'プラスチック片', 'ゴム片',
@@ -257,6 +259,7 @@ export default function AiChatPage() {
 
     const url = URL.createObjectURL(file);
     setImageUrl(url);
+    setShowPanel(true);
     setMimeType(file.type || 'image/jpeg');
 
     const reader = new FileReader();
@@ -383,6 +386,7 @@ export default function AiChatPage() {
       };
 
       setMessages((prev) => [...prev, analysisMsg]);
+      setShowPanel(false);
       setImageBase64(null);
       setImageUrl(null);
       setImageOriginalDataUrl(null);
@@ -399,8 +403,25 @@ export default function AiChatPage() {
     }
   }, [imageBase64, imageUrl, mimeType, userHint])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handlePageDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
+    dragCounterRef.current++
+    if ([...e.dataTransfer.items].some(i => i.kind === 'file')) setIsDragOver(true)
+  }, [])
+
+  const handlePageDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+  }, [])
+
+  const handlePageDragLeave = useCallback(() => {
+    dragCounterRef.current--
+    if (dragCounterRef.current <= 0) { dragCounterRef.current = 0; setIsDragOver(false) }
+  }, [])
+
+  const handlePageDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    dragCounterRef.current = 0
+    setIsDragOver(false)
     const file = e.dataTransfer.files?.[0]
     if (file?.type.startsWith('image/')) handleImage(file)
   }, [handleImage])
@@ -600,14 +621,19 @@ export default function AiChatPage() {
   }, [t])
 
   const hasAnalysis = messages.some((m) => m.analysis || m.searchResult || m.imageAnalysis)
-  const isFirstUserTurn = chatHistoryRef.current.length === 0
 
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div
+      className="flex flex-col h-screen bg-gray-50 relative"
+      onDragEnter={handlePageDragEnter}
+      onDragOver={handlePageDragOver}
+      onDragLeave={handlePageDragLeave}
+      onDrop={handlePageDrop}
+    >
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-100 shadow-sm px-4 pt-safe-top">
         <div className="max-w-2xl mx-auto flex items-center justify-between h-14">
@@ -675,115 +701,127 @@ export default function AiChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 入力エリア */}
-      <div className="bg-white border-t border-gray-100 px-3 pt-2 pb-[calc(theme(spacing.16)+env(safe-area-inset-bottom,0px)+8px)] max-w-2xl w-full mx-auto space-y-3">
-        {/* Claude 検索セクション（折りたたみ式・初期は閉じている） */}
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl overflow-hidden">
-          <button
-            onClick={() => setShowSearch(v => !v)}
-            className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-blue-700 active:bg-blue-100 transition-colors"
-          >
-            <span className="flex items-center gap-1.5">
-              <span>🔍</span>
-              <span>Claude 検索</span>
-            </span>
-            <span className="text-blue-400 text-[10px]">{showSearch ? '▲ 閉じる' : '▼'}</span>
-          </button>
-          {showSearch && (
-            <div className="px-3 pb-3 space-y-2 border-t border-blue-200">
-              <div className="flex gap-2 pt-2">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleClaudeSearch()}
-                  placeholder="キーワードを入力..."
-                  className="flex-1 bg-white rounded-lg px-3 py-2 text-xs border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
-                  disabled={searchLoading}
-                />
-                <button
-                  onClick={handleClaudeSearch}
-                  disabled={searchLoading || !searchQuery.trim()}
-                  className="px-3 py-2 bg-blue-500 text-white text-xs font-medium rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {searchLoading ? t('aichat.searching') : t('aichat.searchBtn')}
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {QUICK_SUGGESTIONS.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => setSearchQuery(suggestion)}
-                    className="text-[10px] px-2 py-1 bg-white border border-blue-200 text-blue-600 rounded-full hover:bg-blue-50 active:scale-95 transition-all font-medium"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+      {/* ドロップオーバーレイ */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-50 bg-orange-500/20 border-4 border-dashed border-orange-400 flex items-center justify-center pointer-events-none">
+          <div className="bg-white rounded-2xl px-8 py-6 shadow-2xl flex flex-col items-center gap-2">
+            <span className="text-4xl">📷</span>
+            <span className="text-base font-bold text-orange-600">ここにドロップ</span>
+          </div>
         </div>
+      )}
 
-        {/* 画像解析セクション（imageUrl 設定後に展開、ボタンは入力行に統合） */}
+      {/* 入力エリア */}
+      <div className="bg-white border-t border-gray-100 max-w-2xl w-full mx-auto">
 
-        {imageUrl && (
-          <div className="p-3 bg-white rounded-2xl border-2 border-orange-200 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold text-orange-600 flex items-center gap-1">
-                <span>📸</span> {t('aichat.photoReady')}
-              </p>
+        {/* パネルトグルバー */}
+        <button
+          onClick={() => setShowPanel(v => !v)}
+          className="w-full flex items-center justify-center gap-1 py-1.5 text-[11px] font-semibold text-gray-400 hover:text-gray-600 active:bg-gray-50 transition-colors"
+        >
+          {showPanel ? '▲ 閉じる' : '▼ 検索・写真'}
+        </button>
+
+        {/* 折りたたみパネル */}
+        {showPanel && (
+          <div className="px-3 pb-2 space-y-2 border-t border-gray-100">
+            {/* Claude 検索 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl overflow-hidden mt-2">
+              <div className="px-3 py-2 space-y-2">
+                <p className="text-[10px] font-semibold text-blue-700 flex items-center gap-1">
+                  <span>🔍</span> Claude 検索
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleClaudeSearch()}
+                    placeholder="キーワードを入力..."
+                    className="flex-1 bg-white rounded-lg px-3 py-1.5 text-xs border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+                    disabled={searchLoading}
+                  />
+                  <button
+                    onClick={handleClaudeSearch}
+                    disabled={searchLoading || !searchQuery.trim()}
+                    className="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {searchLoading ? t('aichat.searching') : t('aichat.searchBtn')}
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {QUICK_SUGGESTIONS.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => setSearchQuery(suggestion)}
+                      className="text-[10px] px-2 py-0.5 bg-white border border-blue-200 text-blue-600 rounded-full active:scale-95 transition-all font-medium"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 写真エリア */}
+            {!imageUrl ? (
               <button
-                onClick={() => { setImageUrl(null); setImageBase64(null); setImageOriginalDataUrl(null); setImageEnhancedDataUrl(null) }}
-                className="text-[10px] text-gray-400 hover:text-red-400"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full h-20 border-2 border-dashed border-orange-300 rounded-xl bg-orange-50/60 flex flex-col items-center justify-center gap-1 active:bg-orange-100 transition-colors"
               >
-                {t('aichat.deletePhoto')}
+                <span className="text-2xl">📷</span>
+                <span className="text-xs text-orange-500 font-medium">写真を追加（タップ・ドロップ）</span>
               </button>
-            </div>
-            {imageOriginalDataUrl && (
-              <ImageEnhancer
-                imageDataUrl={imageOriginalDataUrl}
-                onEnhanced={handleEnhanced}
-              />
-            )}
-            {imageOriginalDataUrl && (
-              <ComparisonPanel
-                originalDataUrl={imageOriginalDataUrl}
-                enhancedDataUrl={imageEnhancedDataUrl}
-              />
-            )}
-            {/* 心当たり入力欄 */}
-            <div className="mb-2">
-              <label className="block text-[10px] font-semibold text-gray-500 mb-1">
-                💡 異物の心当たり（任意）
-              </label>
-              <input
-                type="text"
-                value={userHint}
-                onChange={e => setUserHint(e.target.value)}
-                placeholder="例：赤いパレットの破片の可能性あり"
-                className="w-full text-xs px-3 py-2 rounded-xl border border-orange-200 bg-orange-50/50 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:bg-white transition-all placeholder:text-gray-300"
-              />
-            </div>
-            <button
-              onClick={() => handleImageUploadAnalysis(new File([imageBase64!], 'image.jpg', { type: mimeType }))}
-              disabled={loading}
-              className="w-full px-3 py-2 bg-orange-500 text-white text-xs font-semibold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? t('aichat.analyzing') : t('aichat.analyzeBtn')}
-            </button>
-            {usageRemaining !== null && (
-              <p className="text-[10px] text-gray-400 text-center mt-1">
-                今月残り {usageRemaining} 回（無料枠）
-              </p>
+            ) : (
+              <div className="p-3 bg-white rounded-xl border-2 border-orange-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-orange-600 flex items-center gap-1">
+                    <span>📸</span> {t('aichat.photoReady')}
+                  </p>
+                  <button
+                    onClick={() => { setImageUrl(null); setImageBase64(null); setImageOriginalDataUrl(null); setImageEnhancedDataUrl(null) }}
+                    className="text-[10px] text-gray-400 hover:text-red-400"
+                  >
+                    {t('aichat.deletePhoto')}
+                  </button>
+                </div>
+                {imageOriginalDataUrl && (
+                  <ImageEnhancer imageDataUrl={imageOriginalDataUrl} onEnhanced={handleEnhanced} />
+                )}
+                {imageOriginalDataUrl && (
+                  <ComparisonPanel originalDataUrl={imageOriginalDataUrl} enhancedDataUrl={imageEnhancedDataUrl} />
+                )}
+                <div className="mb-2">
+                  <label className="block text-[10px] font-semibold text-gray-500 mb-1">
+                    💡 異物の心当たり（任意）
+                  </label>
+                  <input
+                    type="text"
+                    value={userHint}
+                    onChange={e => setUserHint(e.target.value)}
+                    placeholder="例：赤いパレットの破片の可能性あり"
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-orange-200 bg-orange-50/50 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:bg-white transition-all placeholder:text-gray-300"
+                  />
+                </div>
+                <button
+                  onClick={() => handleImageUploadAnalysis(new File([imageBase64!], 'image.jpg', { type: mimeType }))}
+                  disabled={loading}
+                  className="w-full px-3 py-2 bg-orange-500 text-white text-xs font-semibold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? t('aichat.analyzing') : t('aichat.analyzeBtn')}
+                </button>
+                {usageRemaining !== null && (
+                  <p className="text-[10px] text-gray-400 text-center mt-1">
+                    今月残り {usageRemaining} 回（無料枠）
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}
 
-        {/* 従来の入力エリア */}
-
-        {/* 従来の入力エリア */}
-        <div className="flex gap-2 items-end">
-          {/* 写真ボタン（会話中） */}
+        {/* 入力行 */}
+        <div className="flex gap-2 items-end px-3 pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
           {!imageUrl && (
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -793,7 +831,6 @@ export default function AiChatPage() {
               📷
             </button>
           )}
-
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -809,7 +846,6 @@ export default function AiChatPage() {
               el.style.height = `${Math.min(el.scrollHeight, 112)}px`
             }}
           />
-
           <button
             onClick={() => sendMessage()}
             disabled={loading || (!input.trim() && !imageBase64)}
@@ -822,7 +858,7 @@ export default function AiChatPage() {
         </div>
 
         {/* 注意書き */}
-        <p className="text-[9px] text-gray-400 text-center mt-1.5 leading-tight">
+        <p className="text-[9px] text-gray-400 text-center pb-2 leading-tight px-3">
           {t('disclaimer')}
         </p>
       </div>
