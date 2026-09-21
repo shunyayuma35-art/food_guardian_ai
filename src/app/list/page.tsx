@@ -224,12 +224,12 @@ export default function ListPage() {
           title={t('guide.list')}
           color="orange"
           steps={[
-            { icon: '🔍', title: 'キーワード検索', desc: '上の検索欄に製品名・ロット番号・担当者名などを入力すると、一致する記録だけが表示されます。' },
-            { icon: '📌', title: 'フィルターで絞り込む', desc: 'ステータスや発見工程で絞り込みができます。' },
-            { icon: '📋', title: 'カードをタップして詳細を確認', desc: '各カードをタップすると詳細画面が開きます。' },
+            { icon: '🔍', title: t('list.guide.step1.title'), desc: t('list.guide.step1.desc') },
+            { icon: '📌', title: t('list.guide.step2.title'), desc: t('list.guide.step2.desc') },
+            { icon: '📋', title: t('list.guide.step3.title'), desc: t('list.guide.step3.desc') },
           ]}
           tips={[
-            '同じロット番号の事故をまとめて確認したい場合は、ロット番号で検索してください',
+            t('list.guide.tip1'),
           ]}
         />
 

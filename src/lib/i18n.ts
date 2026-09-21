@@ -157,6 +157,13 @@ export type TranslationKey =
   // device types and inspection results (inspection page)
   | 'insp.device.metalDetector' | 'insp.device.xray'
   | 'insp.result.pass' | 'insp.result.fail' | 'insp.result.adjusted'
+  // qr banner (brand-aware split)
+  | 'qr.banner.prefix' | 'qr.banner.suffix'
+  // list page – usage guide
+  | 'list.guide.step1.title' | 'list.guide.step1.desc'
+  | 'list.guide.step2.title' | 'list.guide.step2.desc'
+  | 'list.guide.step3.title' | 'list.guide.step3.desc'
+  | 'list.guide.tip1'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -405,6 +412,17 @@ const ja: Dict = {
   'insp.result.pass': '正常',
   'insp.result.fail': '異常',
   'insp.result.adjusted': '調整後OK',
+  // qr banner split
+  'qr.banner.prefix': '',
+  'qr.banner.suffix': ' を共有',
+  // list guide
+  'list.guide.step1.title': 'キーワード検索',
+  'list.guide.step1.desc': '上の検索欄に製品名・ロット番号・担当者名などを入力すると、一致する記録だけが表示されます。',
+  'list.guide.step2.title': 'フィルターで絞り込む',
+  'list.guide.step2.desc': 'ステータスや発見工程で絞り込みができます。',
+  'list.guide.step3.title': 'カードをタップして詳細を確認',
+  'list.guide.step3.desc': '各カードをタップすると詳細画面が開きます。',
+  'list.guide.tip1': '同じロット番号の事故をまとめて確認したい場合は、ロット番号で検索してください',
 }
 
 const en: Dict = {
@@ -652,6 +670,17 @@ const en: Dict = {
   'insp.result.pass': 'Pass',
   'insp.result.fail': 'Fail',
   'insp.result.adjusted': 'Adjusted OK',
+  // qr banner split
+  'qr.banner.prefix': 'Share ',
+  'qr.banner.suffix': '',
+  // list guide
+  'list.guide.step1.title': 'Keyword Search',
+  'list.guide.step1.desc': 'Enter a product name, lot number, operator, etc. in the search field to show only matching records.',
+  'list.guide.step2.title': 'Filter Records',
+  'list.guide.step2.desc': 'Filter by status or discovery process.',
+  'list.guide.step3.title': 'Tap Card for Details',
+  'list.guide.step3.desc': 'Tap any card to open the detail screen.',
+  'list.guide.tip1': 'To review all incidents with the same lot number, search by lot number.',
 }
 
 const zh: Dict = {

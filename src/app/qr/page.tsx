@@ -92,7 +92,7 @@ export default function QRPage() {
               <FoodEyeLogo size={88} />
             </div>
           </div>
-          <h2 className="text-white text-xl font-extrabold">FoodEye を共有</h2>
+          <h2 className="text-white text-xl font-extrabold">{t('qr.banner.prefix')}FoodEye{t('qr.banner.suffix')}</h2>
           <p className="text-white/80 text-sm mt-1 whitespace-pre-line">
             {t('qr.banner.desc')}
           </p>

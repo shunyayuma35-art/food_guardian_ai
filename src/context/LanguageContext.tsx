@@ -24,6 +24,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (saved) setLangState(saved)
   }, [])
 
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
+
   const setLang = useCallback((l: LangCode) => {
     setLangState(l)
     localStorage.setItem('foodeye_lang', l)

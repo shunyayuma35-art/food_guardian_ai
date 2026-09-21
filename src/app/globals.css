@@ -77,6 +77,13 @@
   }
 }
 
+/* ── ベトナム語フォント補正 ── */
+/* 日本語フォント（Yu Gothic 等）はベトナム語の多重声調記号のグリフメトリクスが不正確なため */
+/* vi 選択時のみ system-ui（Windows: Segoe UI / macOS: San Francisco）を優先する */
+:lang(vi) {
+  font-family: system-ui, 'Segoe UI', Arial, sans-serif;
+}
+
 /* ── ロック画面 波紋アニメーション ── */
 @keyframes lockRipple {
   0% { transform: scale(1); opacity: 0.55; }
