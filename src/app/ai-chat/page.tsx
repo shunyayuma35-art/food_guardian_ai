@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, type RefObject } from 'react'
 import Navigation from '@/components/Navigation'
 import { useLang } from '@/context/LanguageContext'
 import ImageEnhancer from '@/components/ImageEnhancer'
@@ -94,7 +94,7 @@ function AnalysisCard({ analysis, urgencyLabels, candidatesLabel, visualLabel }:
   )
 }
 
-function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (text: string) => void }) {
+function MessageBubble({ msg, onQuickReply, analysisRef }: { msg: Message; onQuickReply: (text: string) => void; analysisRef?: RefObject<HTMLDivElement> }) {
   const { t } = useLang()
   const urgencyLabels = {
     high:   { text: t('aichat.urgency.high'), bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500', textColor: 'text-red-700' },
@@ -144,7 +144,7 @@ function MessageBubble({ msg, onQuickReply }: { msg: Message; onQuickReply: (tex
 
         {/* 画像解析結果（スマホ全幅・text-sm で読みやすく） */}
         {msg.imageAnalysis && (
-          <div className="mt-2 rounded-xl border border-orange-200 bg-orange-50 p-3">
+          <div ref={analysisRef} className="mt-2 rounded-xl border border-orange-200 bg-orange-50 p-3">
             <p className="text-[10px] font-semibold text-orange-700 uppercase tracking-wide mb-2">{t('aichat.imageAnalysis')}</p>
             <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
               {msg.imageAnalysis.result}
@@ -212,6 +212,7 @@ export default function AiChatPage() {
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const lastAnalysisRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
 
@@ -221,7 +222,12 @@ export default function AiChatPage() {
   ]
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const lastMsg = messages[messages.length - 1]
+    if (!loading && lastMsg?.imageAnalysis && lastAnalysisRef.current) {
+      lastAnalysisRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages, loading, searchLoading])
 
   // 初回ウェルカムメッセージ
@@ -650,11 +656,20 @@ export default function AiChatPage() {
       </header>
 
       {/* チャットエリア */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 pb-2 max-w-2xl w-full mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 py-3 pb-40 max-w-2xl w-full mx-auto">
         {/* メッセージ一覧 */}
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} msg={msg} onQuickReply={handleQuickReply} />
-        ))}
+        {messages.map((msg, idx) => {
+          const isLastAnalysis = msg.imageAnalysis != null &&
+            messages.slice(idx + 1).every(m => !m.imageAnalysis)
+          return (
+            <MessageBubble
+              key={msg.id}
+              msg={msg}
+              onQuickReply={handleQuickReply}
+              analysisRef={isLastAnalysis ? lastAnalysisRef : undefined}
+            />
+          )
+        })}
 
         {loading && <TypingIndicator />}
         <div ref={messagesEndRef} />
@@ -668,8 +683,11 @@ export default function AiChatPage() {
             onClick={() => setShowSearch(v => !v)}
             className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-blue-700 active:bg-blue-100 transition-colors"
           >
-            <span>{t('aichat.searchSection')}</span>
-            <span className="text-blue-400 text-[10px]">{showSearch ? '▲ 閉じる' : '▼ 開く'}</span>
+            <span className="flex items-center gap-1.5">
+              <span>🔍</span>
+              <span>Claude 検索</span>
+            </span>
+            <span className="text-blue-400 text-[10px]">{showSearch ? '▲ 閉じる' : '▼'}</span>
           </button>
           {showSearch && (
             <div className="px-3 pb-3 space-y-2 border-t border-blue-200">
@@ -706,16 +724,7 @@ export default function AiChatPage() {
           )}
         </div>
 
-        {/* 画像解析セクション */}
-        {!imageBase64 && (
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-orange-300 rounded-xl text-sm font-medium text-orange-500 bg-orange-50/50 active:bg-orange-100 transition-colors"
-          >
-            <span>📷</span>
-            <span>{t('aichat.addPhoto')}</span>
-          </button>
-        )}
+        {/* 画像解析セクション（imageUrl 設定後に展開、ボタンは入力行に統合） */}
 
         {imageUrl && (
           <div className="p-3 bg-white rounded-2xl border-2 border-orange-200 shadow-sm">
@@ -775,7 +784,7 @@ export default function AiChatPage() {
         {/* 従来の入力エリア */}
         <div className="flex gap-2 items-end">
           {/* 写真ボタン（会話中） */}
-          {(!isFirstUserTurn || imageBase64) && !imageUrl && (
+          {!imageUrl && (
             <button
               onClick={() => fileInputRef.current?.click()}
               className="w-10 h-10 shrink-0 flex items-center justify-center bg-orange-50 border border-orange-200 rounded-xl text-lg active:scale-95 transition-all"
