@@ -2,27 +2,47 @@
  * Unified AI provider: Anthropic (default) or Vertex AI Gemini.
  * Switch with AI_PROVIDER=gemini env var.
  *
- * NOTES — Vertex AI / Gemini:
- *   - 必要な IAM ロール: roles/aiplatform.user
- *     (未確認: 正確なロール名は Google Cloud IAM コンソールで要確認)
- *   - "Agent Platform API" が aiplatform.googleapis.com を指す場合は有効済み。
- *     別サービス（Vertex AI Agent Builder 等）の場合は追加で有効化が必要（未確認）。
- *   - asia-northeast1 での Gemini モデル提供状況は未確認。
- *     gcloud ai models list --region=asia-northeast1 で確認可能。
+ * SDK: @google/genai v2.23.0 (公式推奨。@google-cloud/vertexai は 2026/06/24 以降
+ *      Gemini 機能を削除予定の非推奨 SDK のため、こちらを使用)
  *
- * LOCAL TEST SETUP:
- *   1. gcloud auth application-default login
- *   2. .env.local に追加:
- *        AI_PROVIDER=gemini
- *        GOOGLE_CLOUD_PROJECT=<your-project-id>
- *        GOOGLE_CLOUD_LOCATION=asia-northeast1   # 未確認: us-central1 は確認済み
- *        GEMINI_MODEL=gemini-2.0-flash-001       # 未確認: モデル名は要確認
- *   3. npm run dev
+ * ── Vertex AI 利用時の IAM 権限 ──────────────────────────────────────────
+ * サービスアカウント: 670414377052-compute@developer.gserviceaccount.com
+ * 必要なロール: roles/aiplatform.user
+ *   （未確認: 2026/04 に Vertex AI → Gemini Enterprise Agent Platform に改名。
+ *    ロール ID は変わっていない可能性が高いが、Google Cloud Console の IAM 画面で
+ *    "aiplatform.user" を検索して確認すること）
+ * 付与コマンド（実行は本人が行うこと）:
+ *   gcloud projects add-iam-policy-binding <project-id> \
+ *     --member="serviceAccount:670414377052-compute@developer.gserviceaccount.com" \
+ *     --role="roles/aiplatform.user"
  *
- * CLOUD RUN SETUP:
- *   - サービスアカウントに roles/aiplatform.user を付与するだけで ADC が自動的に使われる。
- *   - GOOGLE_APPLICATION_CREDENTIALS の設定は不要。
- *   - deploy-cloudrun.ps1 の --set-env-vars に上記 4 変数を追加すること。
+ * ── ローカルテスト手順 ───────────────────────────────────────────────────
+ * 1. gcloud auth application-default login
+ *    （ブラウザが開く。Google アカウントでログイン後、ADC が ~/.config/gcloud/ に保存される）
+ * 2. .env.local に追加:
+ *      AI_PROVIDER=gemini
+ *      GOOGLE_CLOUD_PROJECT=project-66aee540-552a-4a95-b80
+ *      GOOGLE_CLOUD_LOCATION=asia-northeast1
+ *      GEMINI_MODEL=gemini-2.5-flash
+ *    ※ GEMINI_API_KEY は不要（ADC を使うため）
+ * 3. npm run dev
+ *
+ * ── Cloud Run での動作 ───────────────────────────────────────────────────
+ * サービスアカウントに roles/aiplatform.user を付与すれば ADC が自動的に使われる。
+ * GOOGLE_APPLICATION_CREDENTIALS の設定は不要。
+ * deploy-cloudrun.ps1 の --set-env-vars に以下を追加すること:
+ *   AI_PROVIDER=gemini
+ *   GOOGLE_CLOUD_PROJECT=project-66aee540-552a-4a95-b80
+ *   GOOGLE_CLOUD_LOCATION=asia-northeast1
+ *   GEMINI_MODEL=gemini-2.5-flash
+ *
+ * ── 利用可能モデル（Vertex AI 確認済み）─────────────────────────────────
+ * - gemini-2.5-flash     : 推奨。高速・マルチモーダル対応
+ * - gemini-2.0-flash-001 : 安定版
+ * - gemini-2.0-flash     : 最新の 2.0 系
+ * ※ asia-northeast1 での提供状況: 標準 API 呼び出しは動作するが、
+ *   Provisioned Throughput は Single Zone のみサポート（2026/09 時点）。
+ *   モデル詳細は Cloud Console → Vertex AI → Model Garden で確認すること。
  */
 
 import Anthropic from '@anthropic-ai/sdk'
@@ -47,31 +67,31 @@ export interface AiCallResult {
 }
 
 // ---------------------------------------------------------------------------
-// Config (all from env vars, no hard-coded secrets)
+// Config (env vars のみ。ハードコードなし)
 // ---------------------------------------------------------------------------
 
 const PROVIDER = (process.env.AI_PROVIDER ?? 'anthropic') as 'anthropic' | 'gemini'
 const GCP_PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? ''
 const GCP_LOCATION = process.env.GOOGLE_CLOUD_LOCATION ?? 'asia-northeast1'
-// 未確認: 実際に使用前に `gcloud ai models list --region=<location>` で確認すること。
-const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash-001'
-const ANTHROPIC_MODEL = 'claude-opus-4-5'
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash'
+const ANTHROPIC_MODEL = 'claude-sonnet-4-6'
 
 // ---------------------------------------------------------------------------
-// Server-side rate limiting (in-memory, per instance)
+// Server-side rate limiting (in-memory)
 //
-// PURPOSE: Cookie ベースの MAX_MONTHLY=10 はクライアント側で改ざん可能なため、
-//          サーバー側でも上限を設ける二重防護。
+// 目的: Cookie ベース制限（MAX_MONTHLY=10）はクライアント側で改ざん可能なため、
+//       サーバー側でも月次上限を設ける二重防護。
 //
-// LIMITATION: Cloud Run の複数インスタンス間でカウンターは共有されない。
-//             本番運用では Supabase の api_usage テーブルによる DB 側カウントを推奨:
-//               UPDATE api_usage SET count = count + 1
-//               WHERE month = current_month AND count < SERVER_LIMIT
-//               RETURNING count
+// 限界: インスタンスごとにカウンターを保持。インスタンス再起動・スケールアウト時に
+//       リセットされる。複数インスタンス間では共有されない。
+//       本番運用では Supabase の api_usage テーブルによる DB カウントを推奨:
+//         UPDATE api_usage SET count = count + 1
+//         WHERE month = current_month AND count < SERVER_LIMIT
+//         RETURNING count
 // ---------------------------------------------------------------------------
 
 const _serverLog = new Map<string, { month: string; count: number }>()
-const SERVER_MONTHLY_LIMIT = 200  // 全ユーザー合計 / インスタンス / 月
+const SERVER_MONTHLY_LIMIT = 200
 
 function checkAndIncrementServerLimit(): boolean {
   const m = new Date().toISOString().slice(0, 7)
@@ -126,9 +146,8 @@ async function callAnthropic(opts: AiCallOptions): Promise<AiCallResult> {
 }
 
 // ---------------------------------------------------------------------------
-// Vertex AI Gemini (ADC — no API key required)
-// SDK: @google-cloud/vertexai
-// ADC: Cloud Run サービスアカウント / ローカルは gcloud auth application-default login
+// Vertex AI Gemini (ADC — API キー不要)
+// SDK: @google/genai  https://www.npmjs.com/package/@google/genai
 // ---------------------------------------------------------------------------
 
 async function callGemini(opts: AiCallOptions): Promise<AiCallResult> {
@@ -136,20 +155,18 @@ async function callGemini(opts: AiCallOptions): Promise<AiCallResult> {
     throw new Error('GOOGLE_CLOUD_PROJECT is required when AI_PROVIDER=gemini')
   }
 
-  // Dynamic import: Gemini SDK は Anthropic 使用時にロードしない（コールドスタート最適化）
-  const { VertexAI } = await import('@google-cloud/vertexai')
+  // Dynamic import: Anthropic 使用時に Gemini SDK をロードしない（コールドスタート最適化）
+  const { GoogleGenAI } = await import('@google/genai')
 
-  const vertexai = new VertexAI({ project: GCP_PROJECT, location: GCP_LOCATION })
-  const generativeModel = vertexai.getGenerativeModel({
-    model: GEMINI_MODEL,
-    generationConfig: { maxOutputTokens: opts.maxTokens ?? 1024 },
-    systemInstruction: { role: 'system', parts: [{ text: opts.system }] },
+  const ai = new GoogleGenAI({
+    vertexai: true,
+    project: GCP_PROJECT,
+    location: GCP_LOCATION,
   })
 
-  // Build parts array (images first, then text)
-  type InlinePart = { inlineData: { mimeType: string; data: string } }
-  type TextPart = { text: string }
-  const parts: (InlinePart | TextPart)[] = []
+  // マルチモーダル parts 構築（画像を先に、テキストを後に）
+  type Part = { text: string } | { inlineData: { mimeType: string; data: string } }
+  const parts: Part[] = []
 
   if (opts.images) {
     for (const img of opts.images) {
@@ -158,12 +175,16 @@ async function callGemini(opts: AiCallOptions): Promise<AiCallResult> {
   }
   parts.push({ text: opts.userText })
 
-  const result = await generativeModel.generateContent({
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
     contents: [{ role: 'user', parts }],
+    config: {
+      systemInstruction: opts.system,
+      maxOutputTokens: opts.maxTokens ?? 1024,
+    },
   })
 
-  const text =
-    result.response?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-
+  // response.text は candidates[0].content.parts[0].text のショートハンド
+  const text = response.text ?? ''
   return { text, provider: 'gemini', model: GEMINI_MODEL }
 }
