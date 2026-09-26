@@ -218,10 +218,11 @@ export default function AiChatPage() {
   const chatHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
   const dragCounterRef = useRef(0)
 
-  const QUICK_SUGGESTIONS = [
-    '虫類', '金属片', '針金・金属線', 'プラスチック片', 'ゴム片',
-    'ガラス片', '毛髪・体毛', '骨片', '木片・紙片', '種・核', '植物片',
-  ]
+  const QUICK_SUGGESTIONS = lang === 'en'
+    ? ['Insects', 'Metal fragment', 'Wire / metal wire', 'Plastic piece', 'Rubber piece',
+       'Glass fragment', 'Hair', 'Bone fragment', 'Wood / paper', 'Seed / pit', 'Plant material']
+    : ['虫類', '金属片', '針金・金属線', 'プラスチック片', 'ゴム片',
+       'ガラス片', '毛髪・体毛', '骨片', '木片・紙片', '種・核', '植物片']
 
   useEffect(() => {
     const lastMsg = messages[messages.length - 1]
