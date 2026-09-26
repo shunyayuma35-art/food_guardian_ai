@@ -711,7 +711,7 @@ export default function AiChatPage() {
       )}
 
       {/* 入力エリア */}
-      <div className="bg-white border-t border-gray-100 max-w-2xl w-full mx-auto">
+      <div className="bg-white border-t border-gray-100 max-w-2xl w-full mx-auto pb-16">
 
         {/* パネルトグルバー */}
         <button
@@ -723,7 +723,7 @@ export default function AiChatPage() {
 
         {/* 折りたたみパネル */}
         {showPanel && (
-          <div className="px-3 pb-2 space-y-2 border-t border-gray-100">
+          <div className="px-3 pb-2 space-y-2 border-t border-gray-100 max-h-[40vh] overflow-y-auto">
             {/* Claude 検索 */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl overflow-hidden mt-2">
               <div className="px-3 py-2 space-y-2">
