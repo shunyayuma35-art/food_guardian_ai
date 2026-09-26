@@ -28,7 +28,7 @@ const STEP_ICONS = ['📦', '📸', '🔍', '📝']
 
 export default function RecordPage() {
   const { user, loading } = useAuth()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const router = useRouter()
 
   const STEPS = [t('record.step.product'), t('record.step.photo'), t('record.step.features'), t('record.step.detail')]
@@ -97,7 +97,7 @@ export default function RecordPage() {
         const res = await fetch('/api/analyze-foreign-matter', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, mediaType, structured: true }),
+          body: JSON.stringify({ imageBase64: base64, mediaType, structured: true, lang }),
         })
         if (cancelled) return
         if (res.status === 429) return // 上限超過は静かに無視

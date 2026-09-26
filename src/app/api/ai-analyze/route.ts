@@ -228,6 +228,13 @@ const SYSTEM_PROMPT = `あなたはFoodEye（食品異物管理システム）�
 - 回答は簡潔・実用的に（箇条書き多用）
 - 「緊急度」は urgency: "high" | "medium" | "low" で表現`
 
+function buildLangInstruction(lang?: string): string {
+  if (lang === 'en') {
+    return '\n\nIMPORTANT — Language: Respond entirely in English. Use standard English names for foreign matter types (e.g., "housefly", "stainless steel fragment", "fish bone", "mold", "glass fragment", "plastic piece"). Use professional food safety English terminology throughout.'
+  }
+  return '\n\n日本語で回答してください。異物の種類名は従来通りの日本語名称を使用してください（例：イエバエ、ステンレス片、魚骨）。'
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
@@ -285,6 +292,7 @@ export async function POST(req: NextRequest) {
     imageBase64?: string
     mimeType?: string
     userHint?: string
+    lang?: string
   }
 
   try {
@@ -293,7 +301,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '不正なリクエスト形式です。' }, { status: 400 })
   }
 
-  const { messages, imageBase64, mimeType = 'image/jpeg', userHint } = body
+  const { messages, imageBase64, mimeType = 'image/jpeg', userHint, lang } = body
 
   if (!messages || messages.length === 0) {
     return NextResponse.json({ error: 'messagesが必要です。' }, { status: 400 })
@@ -313,7 +321,7 @@ export async function POST(req: NextRequest) {
       : undefined
 
     const aiResult = await callAI({
-      system: SYSTEM_PROMPT,
+      system: SYSTEM_PROMPT + buildLangInstruction(lang),
       userText: lastMsg.content + hintSuffix,
       images,
       maxTokens: 800,

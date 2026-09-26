@@ -193,7 +193,7 @@ function TypingIndicator() {
 }
 
 export default function AiChatPage() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -353,6 +353,7 @@ export default function AiChatPage() {
           imageBase64,
           mediaType: mimeType,
           userHint: userHint.trim() || undefined,
+          lang,
         }),
         signal: AbortSignal.timeout(30000), // 30秒でAPI呼び出しをキャンセル
       });
@@ -400,7 +401,7 @@ export default function AiChatPage() {
     } finally {
       setLoading(false);
     }
-  }, [imageBase64, imageUrl, mimeType, userHint])
+  }, [imageBase64, imageUrl, mimeType, userHint, lang])
 
   const handlePageDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -465,6 +466,7 @@ export default function AiChatPage() {
           imageBase64: isFirstMessage ? imageBase64 : undefined,
           mimeType,
           userHint: isFirstMessage && userHint.trim() ? userHint.trim() : undefined,
+          lang,
         }),
       })
 
@@ -507,7 +509,7 @@ export default function AiChatPage() {
     } finally {
       setLoading(false)
     }
-  }, [input, imageBase64, imageUrl, mimeType, loading, userHint])
+  }, [input, imageBase64, imageUrl, mimeType, loading, userHint, lang])
 
   const handleQuickReply = useCallback((text: string) => {
     sendMessage(text)

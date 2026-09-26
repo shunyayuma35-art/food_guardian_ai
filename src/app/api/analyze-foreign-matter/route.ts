@@ -188,6 +188,13 @@ const FOREIGN_MATTER_DB = `## 食品異物データベース
 🟡 中（記録・原因調査）：軟骨・魚皮・植物由来・繊維
 🟢 低（記録のみ）：添加物かたまり・自社原料由来`
 
+function buildLangInstruction(lang?: string): string {
+  if (lang === 'en') {
+    return '\n\nIMPORTANT — Language: Respond entirely in English. Use standard English names for foreign matter types (e.g., "housefly", "stainless steel fragment", "fish bone", "mold", "glass fragment", "plastic piece"). Use professional food safety English terminology throughout.'
+  }
+  return '\n\n日本語で回答してください。異物の種類名は従来通りの日本語名称を使用してください（例：イエバエ、ステンレス片、魚骨）。'
+}
+
 export async function POST(req: NextRequest) {
   const usage = parseUsage(req.cookies.get(USAGE_COOKIE)?.value)
   if (usage.count >= MAX_MONTHLY) {
@@ -199,7 +206,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { imageBase64, mediaType, userHint, structured } = body;
+    const { imageBase64, mediaType, userHint, structured, lang } = body;
 
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return NextResponse.json({ error: '画像データが無効です。' }, { status: 400 });
@@ -224,6 +231,7 @@ export async function POST(req: NextRequest) {
       setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT_MS)
     );
 
+    const langInst = buildLangInstruction(lang as string | undefined)
     const systemPrompt = structured
       ? `食品工場の異物特定専門家として画像を分析し、以下のJSONのみを返してください（説明文・前置き一切不要）。
 
@@ -248,7 +256,7 @@ ${FOREIGN_MATTER_DB}
   "textureKeys": ["hard|soft|elastic|sharp|smooth|rough|brittle|sticky のうち該当するもの"],
   "appearanceKeys": ["glossy|matte|fibrous|metallic|rubbery|granular|flatPlate|wireShape のうち該当するもの"],
   "sizeKey": "tiny|medium|large|finePowder|longFiber|thinFilm|thickPiece のうち最も適切な1つ"
-}`
+}${langInst}`
       : `食品工場の異物特定専門家として画像を分析してください。
 
 ${FOREIGN_MATTER_DB}
@@ -265,7 +273,7 @@ ${FOREIGN_MATTER_DB}
 【緊急度】高・中・低（理由）
 【即時対応】箇条書き
 
-末尾：確定診断には外部専門機関の鑑定が必要です`
+末尾：確定診断には外部専門機関の鑑定が必要です${langInst}`
 
     const userText = structured
       ? `この異物を分析してJSON形式で回答してください。${userHint ? `ユーザー提供情報：${userHint}` : ''}`
