@@ -58,6 +58,8 @@ export interface AiCallOptions {
   userText: string
   images?: { base64: string; mediaType: MediaType }[]
   maxTokens?: number
+  /** 多ターン会話の過去履歴（最新メッセージは userText に渡す） */
+  history?: { role: 'user' | 'assistant'; text: string }[]
 }
 
 export interface AiCallResult {
@@ -113,7 +115,9 @@ export async function callAI(opts: AiCallOptions): Promise<AiCallResult> {
   if (!checkAndIncrementServerLimit()) {
     throw new Error('SERVER_LIMIT_EXCEEDED')
   }
-  return PROVIDER === 'gemini' ? callGemini(opts) : callAnthropic(opts)
+  const result = await (PROVIDER === 'gemini' ? callGemini(opts) : callAnthropic(opts))
+  console.log('[ai-provider] provider=%s model=%s', result.provider, result.model)
+  return result
 }
 
 // ---------------------------------------------------------------------------
@@ -123,6 +127,16 @@ export async function callAI(opts: AiCallOptions): Promise<AiCallResult> {
 async function callAnthropic(opts: AiCallOptions): Promise<AiCallResult> {
   const client = new Anthropic()
 
+  const msgs: Anthropic.MessageParam[] = []
+
+  // 過去履歴を追加
+  if (opts.history) {
+    for (const h of opts.history) {
+      msgs.push({ role: h.role, content: h.text })
+    }
+  }
+
+  // 現在のユーザーメッセージ（画像＋テキスト）
   const content: Anthropic.MessageParam['content'] = []
   if (opts.images) {
     for (const img of opts.images) {
@@ -133,12 +147,13 @@ async function callAnthropic(opts: AiCallOptions): Promise<AiCallResult> {
     }
   }
   content.push({ type: 'text', text: opts.userText })
+  msgs.push({ role: 'user', content })
 
   const res = await client.messages.create({
     model: ANTHROPIC_MODEL,
     max_tokens: opts.maxTokens ?? 1024,
     system: opts.system,
-    messages: [{ role: 'user', content }],
+    messages: msgs,
   })
 
   const text = res.content.find(b => b.type === 'text')?.text ?? ''
@@ -164,20 +179,34 @@ async function callGemini(opts: AiCallOptions): Promise<AiCallResult> {
     location: GCP_LOCATION,
   })
 
-  // マルチモーダル parts 構築（画像を先に、テキストを後に）
   type Part = { text: string } | { inlineData: { mimeType: string; data: string } }
-  const parts: Part[] = []
+  type GeminiContent = { role: 'user' | 'model'; parts: Part[] }
 
-  if (opts.images) {
-    for (const img of opts.images) {
-      parts.push({ inlineData: { mimeType: img.mediaType, data: img.base64 } })
+  const contents: GeminiContent[] = []
+
+  // 過去履歴を追加
+  if (opts.history) {
+    for (const h of opts.history) {
+      contents.push({
+        role: h.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: h.text }],
+      })
     }
   }
-  parts.push({ text: opts.userText })
+
+  // 現在のユーザーメッセージ（画像を先に、テキストを後に）
+  const currentParts: Part[] = []
+  if (opts.images) {
+    for (const img of opts.images) {
+      currentParts.push({ inlineData: { mimeType: img.mediaType, data: img.base64 } })
+    }
+  }
+  currentParts.push({ text: opts.userText })
+  contents.push({ role: 'user', parts: currentParts })
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL,
-    contents: [{ role: 'user', parts }],
+    contents,
     config: {
       systemInstruction: opts.system,
       maxOutputTokens: opts.maxTokens ?? 1024,

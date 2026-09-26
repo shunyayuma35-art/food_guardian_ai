@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { callAI, type MediaType } from '@/lib/ai-provider'
 
 // ── 月次使用制限（analyze-foreign-matter と共有） ─────────────────────
 const USAGE_COOKIE = 'foodeye_usage'
@@ -270,20 +271,12 @@ function parseAnalysis(text: string): { analysis: AnalysisResult | null; message
 }
 
 export async function POST(req: NextRequest) {
-  // 使用制限チェック（Claude解析と共有カウンター）
+  // 使用制限チェック（analyze-foreign-matter と共有カウンター）
   const usage = parseUsage(req.cookies.get(USAGE_COOKIE)?.value)
   if (usage.count >= MAX_MONTHLY) {
     return NextResponse.json(
       { error: 'USAGE_LIMIT', message: '今月の無料解析上限（10回）に達しました。' },
       { status: 429 }
-    )
-  }
-
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: 'AI機能を利用するにはGEMINI_API_KEYの設定が必要です。Google AI Studio（aistudio.google.com）で無料取得できます。' },
-      { status: 503 }
     )
   }
 
@@ -306,77 +299,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'messagesが必要です。' }, { status: 400 })
   }
 
-  // Gemini API 用のメッセージ配列を構築
-  // Gemini では role が "user" | "model"
-  const geminiContents = messages.map((msg, idx) => {
-    const role = msg.role === 'assistant' ? 'model' : 'user'
-
-    // 最初のユーザーメッセージ + 画像がある場合は画像を埋め込む
-    if (idx === 0 && msg.role === 'user' && imageBase64) {
-      const hintText = userHint ? `\n\nユーザー提供情報：${userHint}` : ''
-      return {
-        role: 'user',
-        parts: [
-          {
-            inline_data: {
-              mime_type: mimeType,
-              data: imageBase64,
-            },
-          },
-          { text: msg.content + hintText },
-        ],
-      }
-    }
-
-    return {
-      role,
-      parts: [{ text: msg.content }],
-    }
-  })
-
-  const requestBody = {
-    system_instruction: {
-      parts: [{ text: SYSTEM_PROMPT }],
-    },
-    contents: geminiContents,
-    generationConfig: {
-      maxOutputTokens: 800,
-      temperature: 0.4,
-    },
-  }
-
   try {
-    const model = 'gemini-1.5-flash'
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+    // 最後のメッセージを現在の発話、それ以前を履歴として分離
+    const history = messages.slice(0, -1).map((m) => ({
+      role: m.role as 'user' | 'assistant',
+      text: m.content,
+    }))
+    const lastMsg = messages[messages.length - 1]
+    const hintSuffix = userHint ? `\n\nユーザー提供情報：${userHint}` : ''
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(requestBody),
+    const images = imageBase64
+      ? [{ base64: imageBase64, mediaType: mimeType as MediaType }]
+      : undefined
+
+    const aiResult = await callAI({
+      system: SYSTEM_PROMPT,
+      userText: lastMsg.content + hintSuffix,
+      images,
+      maxTokens: 800,
+      history: history.length > 0 ? history : undefined,
     })
 
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error('[ai-analyze] Gemini API error:', response.status, errText)
-
-      // APIキーが無効な場合の分かりやすいメッセージ
-      if (response.status === 400 || response.status === 403) {
-        return NextResponse.json(
-          { error: 'APIキーが無効です。Google AI Studio でキーを確認してください。' },
-          { status: 500 }
-        )
-      }
-      return NextResponse.json({ error: 'AI APIの呼び出しに失敗しました。' }, { status: 500 })
-    }
-
-    const data = await response.json()
-    const rawText: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-
-    if (!rawText) {
-      return NextResponse.json({ error: 'AI からの応答が空でした。' }, { status: 500 })
-    }
-
-    const { analysis, message, quickReplies } = parseAnalysis(rawText)
+    const { analysis, message, quickReplies } = parseAnalysis(aiResult.text.trim())
 
     const remaining = MAX_MONTHLY - (usage.count + 1)
     const finalRes = NextResponse.json({ message, analysis, quickReplies, remaining })
@@ -385,7 +329,15 @@ export async function POST(req: NextRequest) {
     })
     return finalRes
   } catch (err) {
-    console.error('[ai-analyze] fetch error:', err)
-    return NextResponse.json({ error: 'ネットワークエラーが発生しました。' }, { status: 500 })
+    console.error('[ai-analyze] callAI error:', err)
+
+    if (err instanceof Error && err.message === 'SERVER_LIMIT_EXCEEDED') {
+      return NextResponse.json(
+        { error: 'USAGE_LIMIT', message: 'サーバー側の月次上限に達しました。' },
+        { status: 429 }
+      )
+    }
+
+    return NextResponse.json({ error: 'AI解析中にエラーが発生しました。' }, { status: 500 })
   }
 }
