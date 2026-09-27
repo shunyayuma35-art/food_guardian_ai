@@ -8,6 +8,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { title, location, description, status = 'investigating', image_url = null, source } = body
+    console.log('[POST /api/claude-save] received', { title: title?.slice(0, 30), status, hasSource: !!source })
 
     if (!title || !description) {
       return NextResponse.json({ error: 'title と description は必須です' }, { status: 400 })

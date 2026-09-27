@@ -37,12 +37,12 @@ export async function POST(req: NextRequest) {
       const ai = new GoogleGenAI({
         vertexai: true,
         project: process.env.GOOGLE_CLOUD_PROJECT ?? '',
-        location: process.env.GOOGLE_CLOUD_LOCATION ?? 'global',
+        location: process.env.GOOGLE_CLOUD_LOCATION ?? 'asia-northeast1',
       });
 
       const response = await Promise.race([
         ai.models.generateContent({
-          model: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash',
+          model: process.env.GEMINI_MODEL ?? 'gemini-3.8-flash',
           contents: [{ role: 'user', parts: [{ text: userMessage }] }],
           config: {
             systemInstruction: SYSTEM_PROMPT,

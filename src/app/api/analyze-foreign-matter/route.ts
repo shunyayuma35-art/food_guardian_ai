@@ -259,7 +259,7 @@ Using the database above, respond ONLY in this JSON format:
   "textureKeys": ["hard|soft|elastic|sharp|smooth|rough|brittle|sticky as applicable"],
   "appearanceKeys": ["glossy|matte|fibrous|metallic|rubbery|granular|flatPlate|wireShape as applicable"],
   "sizeKey": "tiny|medium|large|finePowder|longFiber|thinFilm|thickPiece (most fitting one)"
-}`
+}${langInst}`
         : `食品工場の異物特定専門家として画像を分析し、以下のJSONのみを返してください（説明文・前置き一切不要）。
 
 ${FOREIGN_MATTER_DB}
@@ -301,7 +301,7 @@ Line 1 (required): Estimated foreign matter: [name] (Confidence: High/Medium/Low
 [Urgency] High / Medium / Low (reason)
 [Immediate action] Bullet points
 
-Note: External specialist assessment is required for definitive identification.`
+Note: External specialist assessment is required for definitive identification.${langInst}`
         : `食品工場の異物特定専門家として画像を分析してください。
 
 ${FOREIGN_MATTER_DB}
