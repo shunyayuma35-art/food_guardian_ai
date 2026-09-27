@@ -648,7 +648,6 @@ export default function AiChatPage() {
           location: '（AI対話から記録）',
           description: resultContent,
           status: 'open',
-          source: 'ai_chat',
         }),
       });
       if (!res.ok) throw new Error('save failed');

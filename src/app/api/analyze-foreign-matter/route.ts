@@ -231,9 +231,36 @@ export async function POST(req: NextRequest) {
       setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT_MS)
     );
 
+    const isEn = lang === 'en'
     const langInst = buildLangInstruction(lang as string | undefined)
+
     const systemPrompt = structured
-      ? `食品工場の異物特定専門家として画像を分析し、以下のJSONのみを返してください（説明文・前置き一切不要）。
+      ? isEn
+        ? `You are a food safety specialist. Analyze the image and return ONLY the following JSON (no explanation or preamble).
+
+${FOREIGN_MATTER_DB}
+
+Using the database above, respond ONLY in this JSON format:
+
+{
+  "name": "Foreign matter name (e.g.: housefly, stainless steel fragment, blue plastic piece)",
+  "category": "insects|metal|plastic|plant-derived|fiber|other",
+  "confidence": "High|Medium|Low",
+  "urgency": "high|medium|low",
+  "size_estimate": "Estimated size (e.g.: approx. 5mm, about 1cm)",
+  "color": ["color feature 1", "color feature 2"],
+  "shape": ["shape feature 1"],
+  "surface": ["surface feature"],
+  "touch": ["texture/feel"],
+  "magnet": "Likely magnetic (visual estimate — requires actual measurement)|Likely non-magnetic (visual estimate — requires actual measurement)|Unknown",
+  "route": ["estimated contamination route 1", "route 2"],
+  "action": "Recommended action (concise, one sentence)",
+  "colorKeys": ["black|brown|white|gray|red|blue|green|yellow|orange|silver|metalColor|transparent as applicable"],
+  "textureKeys": ["hard|soft|elastic|sharp|smooth|rough|brittle|sticky as applicable"],
+  "appearanceKeys": ["glossy|matte|fibrous|metallic|rubbery|granular|flatPlate|wireShape as applicable"],
+  "sizeKey": "tiny|medium|large|finePowder|longFiber|thinFilm|thickPiece (most fitting one)"
+}`
+        : `食品工場の異物特定専門家として画像を分析し、以下のJSONのみを返してください（説明文・前置き一切不要）。
 
 ${FOREIGN_MATTER_DB}
 
@@ -257,7 +284,25 @@ ${FOREIGN_MATTER_DB}
   "appearanceKeys": ["glossy|matte|fibrous|metallic|rubbery|granular|flatPlate|wireShape のうち該当するもの"],
   "sizeKey": "tiny|medium|large|finePowder|longFiber|thinFilm|thickPiece のうち最も適切な1つ"
 }${langInst}`
-      : `食品工場の異物特定専門家として画像を分析してください。
+      : isEn
+        ? `You are a food safety specialist. Analyze the image.
+
+${FOREIGN_MATTER_DB}
+
+For insects: identify species from body shape, color, wings, antennae, and leg count.
+For metals: consider magnetic reaction (magnetic = iron/steel, non-magnetic = SUS/Al/Cu).
+
+Response format:
+Line 1 (required): Estimated foreign matter: [name] (Confidence: High/Medium/Low)
+[Type / Material] Estimated material and basis
+[Physical features] Color, shape, gloss, size, surface condition
+[Magnetic reaction] Visual estimate only: Likely magnetic / Likely non-magnetic / Unknown (requires actual measurement)
+[Contamination route] Priority order, 1-3 points
+[Urgency] High / Medium / Low (reason)
+[Immediate action] Bullet points
+
+Note: External specialist assessment is required for definitive identification.`
+        : `食品工場の異物特定専門家として画像を分析してください。
 
 ${FOREIGN_MATTER_DB}
 
@@ -276,8 +321,12 @@ ${FOREIGN_MATTER_DB}
 末尾：確定診断には外部専門機関の鑑定が必要です${langInst}`
 
     const userText = structured
-      ? `この異物を分析してJSON形式で回答してください。${userHint ? `ユーザー提供情報：${userHint}` : ''}`
-      : `異物を特定してください。種類・材質・経路・緊急度を必ず含めてください。${userHint ? `\n\nユーザー提供情報：${userHint}` : ''}`
+      ? isEn
+        ? `Analyze this foreign matter and respond in JSON format only.${userHint ? ` User info: ${userHint}` : ''}`
+        : `この異物を分析してJSON形式で回答してください。${userHint ? `ユーザー提供情報：${userHint}` : ''}`
+      : isEn
+        ? `Identify the foreign matter. Must include type, material, contamination route, and urgency.${userHint ? `\n\nUser info: ${userHint}` : ''}`
+        : `異物を特定してください。種類・材質・経路・緊急度を必ず含めてください。${userHint ? `\n\nユーザー提供情報：${userHint}` : ''}`
 
     // maxTokens: 2048 — thinking モデル(gemini-3.8-flash)は thinking + output の合計で消費するため大きめに設定
     const aiResult = await Promise.race([
