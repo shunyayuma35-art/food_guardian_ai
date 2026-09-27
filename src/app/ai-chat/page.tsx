@@ -7,6 +7,7 @@ import ImageEnhancer from '@/components/ImageEnhancer'
 import ForeignMatterVisualizer from '@/components/ForeignMatterVisualizer'
 import ComparisonPanel from '@/components/ComparisonPanel'
 import toast from 'react-hot-toast'
+import { compressImage, compressDataUrl } from '@/lib/compressImage'
 
 interface AnalysisResult {
   urgency: 'high' | 'medium' | 'low'
@@ -218,9 +219,11 @@ export default function AiChatPage() {
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [showPanel, setShowPanel] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [compressing, setCompressing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const lastAnalysisRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const imageFileRef = useRef<File | null>(null)
   const chatHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
   const dragCounterRef = useRef(0)
 
@@ -250,8 +253,8 @@ export default function AiChatPage() {
   }, [t])
 
   const handleImage = useCallback((file: File) => {
-    // ファイルサイズチェック（5MB以下）
-    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    // 20MB 超は拒否（canvas が OOM になる恐れ）
+    const MAX_FILE_SIZE = 20 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       toast.error(t('toast.imageSize') + ` (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
       return;
@@ -262,6 +265,8 @@ export default function AiChatPage() {
       toast.error(t('toast.imageFormat'));
       return;
     }
+
+    imageFileRef.current = file;  // 圧縮時に使うために保持
 
     const url = URL.createObjectURL(file);
     setImageUrl(url);
@@ -343,26 +348,50 @@ export default function AiChatPage() {
     }
   }, [searchQuery])
 
-  const handleImageUploadAnalysis = useCallback(async (file: File) => {
+  const handleImageUploadAnalysis = useCallback(async () => {
     if (!imageBase64) return;
-    
+
+    setCompressing(true);
     setLoading(true);
     const timeoutId = setTimeout(() => {
+      setCompressing(false);
       setLoading(false);
       toast.error(t('toast.timeout'));
-    }, 35000); // 35秒後にタイムアウト
+    }, 35000);
 
+    // ── Step 1: 圧縮（画像を圧縮中…） ────────────────────────────────────
+    let base64ToSend = imageBase64;
+    try {
+      let compressed;
+      if (imageEnhancedDataUrl) {
+        // エンハンス済み画像がある場合はそちらを圧縮
+        compressed = await compressDataUrl(imageEnhancedDataUrl);
+      } else if (imageFileRef.current) {
+        // 元ファイルがある場合は EXIF 回転を補正しながら圧縮
+        compressed = await compressImage(imageFileRef.current);
+      } else {
+        // フォールバック: base64 文字列から圧縮
+        compressed = await compressDataUrl(`data:${mimeType};base64,${imageBase64}`);
+      }
+      base64ToSend = compressed.base64;
+    } catch {
+      // 圧縮失敗時はオリジナルで続行
+    } finally {
+      setCompressing(false);
+    }
+
+    // ── Step 2: AI 解析（AIが解析中…） ─────────────────────────────────
     try {
       const res = await fetch('/api/analyze-foreign-matter', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          imageBase64,
-          mediaType: mimeType,
+          imageBase64: base64ToSend,
+          mediaType: 'image/jpeg',
           userHint: userHint.trim() || undefined,
           lang: getStoredLang(),
         }),
-        signal: AbortSignal.timeout(30000), // 30秒でAPI呼び出しをキャンセル
+        signal: AbortSignal.timeout(30000),
       });
 
       clearTimeout(timeoutId);
@@ -386,7 +415,7 @@ export default function AiChatPage() {
       const analysisMsg: Message = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: '',          // カード側(imageAnalysis)にのみ表示するため空に
+        content: '',
         imageAnalysis: data,
         imageUrl: imageUrl ?? undefined,
         timestamp: new Date(),
@@ -398,6 +427,7 @@ export default function AiChatPage() {
       setImageUrl(null);
       setImageOriginalDataUrl(null);
       setImageEnhancedDataUrl(null);
+      imageFileRef.current = null;
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
@@ -408,7 +438,7 @@ export default function AiChatPage() {
     } finally {
       setLoading(false);
     }
-  }, [imageBase64, imageUrl, mimeType, userHint])
+  }, [imageBase64, imageUrl, mimeType, userHint, imageEnhancedDataUrl])
 
   const handlePageDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -464,14 +494,34 @@ export default function AiChatPage() {
     // チャット履歴に追加
     chatHistoryRef.current.push({ role: 'user', content: userText })
 
+    // 初回メッセージに画像がある場合は圧縮してから送る
+    let finalImageBase64 = isFirstMessage ? imageBase64 : undefined
+    let finalMimeType = mimeType
+    if (finalImageBase64) {
+      try {
+        let compressed
+        if (imageEnhancedDataUrl) {
+          compressed = await compressDataUrl(imageEnhancedDataUrl)
+        } else if (imageFileRef.current) {
+          compressed = await compressImage(imageFileRef.current)
+        } else {
+          compressed = await compressDataUrl(`data:${mimeType};base64,${finalImageBase64}`)
+        }
+        finalImageBase64 = compressed.base64
+        finalMimeType = compressed.mimeType
+      } catch {
+        // 圧縮失敗時はオリジナルで続行
+      }
+    }
+
     try {
       const res = await fetch('/api/ai-analyze', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           messages: chatHistoryRef.current,
-          imageBase64: isFirstMessage ? imageBase64 : undefined,
-          mimeType,
+          imageBase64: finalImageBase64,
+          mimeType: finalMimeType,
           userHint: isFirstMessage && userHint.trim() ? userHint.trim() : undefined,
           lang: getStoredLang(),
         }),
@@ -516,7 +566,7 @@ export default function AiChatPage() {
     } finally {
       setLoading(false)
     }
-  }, [input, imageBase64, imageUrl, mimeType, loading, userHint])
+  }, [input, imageBase64, imageUrl, mimeType, loading, userHint, imageEnhancedDataUrl])
 
   const handleQuickReply = useCallback((text: string) => {
     sendMessage(text)
@@ -805,11 +855,11 @@ export default function AiChatPage() {
                   />
                 </div>
                 <button
-                  onClick={() => handleImageUploadAnalysis(new File([imageBase64!], 'image.jpg', { type: mimeType }))}
-                  disabled={loading}
+                  onClick={handleImageUploadAnalysis}
+                  disabled={loading || compressing}
                   className="w-full px-3 py-2 bg-orange-500 text-white text-xs font-semibold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? t('aichat.analyzing') : t('aichat.analyzeBtn')}
+                  {compressing ? t('aichat.compressing') : loading ? t('aichat.analyzing') : t('aichat.analyzeBtn')}
                 </button>
                 {usageRemaining !== null && (
                   <p className="text-[10px] text-gray-400 text-center mt-1">
@@ -848,8 +898,8 @@ export default function AiChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={imageBase64 ? t('aichat.inputWithPhoto') : loading ? t('aichat.analyzing') : t('aichat.inputPlaceholder')}
-            disabled={loading}
+            placeholder={compressing ? t('aichat.compressing') : imageBase64 ? t('aichat.inputWithPhoto') : loading ? t('aichat.analyzing') : t('aichat.inputPlaceholder')}
+            disabled={loading || compressing}
             rows={1}
             className="flex-1 resize-none bg-gray-100 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:bg-white transition-all max-h-28 overflow-y-auto leading-relaxed disabled:opacity-50"
             style={{ height: 'auto' }}

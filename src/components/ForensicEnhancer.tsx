@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { compressDataUrl } from '@/lib/compressImage'
 
 interface Props {
   file?: File | null
@@ -283,11 +284,19 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
     setAnalyzing(true)
     setShowResult(false)
     try {
+      // 送信前に圧縮（レイヤー処理済みの JPEG をさらに最適化）
+      let base64ToSend = aiReadyUrl.split(',')[1]
+      try {
+        const compressed = await compressDataUrl(aiReadyUrl)
+        base64ToSend = compressed.base64
+      } catch {
+        // 圧縮失敗時はオリジナルで続行
+      }
       const res = await fetch('/api/analyze-foreign-matter', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          imageBase64: aiReadyUrl.split(',')[1],
+          imageBase64: base64ToSend,
           mediaType: 'image/jpeg',
           structured: true,
           userHint: userHint.trim() || undefined,

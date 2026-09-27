@@ -7,6 +7,7 @@ import { useLang } from '@/context/LanguageContext'
 import { createIncident } from '@/lib/firestore'
 import { uploadPhotos } from '@/lib/storage'
 import { estimateForeignMaterial } from '@/lib/estimation'
+import { compressImage } from '@/lib/compressImage'
 import { parseQRCode } from '@/lib/utils'
 import {
   createEmptyFeatures,
@@ -91,12 +92,27 @@ export default function RecordPage() {
     setAiEstimating(true)
     setAiQuickResult(null)
 
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      const dataUrl = e.target?.result as string
-      if (!dataUrl || cancelled) return
-      const base64 = dataUrl.split(',')[1]
-      const mediaType = file.type || 'image/jpeg'
+    ;(async () => {
+      // canvas で圧縮（EXIF 回転補正あり）→ API 送信
+      let base64: string
+      let mediaType = 'image/jpeg'
+      try {
+        const compressed = await compressImage(file)
+        base64 = compressed.base64
+        mediaType = compressed.mimeType
+      } catch {
+        // 圧縮失敗時は FileReader でフォールバック
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const r = new FileReader()
+          r.onload = e => resolve(e.target?.result as string)
+          r.onerror = reject
+          r.readAsDataURL(file)
+        })
+        base64 = dataUrl.split(',')[1]
+        mediaType = file.type || 'image/jpeg'
+      }
+
+      if (cancelled) return
 
       try {
         const res = await fetch('/api/analyze-foreign-matter', {
@@ -105,7 +121,7 @@ export default function RecordPage() {
           body: JSON.stringify({ imageBase64: base64, mediaType, structured: true, lang: getStoredLang() }),
         })
         if (cancelled) return
-        if (res.status === 429) return // 上限超過は静かに無視
+        if (res.status === 429) return
         const data = await res.json()
         if (!res.ok) return
         if (data.quickResult) {
@@ -116,8 +132,7 @@ export default function RecordPage() {
       } finally {
         if (!cancelled) setAiEstimating(false)
       }
-    }
-    reader.readAsDataURL(file)
+    })()
 
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -73,7 +73,7 @@ export type TranslationKey =
   | 'aichat.urgency.high' | 'aichat.urgency.medium' | 'aichat.urgency.low'
   | 'aichat.searchResult' | 'aichat.imageAnalysis' | 'aichat.searchSection'
   | 'aichat.searchBtn' | 'aichat.searching' | 'aichat.addPhoto' | 'aichat.tapOrDrop'
-  | 'aichat.photoReady' | 'aichat.deletePhoto' | 'aichat.analyzeBtn' | 'aichat.analyzing'
+  | 'aichat.photoReady' | 'aichat.deletePhoto' | 'aichat.analyzeBtn' | 'aichat.analyzing' | 'aichat.compressing'
   | 'aichat.inputPlaceholder' | 'aichat.inputWithPhoto'
   // lock
   | 'lock.button'
@@ -255,7 +255,7 @@ const ja: Dict = {
   'aichat.searchSection': '🔍 Claude 検索：異物・害虫情報', 'aichat.searchBtn': '検索', 'aichat.searching': '検索中...',
   'aichat.addPhoto': '異物の写真を追加', 'aichat.tapOrDrop': 'タップまたはドラッグ＆ドロップ',
   'aichat.photoReady': '異物写真（解析待ち）', 'aichat.deletePhoto': '✕ 削除',
-  'aichat.analyzeBtn': '🔬 画像を解析', 'aichat.analyzing': '解析中...',
+  'aichat.analyzeBtn': '🔬 画像を解析', 'aichat.analyzing': 'AIが解析中…', 'aichat.compressing': '画像を圧縮中…',
   'aichat.inputPlaceholder': 'メッセージを入力...', 'aichat.inputWithPhoto': '解析の指示を追加（任意）',
   'lock.button': '🔒 ロック',
   'guide.open': '▼ 開く', 'guide.close': '▲ 閉じる', 'guide.point': '💡 ポイント', 'guide.title': '📖 使い方・操作手順', 'guide.jaOnly': '📖 使い方ガイド（日本語）',
@@ -513,7 +513,7 @@ const en: Dict = {
   'aichat.searchSection': '🔍 Claude Search: Foreign Matter Info', 'aichat.searchBtn': 'Search', 'aichat.searching': 'Searching...',
   'aichat.addPhoto': 'Add Photo of Foreign Matter', 'aichat.tapOrDrop': 'Tap or drag & drop',
   'aichat.photoReady': 'Foreign Matter Photo (Pending Analysis)', 'aichat.deletePhoto': '✕ Remove',
-  'aichat.analyzeBtn': '🔬 Analyze Image', 'aichat.analyzing': 'Analyzing...',
+  'aichat.analyzeBtn': '🔬 Analyze Image', 'aichat.analyzing': 'Analyzing with AI…', 'aichat.compressing': 'Compressing image…',
   'aichat.inputPlaceholder': 'Type a message...', 'aichat.inputWithPhoto': 'Add analysis instructions (optional)',
   'lock.button': '🔒 Lock',
   'guide.open': '▼ Open', 'guide.close': '▲ Close', 'guide.point': '💡 Tips', 'guide.title': '📖 How to Use', 'guide.jaOnly': '📖 Guide (Japanese only)',
