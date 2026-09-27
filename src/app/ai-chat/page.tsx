@@ -192,6 +192,12 @@ function TypingIndicator() {
   )
 }
 
+/** API 呼び出し直前に localStorage から最新の lang を読む（SSR では 'ja' を返す） */
+function getStoredLang(): string {
+  if (typeof window === 'undefined') return 'ja'
+  return localStorage.getItem('foodeye_lang') ?? 'ja'
+}
+
 export default function AiChatPage() {
   const { t, lang } = useLang()
   const [messages, setMessages] = useState<Message[]>([])
@@ -237,7 +243,7 @@ export default function AiChatPage() {
   useEffect(() => {
     setMessages(prev => {
       const isInitial = prev.length === 0 ||
-        (prev.length === 1 && (prev[0].id === 'welcome' || prev[0].id === 'welcome-reset'))
+        (prev.length === 1 && prev[0].id === 'welcome')
       if (!isInitial) return prev
       return [{ id: 'welcome', role: 'assistant' as const, content: t('aichat.welcome'), quickReplies: [], timestamp: new Date() }]
     })
@@ -354,7 +360,7 @@ export default function AiChatPage() {
           imageBase64,
           mediaType: mimeType,
           userHint: userHint.trim() || undefined,
-          lang,
+          lang: getStoredLang(),
         }),
         signal: AbortSignal.timeout(30000), // 30秒でAPI呼び出しをキャンセル
       });
@@ -402,7 +408,7 @@ export default function AiChatPage() {
     } finally {
       setLoading(false);
     }
-  }, [imageBase64, imageUrl, mimeType, userHint, lang])
+  }, [imageBase64, imageUrl, mimeType, userHint])
 
   const handlePageDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -467,7 +473,7 @@ export default function AiChatPage() {
           imageBase64: isFirstMessage ? imageBase64 : undefined,
           mimeType,
           userHint: isFirstMessage && userHint.trim() ? userHint.trim() : undefined,
-          lang,
+          lang: getStoredLang(),
         }),
       })
 
@@ -510,7 +516,7 @@ export default function AiChatPage() {
     } finally {
       setLoading(false)
     }
-  }, [input, imageBase64, imageUrl, mimeType, loading, userHint, lang])
+  }, [input, imageBase64, imageUrl, mimeType, loading, userHint])
 
   const handleQuickReply = useCallback((text: string) => {
     sendMessage(text)
@@ -664,13 +670,6 @@ export default function AiChatPage() {
                 >
                   {t('report.print')}
                 </button>
-                <button
-                  onClick={saveAsIncident}
-                  disabled={saving}
-                  className="text-xs px-3 py-1.5 bg-orange-500 text-white rounded-lg font-medium active:scale-95 transition-all disabled:opacity-50 shadow-sm"
-                >
-                  {saving ? t('common.saving') : t('aichat.save')}
-                </button>
               </>
             )}
             <button
@@ -822,6 +821,18 @@ export default function AiChatPage() {
           </div>
         )}
 
+        {/* 保存ボタン（解析結果あり時のみ表示） */}
+        {hasAnalysis && (
+          <div className="px-3 pb-1.5">
+            <button
+              onClick={saveAsIncident}
+              disabled={saving}
+              className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-1.5"
+            >
+              {saving ? t('common.saving') : t('aichat.save')}
+            </button>
+          </div>
+        )}
         {/* 入力行 */}
         <div className="flex gap-2 items-end px-3 pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
           {!imageUrl && (
@@ -869,7 +880,6 @@ export default function AiChatPage() {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleFileChange}
         className="hidden"
       />
