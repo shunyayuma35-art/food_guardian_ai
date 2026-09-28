@@ -1,13 +1,14 @@
 import { FOREIGN_MATTER_DB } from '../foreign-matter-db'
-import { listIncidents, createIncident } from '../firestore'
-import { createEmptyFeatures } from '../types'
 import type { PartialResult } from './types'
 
-// ── 内部 AI ヘルパー（rate limit カウンター外） ────────────────────
+// ── 内部 AI ヘルパー ──────────────────────────────────────────────
 
-async function callAIText(system: string, userText: string): Promise<string> {
+async function callAIText(
+  system: string,
+  userText: string,
+  maxTokens = 1500,
+): Promise<string> {
   const provider = process.env.AI_PROVIDER ?? 'anthropic'
-  const maxTokens = 1500
 
   if (provider === 'gemini') {
     const { GoogleGenAI } = await import('@google/genai')
@@ -70,7 +71,6 @@ function getKnowledge(category: string): string {
     原料: ['原料由来'],
   }
 
-  // カテゴリに対応するセクションヘッダーを探す
   const matchHeaders: string[] = []
   for (const [key, headers] of Object.entries(keywords)) {
     if (lower.includes(key) || headers.some((h) => lower.includes(h.toLowerCase()))) {
@@ -94,41 +94,49 @@ function getKnowledge(category: string): string {
   if (inSection && buf.length) sections.push(buf.join('\n'))
 
   if (sections.length === 0) {
-    // フォールバック：緊急度基準 + 全文先頭300文字
     const urgency = FOREIGN_MATTER_DB.split('## 緊急度基準')[1] ?? ''
     return `【カテゴリ "${category}" の専用情報なし】\n\n## 緊急度基準\n${urgency.trim()}`
   }
   return sections.join('\n\n')
 }
 
-/** 過去の異物事故をキーワードで検索（Firestore） */
-async function searchSimilarIncidents(keyword: string): Promise<string> {
+/** Supabase の incidents テーブルからキーワードで過去事例を検索 */
+async function searchSimilarIncidents(keyword: string, lang: string): Promise<string> {
   try {
-    const incidents = await listIncidents()
-    const lower = keyword.toLowerCase()
-    const matched = incidents.filter((inc) => {
-      const text = [
-        inc.productName,
-        inc.comment,
-        inc.correctiveAction,
-        inc.preventiveMeasure,
-        ...(inc.estimations?.map((e) => e.category) ?? []),
-      ]
-        .join(' ')
-        .toLowerCase()
-      return text.includes(lower)
-    })
-    if (matched.length === 0) return `「${keyword}」に一致する過去事例は見つかりませんでした。`
-    const summary = matched
-      .slice(0, 5)
-      .map(
-        (inc, i) =>
-          `${i + 1}. [${inc.status}] ${inc.productName} — ${inc.comment.slice(0, 80)}`,
-      )
+    const { getSupabaseAdmin } = await import('../supabase')
+    const db = getSupabaseAdmin()
+
+    // SQL インジェクション対策: 特殊文字をエスケープ
+    const safeKeyword = keyword.replace(/[%_\\]/g, (c) => `\\${c}`).slice(0, 100)
+
+    const { data, error } = await db
+      .from('incidents')
+      .select('id, title, location, description, status, created_at')
+      .or(`title.ilike.%${safeKeyword}%,description.ilike.%${safeKeyword}%`)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    if (error) throw new Error(error.message)
+
+    if (!data?.length) {
+      return lang === 'en'
+        ? `No similar incidents found for "${keyword}".`
+        : `「${keyword}」に一致する過去事例は見つかりませんでした。`
+    }
+
+    const header = lang === 'en'
+      ? `Found ${data.length} similar incident(s) for "${keyword}":\n`
+      : `「${keyword}」の過去事例 ${data.length} 件:\n`
+
+    const rows = data
+      .map((inc, i) => `${i + 1}. [${inc.status}] ${inc.title} — ${(inc.description ?? '').slice(0, 80)}`)
       .join('\n')
-    return `「${keyword}」の過去事例 ${matched.length} 件（上位5件）:\n${summary}`
+
+    return header + rows
   } catch (err) {
-    return `過去事例の検索中にエラーが発生しました: ${String(err)}`
+    return lang === 'en'
+      ? `Error searching incidents: ${String(err)}`
+      : `過去事例の検索中にエラーが発生しました: ${String(err)}`
   }
 }
 
@@ -136,28 +144,56 @@ async function searchSimilarIncidents(keyword: string): Promise<string> {
 async function createActionChecklist(
   foreignMatter: string,
   urgency: string,
+  lang: string,
 ): Promise<{ checklist: string[]; text: string }> {
-  const system =
-    '食品異物対応の専門家として、簡潔で実践的な対応チェックリストを生成してください。箇条書きで5〜8項目。日本語で回答。'
-  const userText = `異物: ${foreignMatter}\n緊急度: ${urgency}\n\n対応チェックリストを生成してください。各項目を「・」で始めてください。`
+  const isEn = lang === 'en'
+
+  const system = isEn
+    ? 'You are a food safety specialist. Generate a concise, practical action checklist (5-8 items). Respond in English only.'
+    : '食品異物対応の専門家として、簡潔で実践的な対応チェックリストを生成してください。箇条書きで5〜8項目。日本語で回答。'
+
+  const userText = isEn
+    ? `Foreign matter: ${foreignMatter}\nUrgency: ${urgency}\n\nGenerate an action checklist. Start each item with "- ".`
+    : `異物: ${foreignMatter}\n緊急度: ${urgency}\n\n対応チェックリストを生成してください。各項目を「・」で始めてください。`
+
   const text = await callAIText(system, userText)
   const checklist = text
     .split('\n')
-    .map((l) => l.replace(/^[・\-\*]\s*/, '').trim())
+    .map((l) => l.replace(/^[・\-\*\d\.]\s*/, '').trim())
     .filter((l) => l.length > 5)
+
   return { checklist, text }
 }
 
-/** AI で CAPA報告書ドラフトを生成 */
+/** AI で CAPA 報告書ドラフトを生成 */
 async function draftCapaReport(
   foreignMatter: string,
   urgency: string,
   incidentSummary: string,
   approvedBy: string,
+  lang: string,
 ): Promise<string> {
-  const system =
-    '食品安全の専門家として、是正処置（CA）と予防処置（PA）を含む CAPA 報告書ドラフトを生成してください。日本語で簡潔に。'
-  const userText = `
+  const isEn = lang === 'en'
+
+  const system = isEn
+    ? 'You are a food safety specialist. Create a concise CAPA (Corrective and Preventive Action) report draft including CA and PA sections. Respond in English only.'
+    : '食品安全の専門家として、是正処置（CA）と予防処置（PA）を含む CAPA 報告書ドラフトを生成してください。日本語で簡潔に。'
+
+  const userText = isEn
+    ? `
+Foreign matter: ${foreignMatter}
+Urgency: ${urgency}
+Incident summary: ${incidentSummary}
+Approved by: ${approvedBy}
+
+Please write a CAPA report draft with these sections:
+1. Incident Summary
+2. Root Cause Analysis
+3. Corrective Action (CA)
+4. Preventive Action (PA)
+5. Effectiveness Check Method
+`.trim()
+    : `
 異物: ${foreignMatter}
 緊急度: ${urgency}
 事案概要: ${incidentSummary}
@@ -170,70 +206,52 @@ CAPA 報告書ドラフトを以下の構成で作成してください:
 4. 予防処置（PA）
 5. 効果確認方法
 `.trim()
+
   return callAIText(system, userText)
 }
 
-/** Firestore に異物事故を保存 */
-async function saveIncident(
-  productName: string,
-  lotNumber: string,
-  description: string,
+/** Supabase の incidents テーブルに異物事故を保存 */
+async function saveIncidentToSupabase(
+  title: string,
   location: string,
+  description: string,
   urgency: string,
 ): Promise<string> {
-  const urgencyMap: Record<string, 'high' | 'medium' | 'low'> = {
-    high: 'high', 高: 'high', 最高: 'high',
-    medium: 'medium', 中: 'medium',
-    low: 'low', 低: 'low',
-  }
-  const mappedUrgency = urgencyMap[urgency] ?? 'medium'
+  const { getSupabaseAdmin } = await import('../supabase')
+  const db = getSupabaseAdmin()
 
-  const id = await createIncident({
-    productName: productName || 'エージェント記録',
-    lotNumber: lotNumber || '',
-    manufacturingDate: '',
-    expiryDate: '',
-    lineNumber: location || '',
-    factory: '',
-    operator: '',
-    discoveryDate: new Date().toISOString().slice(0, 10),
-    discoveryProcess: 'after_packaging',
-    photos: [],
-    microscopePhotos: [],
-    comment: description,
-    features: createEmptyFeatures(),
-    estimations: [
+  const { data, error } = await db
+    .from('incidents')
+    .insert([
       {
-        category: foreignMatter(description),
-        probability: 0.8,
-        basis: ['エージェント解析'],
-        urgency: mappedUrgency,
+        title: title || 'Agent Record',
+        location: location || '',
+        description,
+        status: urgency === 'high' ? 'investigating' : 'open',
         source: 'agent',
       },
-    ],
-    correctiveAction: '',
-    preventiveMeasure: '',
-    status: 'open',
-    createdBy: 'agent',
-  })
-  return id
+    ])
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return String(data.id)
 }
 
-function foreignMatter(description: string): string {
-  const m = description.match(/異物[:：]?\s*([^\n。、]{2,20})/)
-  return m ? m[1] : description.slice(0, 20)
-}
-
-// ── ツールルーター ─────────────────────────────────────────────────
+// ── ツールコンテキストとルーター ──────────────────────────────────
 
 export interface ToolContext {
   partialResult: PartialResult
+  approved: boolean
+  urgency: 'high' | 'medium' | 'low'
+  approvalCalled: boolean
+  lang: string
   approvedBy?: string
 }
 
 export interface ToolResult {
   output: string
-  /** submit_for_approval の場合 true */
+  /** submit_for_approval のとき true */
   triggerApproval?: boolean
   approvalReason?: string
   checklistSummary?: string
@@ -244,6 +262,21 @@ export async function executeTool(
   args: Record<string, string>,
   ctx: ToolContext,
 ): Promise<ToolResult> {
+  // ── 承認ゲート強制 ──────────────────────────────────────────────
+  // urgency=high かつ未承認のとき、draft_capa_report / save_incident の実行を拒否
+  if (
+    ctx.urgency === 'high' &&
+    !ctx.approved &&
+    (name === 'draft_capa_report' || name === 'save_incident')
+  ) {
+    return {
+      output:
+        ctx.lang === 'en'
+          ? `APPROVAL REQUIRED: You must call submit_for_approval before calling ${name}. Please submit the checklist for approval first.`
+          : `承認ゲート: ${name} を実行する前に submit_for_approval を呼び出してください。チェックリストを先に提出してください。`,
+    }
+  }
+
   switch (name) {
     case 'get_knowledge': {
       const output = getKnowledge(args.category ?? '')
@@ -251,7 +284,7 @@ export async function executeTool(
     }
 
     case 'search_similar_incidents': {
-      const output = await searchSimilarIncidents(args.keyword ?? '')
+      const output = await searchSimilarIncidents(args.keyword ?? '', ctx.lang)
       return { output }
     }
 
@@ -259,6 +292,7 @@ export async function executeTool(
       const { checklist, text } = await createActionChecklist(
         args.foreign_matter ?? '',
         args.urgency ?? 'medium',
+        ctx.lang,
       )
       ctx.partialResult.checklist = checklist
       return { output: text }
@@ -269,8 +303,13 @@ export async function executeTool(
       const checklistSummary = args.checklist_summary ?? ''
       ctx.partialResult.approvalReason = reason
       ctx.partialResult.checklistSummary = checklistSummary
+      ctx.approvalCalled = true
+      const msg =
+        ctx.lang === 'en'
+          ? `Approval request submitted. Reason: ${reason}`
+          : `承認申請を送信しました。理由: ${reason}`
       return {
-        output: `承認申請を送信しました。理由: ${reason}`,
+        output: msg,
         triggerApproval: true,
         approvalReason: reason,
         checklistSummary,
@@ -282,30 +321,39 @@ export async function executeTool(
         args.foreign_matter ?? '',
         args.urgency ?? 'medium',
         args.incident_summary ?? '',
-        ctx.approvedBy ?? '未設定',
+        ctx.approvedBy ?? (ctx.lang === 'en' ? 'Not set' : '未設定'),
+        ctx.lang,
       )
       ctx.partialResult.capaReport = report
       return { output: report }
     }
 
     case 'save_incident': {
-      const id = await saveIncident(
+      const id = await saveIncidentToSupabase(
         args.product_name ?? '',
-        args.lot_number ?? '',
-        args.description ?? '',
         args.location ?? '',
-        args.urgency ?? 'medium',
+        args.description ?? '',
+        args.urgency ?? ctx.urgency,
       )
       ctx.partialResult.savedIncidentId = id
-      return { output: `異物事故を Firestore に保存しました。ID: ${id}` }
+      const msg =
+        ctx.lang === 'en'
+          ? `Incident saved to Supabase. ID: ${id}`
+          : `異物事故を Supabase に保存しました。ID: ${id}`
+      return { output: msg }
     }
 
     default:
-      return { output: `不明なツール: ${name}` }
+      return {
+        output:
+          ctx.lang === 'en'
+            ? `Unknown tool: ${name}`
+            : `不明なツール: ${name}`,
+      }
   }
 }
 
-// ── Gemini / Anthropic 用ツール宣言 ───────────────────────────────
+// ── ツール宣言（Gemini / Anthropic） ──────────────────────────────
 
 export const TOOL_DECLARATIONS_GEMINI = [
   {
@@ -344,19 +392,24 @@ export const TOOL_DECLARATIONS_GEMINI = [
   },
   {
     name: 'submit_for_approval',
-    description: 'チェックリストを担当者に提出し、承認を求める（ここでエージェントは一時停止）',
+    description:
+      'チェックリストを担当者に提出し、承認を求める（緊急度 high の場合は必須）。ここでエージェントは一時停止する',
     parameters: {
       type: 'OBJECT',
       properties: {
         reason: { type: 'STRING', description: '承認が必要な理由の説明' },
-        checklist_summary: { type: 'STRING', description: 'チェックリストの要約（100文字以内）' },
+        checklist_summary: {
+          type: 'STRING',
+          description: 'チェックリストの要約（100文字以内）',
+        },
       },
       required: ['reason', 'checklist_summary'],
     },
   },
   {
     name: 'draft_capa_report',
-    description: '承認後、是正処置・予防処置（CAPA）報告書のドラフトを作成する',
+    description:
+      '承認後に是正処置・予防処置（CAPA）報告書のドラフトを作成する。緊急度 high の場合は承認前に呼んではいけない',
     parameters: {
       type: 'OBJECT',
       properties: {
@@ -369,7 +422,8 @@ export const TOOL_DECLARATIONS_GEMINI = [
   },
   {
     name: 'save_incident',
-    description: '異物事故記録を Firestore に保存する',
+    description:
+      '異物事故記録を Supabase に保存する。緊急度 high の場合は承認前に呼んではいけない',
     parameters: {
       type: 'OBJECT',
       properties: {
@@ -421,19 +475,24 @@ export const TOOL_DECLARATIONS_ANTHROPIC = [
   },
   {
     name: 'submit_for_approval',
-    description: 'チェックリストを担当者に提出し、承認を求める（ここでエージェントは一時停止）',
+    description:
+      'チェックリストを担当者に提出し、承認を求める（緊急度 high の場合は必須）。ここでエージェントは一時停止する',
     input_schema: {
       type: 'object' as const,
       properties: {
         reason: { type: 'string', description: '承認が必要な理由の説明' },
-        checklist_summary: { type: 'string', description: 'チェックリストの要約（100文字以内）' },
+        checklist_summary: {
+          type: 'string',
+          description: 'チェックリストの要約（100文字以内）',
+        },
       },
       required: ['reason', 'checklist_summary'],
     },
   },
   {
     name: 'draft_capa_report',
-    description: '承認後、是正処置・予防処置（CAPA）報告書のドラフトを作成する',
+    description:
+      '承認後に是正処置・予防処置（CAPA）報告書のドラフトを作成する。緊急度 high の場合は承認前に呼んではいけない',
     input_schema: {
       type: 'object' as const,
       properties: {
@@ -446,7 +505,8 @@ export const TOOL_DECLARATIONS_ANTHROPIC = [
   },
   {
     name: 'save_incident',
-    description: '異物事故記録を Firestore に保存する',
+    description:
+      '異物事故記録を Supabase に保存する。緊急度 high の場合は承認前に呼んではいけない',
     input_schema: {
       type: 'object' as const,
       properties: {

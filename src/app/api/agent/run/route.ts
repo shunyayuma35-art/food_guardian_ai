@@ -4,6 +4,8 @@ import type { AgentInput } from '@/lib/agent/types'
 
 export const maxDuration = 120
 
+const MAX_HINT_LEN = 500
+
 export async function POST(req: NextRequest) {
   let body: unknown
   try {
@@ -12,7 +14,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  // 入力バリデーション
   if (
     typeof body !== 'object' ||
     body === null ||
@@ -20,7 +21,10 @@ export async function POST(req: NextRequest) {
     typeof (body as Record<string, unknown>).analysisResult !== 'object'
   ) {
     return NextResponse.json(
-      { error: 'analysisResult が必要です。{ urgency, candidates, visualFeatures } を含めてください。' },
+      {
+        error:
+          'analysisResult が必要です。{ urgency, candidates, visualFeatures } を含めてください。',
+      },
       { status: 400 },
     )
   }
@@ -35,13 +39,28 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  if (!['high', 'medium', 'low'].includes(ar.urgency)) {
+    return NextResponse.json(
+      { error: 'urgency は high / medium / low のいずれかが必要です。' },
+      { status: 400 },
+    )
+  }
+
+  // userHint の長さ制限（サーバー側でも切り詰め）
+  if (input.userHint && input.userHint.length > MAX_HINT_LEN) {
+    input.userHint = input.userHint.slice(0, MAX_HINT_LEN)
+  }
+
   try {
     const result = await runAgent(input)
     return NextResponse.json(result)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     if (msg === 'AGENT_TIMEOUT') {
-      return NextResponse.json({ error: 'エージェントがタイムアウトしました（85秒）。' }, { status: 504 })
+      return NextResponse.json(
+        { error: 'エージェントがタイムアウトしました（85秒）。' },
+        { status: 504 },
+      )
     }
     console.error('[POST /api/agent/run]', err)
     return NextResponse.json({ error: msg }, { status: 500 })

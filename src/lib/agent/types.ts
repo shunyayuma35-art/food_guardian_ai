@@ -37,6 +37,8 @@ export interface AgentSessionData {
   steps: AgentStep[]
   input: AgentInput
   partialResult: PartialResult
+  /** HMAC signed token to prevent tampering. Created by server, verified on confirm. */
+  _token?: string
 }
 
 export interface AgentRunResult {
