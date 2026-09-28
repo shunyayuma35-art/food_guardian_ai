@@ -210,6 +210,99 @@ CAPA 報告書ドラフトを以下の構成で作成してください:
   return callAIText(system, userText)
 }
 
+/** 自主回収リスクを評価し、判断材料を提示する（AI は最終判断しない） */
+async function assessRecallRisk(
+  matterType: string,
+  urgency: string,
+  shipmentStatus: string,
+  lang: string,
+): Promise<string> {
+  const isEn = lang === 'en'
+
+  const statusLabel: Record<string, { ja: string; en: string }> = {
+    not_shipped: { ja: '未出荷（製造ライン内）', en: 'Not yet shipped (in-line)' },
+    shipped_not_distributed: { ja: '出荷済み（市場未流通）', en: 'Shipped, not yet in market' },
+    in_market: { ja: '市場流通中', en: 'Already in market circulation' },
+  }
+  const statusText = statusLabel[shipmentStatus]
+    ? (isEn ? statusLabel[shipmentStatus].en : statusLabel[shipmentStatus].ja)
+    : shipmentStatus
+
+  const system = isEn
+    ? `You are a food safety compliance advisor. Provide recall risk assessment as decision-SUPPORT material only. Always state: "This is NOT a final determination. Consult your supervisor and the local health authority before taking any action." Do not make final recall decisions. Respond in English only.`
+    : `あなたは食品安全コンプライアンスのアドバイザーです。自主回収の判断材料を提示しますが、最終判断は行いません。必ず「これは最終判断ではありません。必ず責任者および保健所に相談してください」と記載してください。日本語で回答してください。`
+
+  const userText = isEn
+    ? `Foreign matter: ${matterType}
+Urgency: ${urgency}
+Shipment status: ${statusText}
+
+Please provide:
+1. Recall risk level (High/Medium/Low) with rationale
+2. Whether Food Sanitation Act voluntary recall reporting should be considered
+3. Required actions by shipment status
+4. List of consultation contacts (supervisor, local health authority, etc.)
+
+⚠️ IMPORTANT: State clearly that this is decision-support material, NOT a final determination.`
+    : `異物種別: ${matterType}
+緊急度: ${urgency}
+出荷状況: ${statusText}
+
+以下を提示してください:
+1. 自主回収リスクレベル（高/中/低）と根拠
+2. 食品衛生法に基づく自主回収届出の検討が必要かどうか
+3. 出荷状況別の必要な対応
+4. 相談先一覧（責任者・保健所・取引先等）
+
+⚠️ 必ず「これは判断材料であり最終判断ではありません。必ず責任者および保健所に相談してください」と明記すること。`
+
+  const result = await callAIText(system, userText, 1500)
+
+  // 必ず相談勧告を末尾に付加（AI が出力しなかった場合の保険）
+  const disclaimer = isEn
+    ? `\n\n⚠️ IMPORTANT: This is decision-support material only. NOT a final determination. Always consult your supervisor and the local health authority (保健所) before taking any recall or reporting action.`
+    : `\n\n⚠️ 重要: これは判断材料です。最終判断ではありません。自主回収・届出の実施前に、必ず責任者および管轄の保健所に相談してください。`
+
+  return result + disclaimer
+}
+
+/** 取引先向け第一報ドラフトを生成する（承認後のみ実行可） */
+async function draftCustomerReport(
+  matterType: string,
+  discoveryDate: string,
+  description: string,
+  actionTaken: string,
+  lang: string,
+): Promise<string> {
+  const isEn = lang === 'en'
+
+  const system = isEn
+    ? 'You are a food safety communication specialist. Draft a concise first notification report to business partners (customers/distributors) regarding a foreign matter incident. Be professional and factual. Respond in English only.'
+    : '食品安全コミュニケーションの専門家として、取引先（卸売・小売）への異物事故第一報のドラフトを作成してください。簡潔・誠実・事実に基づいた内容で。日本語で回答してください。'
+
+  const userText = isEn
+    ? `Please draft a first notification letter to business partners for a foreign matter incident.
+
+Foreign matter: ${matterType}
+Discovery date: ${discoveryDate}
+Incident description: ${description}
+Actions taken so far: ${actionTaken}
+
+Include: date, subject, incident overview, actions taken, next steps, contact information placeholder.
+Mark all placeholder fields with [PLACEHOLDER].`
+    : `以下の情報をもとに、取引先への異物事故第一報ドラフトを作成してください。
+
+異物種別: ${matterType}
+発見日: ${discoveryDate}
+事案概要: ${description}
+実施済み対応: ${actionTaken}
+
+記載内容: 日付・件名・事案概要・対応状況・今後の対応・問い合わせ先（プレースホルダー）。
+未確定の項目は【要記入】と記載すること。`
+
+  return callAIText(system, userText, 1500)
+}
+
 /** Supabase の incidents テーブルに異物事故を保存 */
 async function saveIncidentToSupabase(
   title: string,
@@ -263,17 +356,20 @@ export async function executeTool(
   ctx: ToolContext,
 ): Promise<ToolResult> {
   // ── 承認ゲート強制 ──────────────────────────────────────────────
-  // urgency=high かつ未承認のとき、draft_capa_report / save_incident の実行を拒否
+  // urgency=high: draft_capa_report / save_incident は承認前に実行不可
+  // draft_customer_report: urgency に関係なく常に承認前に実行不可（回収判断は重大）
   if (
-    ctx.urgency === 'high' &&
     !ctx.approved &&
-    (name === 'draft_capa_report' || name === 'save_incident')
+    (
+      (ctx.urgency === 'high' && (name === 'draft_capa_report' || name === 'save_incident')) ||
+      name === 'draft_customer_report'
+    )
   ) {
     return {
       output:
         ctx.lang === 'en'
-          ? `APPROVAL REQUIRED: You must call submit_for_approval before calling ${name}. Please submit the checklist for approval first.`
-          : `承認ゲート: ${name} を実行する前に submit_for_approval を呼び出してください。チェックリストを先に提出してください。`,
+          ? `APPROVAL REQUIRED: You must call submit_for_approval before calling ${name}. Please submit the checklist and recall assessment for approval first.`
+          : `承認ゲート: ${name} を実行する前に submit_for_approval を呼び出してください。チェックリストと回収リスク評価を先に提出してください。`,
     }
   }
 
@@ -341,6 +437,29 @@ export async function executeTool(
           ? `Incident saved to Supabase. ID: ${id}`
           : `異物事故を Supabase に保存しました。ID: ${id}`
       return { output: msg }
+    }
+
+    case 'assess_recall_risk': {
+      const assessment = await assessRecallRisk(
+        args.matter_type ?? '',
+        args.urgency ?? ctx.urgency,
+        args.shipment_status ?? '',
+        ctx.lang,
+      )
+      ctx.partialResult.recallAssessment = assessment
+      return { output: assessment }
+    }
+
+    case 'draft_customer_report': {
+      const report = await draftCustomerReport(
+        args.matter_type ?? '',
+        args.discovery_date ?? new Date().toLocaleDateString('ja-JP'),
+        args.description ?? '',
+        args.action_taken ?? '',
+        ctx.lang,
+      )
+      ctx.partialResult.customerReport = report
+      return { output: report }
     }
 
     default:
@@ -436,6 +555,38 @@ export const TOOL_DECLARATIONS_GEMINI = [
       required: ['product_name', 'description', 'urgency'],
     },
   },
+  {
+    name: 'assess_recall_risk',
+    description:
+      '異物種別・緊急度・出荷状況から自主回収リスクを評価し、判断材料を提示する。AIは最終判断せず必ず相談先を提示する',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        matter_type: { type: 'STRING', description: '異物の種類・名称' },
+        urgency: { type: 'STRING', description: '緊急度（high/medium/low）' },
+        shipment_status: {
+          type: 'STRING',
+          description: '出荷状況: not_shipped（未出荷）/ shipped_not_distributed（出荷済み市場未流通）/ in_market（市場流通中）',
+        },
+      },
+      required: ['matter_type', 'urgency', 'shipment_status'],
+    },
+  },
+  {
+    name: 'draft_customer_report',
+    description:
+      '取引先向け第一報ドラフトを作成する。承認ゲートを通過してからのみ実行可能。AIは最終的な届出・回収決定はしない',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        matter_type: { type: 'STRING', description: '異物の種類・名称' },
+        discovery_date: { type: 'STRING', description: '発見日（YYYY-MM-DD）' },
+        description: { type: 'STRING', description: '事案の概要' },
+        action_taken: { type: 'STRING', description: 'すでに実施した対応' },
+      },
+      required: ['matter_type', 'discovery_date', 'description', 'action_taken'],
+    },
+  },
 ]
 
 export const TOOL_DECLARATIONS_ANTHROPIC = [
@@ -517,6 +668,38 @@ export const TOOL_DECLARATIONS_ANTHROPIC = [
         urgency: { type: 'string', description: '緊急度（high/medium/low）' },
       },
       required: ['product_name', 'description', 'urgency'],
+    },
+  },
+  {
+    name: 'assess_recall_risk',
+    description:
+      '異物種別・緊急度・出荷状況から自主回収リスクを評価し、判断材料を提示する。AIは最終判断せず必ず相談先を提示する',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        matter_type: { type: 'string', description: '異物の種類・名称' },
+        urgency: { type: 'string', description: '緊急度（high/medium/low）' },
+        shipment_status: {
+          type: 'string',
+          description: '出荷状況: not_shipped / shipped_not_distributed / in_market',
+        },
+      },
+      required: ['matter_type', 'urgency', 'shipment_status'],
+    },
+  },
+  {
+    name: 'draft_customer_report',
+    description:
+      '取引先向け第一報ドラフトを作成する。承認ゲートを通過してからのみ実行可能。AIは最終的な届出・回収決定はしない',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        matter_type: { type: 'string', description: '異物の種類・名称' },
+        discovery_date: { type: 'string', description: '発見日（YYYY-MM-DD）' },
+        description: { type: 'string', description: '事案の概要' },
+        action_taken: { type: 'string', description: 'すでに実施した対応' },
+      },
+      required: ['matter_type', 'discovery_date', 'description', 'action_taken'],
     },
   },
 ]

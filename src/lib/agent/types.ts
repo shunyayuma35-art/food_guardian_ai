@@ -8,6 +8,8 @@ export interface AgentInput {
   analysisResult: AgentAnalysisResult
   lang?: string
   userHint?: string
+  /** 出荷状況（自主回収判断ツール用） */
+  shipmentStatus?: 'not_shipped' | 'shipped_not_distributed' | 'in_market'
 }
 
 export interface AgentStep {
@@ -26,6 +28,10 @@ export interface PartialResult {
   summary?: string
   approvalReason?: string
   checklistSummary?: string
+  /** 自主回収リスク評価の結果テキスト */
+  recallAssessment?: string
+  /** 取引先向け第一報ドラフト */
+  customerReport?: string
 }
 
 export interface AgentSessionData {

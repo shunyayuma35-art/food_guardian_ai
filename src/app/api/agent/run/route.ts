@@ -51,6 +51,12 @@ export async function POST(req: NextRequest) {
     input.userHint = input.userHint.slice(0, MAX_HINT_LEN)
   }
 
+  // shipmentStatus の値検証
+  const validShipmentStatuses = ['not_shipped', 'shipped_not_distributed', 'in_market']
+  if (input.shipmentStatus && !validShipmentStatuses.includes(input.shipmentStatus)) {
+    input.shipmentStatus = undefined
+  }
+
   try {
     const result = await runAgent(input)
     return NextResponse.json(result)

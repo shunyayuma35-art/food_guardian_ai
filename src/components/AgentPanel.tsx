@@ -16,21 +16,26 @@ interface AgentPanelProps {
   onClose: () => void
 }
 
+type ShipmentStatus = 'not_shipped' | 'shipped_not_distributed' | 'in_market' | ''
+
 const TOOL_LABELS: Record<string, { ja: string; en: string; icon: string }> = {
-  get_knowledge:            { ja: '異物知識を確認',     en: 'Checking knowledge base',  icon: '📚' },
-  search_similar_incidents: { ja: '類似事例を検索',     en: 'Searching past incidents', icon: '🔍' },
-  create_action_checklist:  { ja: 'チェックリストを生成', en: 'Creating action checklist', icon: '📋' },
-  submit_for_approval:      { ja: '承認を申請',         en: 'Requesting approval',      icon: '🔐' },
-  draft_capa_report:        { ja: 'CAPA報告書を作成',   en: 'Drafting CAPA report',     icon: '📝' },
-  save_incident:            { ja: '異物事故を記録',     en: 'Saving incident record',   icon: '💾' },
+  get_knowledge:            { ja: '異物知識を確認',       en: 'Checking knowledge base',        icon: '📚' },
+  search_similar_incidents: { ja: '類似事例を検索',       en: 'Searching past incidents',       icon: '🔍' },
+  create_action_checklist:  { ja: 'チェックリストを生成', en: 'Creating action checklist',       icon: '📋' },
+  assess_recall_risk:       { ja: '自主回収リスクを評価', en: 'Assessing recall risk',           icon: '⚖️' },
+  submit_for_approval:      { ja: '承認を申請',           en: 'Requesting approval',            icon: '🔐' },
+  draft_capa_report:        { ja: 'CAPA報告書を作成',     en: 'Drafting CAPA report',           icon: '📝' },
+  save_incident:            { ja: '異物事故を記録',       en: 'Saving incident record',         icon: '💾' },
+  draft_customer_report:    { ja: '取引先への第一報を作成', en: 'Drafting customer notification', icon: '📨' },
 }
 
-type PanelStatus = 'running' | 'awaiting_approval' | 'completed' | 'rejected' | 'error'
+type PanelStatus = 'preflight' | 'running' | 'awaiting_approval' | 'completed' | 'rejected' | 'error'
 
 export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentPanelProps) {
   const isEn = lang === 'en'
 
-  const [status, setStatus] = useState<PanelStatus>('running')
+  const [status, setStatus] = useState<PanelStatus>('preflight')
+  const [shipmentStatus, setShipmentStatus] = useState<ShipmentStatus>('')
   const [steps, setSteps] = useState<AgentStep[]>([])
   const [result, setResult] = useState<PartialResult | null>(null)
   const [sessionData, setSessionData] = useState<AgentSessionData | null>(null)
@@ -40,14 +45,15 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
   const [confirming, setConfirming] = useState(false)
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({})
   const [capaText, setCapaText] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [customerReportText, setCustomerReportText] = useState('')
+  const [recallText, setRecallText] = useState('')
+  const [copiedCapa, setCopiedCapa] = useState(false)
+  const [copiedReport, setCopiedReport] = useState(false)
 
-  useEffect(() => {
-    void runAgent()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // preflight を飛ばして直接起動したい場合は useEffect で自動開始
+  // （今回は preflight を 1 ステップ目として必ず表示する）
 
-  async function runAgent() {
+  async function startAgent() {
     setStatus('running')
     setSteps([])
     setResult(null)
@@ -66,6 +72,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
         },
         lang,
         userHint: userHint?.slice(0, 500),
+        ...(shipmentStatus ? { shipmentStatus } : {}),
       }
       const res = await fetch('/api/agent/run', {
         method: 'POST',
@@ -86,6 +93,8 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
       } else {
         setStatus('completed')
         setCapaText(data.result?.capaReport ?? '')
+        setCustomerReportText(data.result?.customerReport ?? '')
+        setRecallText(data.result?.recallAssessment ?? '')
       }
     } catch (err) {
       setErrorMsg(String(err))
@@ -119,6 +128,8 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
       if (approved) {
         setStatus('completed')
         setCapaText(data.result?.capaReport ?? '')
+        setCustomerReportText(data.result?.customerReport ?? '')
+        setRecallText(data.result?.recallAssessment ?? '')
       } else {
         setStatus('rejected')
       }
@@ -130,19 +141,25 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
     }
   }
 
-  async function handleCopy() {
-    if (!capaText) return
+  async function copy(text: string, setter: (v: boolean) => void) {
     try {
-      await navigator.clipboard.writeText(capaText)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // fallback: select text
-    }
+      await navigator.clipboard.writeText(text)
+      setter(true)
+      setTimeout(() => setter(false), 2000)
+    } catch { /* ignore */ }
   }
 
+  const shipmentOptions: { value: ShipmentStatus; ja: string; en: string; badge: string }[] = [
+    { value: 'not_shipped',             ja: '未出荷（製造ライン内）',   en: 'Not yet shipped (in-line)',      badge: '🟢' },
+    { value: 'shipped_not_distributed', ja: '出荷済み（市場未流通）',   en: 'Shipped, not in market yet',     badge: '🟡' },
+    { value: 'in_market',               ja: '市場流通中',             en: 'Already in market circulation',  badge: '🔴' },
+  ]
+
   return (
-    <div className="fixed inset-0 z-[200] bg-black/50 flex items-end justify-center" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div
+      className="fixed inset-0 z-[200] bg-black/50 flex items-end justify-center"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
       <div className="bg-white w-full max-w-2xl rounded-t-2xl max-h-[92dvh] flex flex-col">
 
         {/* Header */}
@@ -170,47 +187,100 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 pb-6">
 
-          {/* Step timeline */}
-          <div>
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
-              {isEn ? 'Steps' : 'ステップ'}
-            </p>
-            <div className="space-y-2">
-              {steps.map((step, i) => {
-                const label = TOOL_LABELS[step.tool]
-                return (
-                  <div key={i} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-full bg-green-50 border border-green-200 flex items-center justify-center shrink-0 text-base">
-                      {label?.icon ?? '🔧'}
-                    </div>
-                    <div className="flex-1 min-w-0 pt-0.5">
-                      <p className="text-xs font-semibold text-gray-800">
-                        Step {step.step}:&nbsp;
-                        <span className="font-medium text-gray-700">
-                          {isEn ? label?.en : label?.ja}
-                        </span>
-                      </p>
-                      <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{step.resultSummary}</p>
-                      <p className="text-[9px] text-gray-300 mt-0.5">{step.durationMs}ms</p>
-                    </div>
-                    <span className="text-green-500 text-sm shrink-0 mt-0.5">✅</span>
-                  </div>
-                )
-              })}
-
-              {/* Running indicator */}
-              {status === 'running' && (
-                <div className="flex items-center gap-2 py-1">
-                  <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin shrink-0" />
-                  <span className="text-xs text-orange-600 font-medium">
-                    {isEn ? 'Agent is working…' : 'エージェントが対応中…'}
-                  </span>
+          {/* ── Preflight: 出荷状況セレクタ ── */}
+          {status === 'preflight' && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+                  {isEn ? 'Step 0: Shipment Status' : 'Step 0: 出荷状況を確認'}
+                </p>
+                <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+                  {isEn
+                    ? 'Select the current shipment status to enable recall risk assessment. You may also skip this step.'
+                    : '自主回収リスク評価を行う場合は出荷状況を選択してください。スキップして通常の対応フローに進むこともできます。'}
+                </p>
+                <div className="space-y-2">
+                  {shipmentOptions.map(opt => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                        shipmentStatus === opt.value
+                          ? 'border-orange-400 bg-orange-50'
+                          : 'border-gray-200 bg-white hover:border-orange-200'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="shipmentStatus"
+                        value={opt.value}
+                        checked={shipmentStatus === opt.value}
+                        onChange={() => setShipmentStatus(opt.value)}
+                        className="accent-orange-500"
+                      />
+                      <span className="text-base">{opt.badge}</span>
+                      <span className="text-xs font-medium text-gray-800">
+                        {isEn ? opt.en : opt.ja}
+                      </span>
+                    </label>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* Approval gate */}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => startAgent()}
+                  className="flex-1 py-3 bg-orange-500 text-white text-sm font-bold rounded-xl active:scale-95 transition-all shadow-sm"
+                >
+                  🤖 {shipmentStatus
+                    ? (isEn ? 'Start with Recall Assessment' : '回収リスク評価を含めて開始')
+                    : (isEn ? 'Start Agent' : '対応を開始する')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step timeline ── */}
+          {status !== 'preflight' && (
+            <div>
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+                {isEn ? 'Steps' : 'ステップ'}
+              </p>
+              <div className="space-y-2">
+                {steps.map((step, i) => {
+                  const label = TOOL_LABELS[step.tool]
+                  return (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-full bg-green-50 border border-green-200 flex items-center justify-center shrink-0 text-base">
+                        {label?.icon ?? '🔧'}
+                      </div>
+                      <div className="flex-1 min-w-0 pt-0.5">
+                        <p className="text-xs font-semibold text-gray-800">
+                          Step {step.step}:&nbsp;
+                          <span className="font-medium text-gray-700">
+                            {isEn ? label?.en : label?.ja}
+                          </span>
+                        </p>
+                        <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{step.resultSummary}</p>
+                        <p className="text-[9px] text-gray-300 mt-0.5">{step.durationMs}ms</p>
+                      </div>
+                      <span className="text-green-500 text-sm shrink-0 mt-0.5">✅</span>
+                    </div>
+                  )
+                })}
+
+                {status === 'running' && (
+                  <div className="flex items-center gap-2 py-1">
+                    <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                    <span className="text-xs text-orange-600 font-medium">
+                      {isEn ? 'Agent is working…' : 'エージェントが対応中…'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Approval gate ── */}
           {status === 'awaiting_approval' && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
               <div className="flex items-center gap-2">
@@ -221,8 +291,8 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
               </div>
               <p className="text-xs text-amber-700 leading-relaxed">
                 {isEn
-                  ? 'Urgency is HIGH. A manager must approve before the agent proceeds with CAPA and incident record.'
-                  : '緊急度「高」のため、CAPA報告書の作成・異物記録の前に責任者の承認が必要です。'}
+                  ? 'A manager must approve before the agent proceeds with CAPA report, incident record, and customer notification.'
+                  : 'CAPA報告書の作成・異物記録・取引先への第一報の前に、責任者の承認が必要です。'}
               </p>
 
               {result?.checklistSummary && (
@@ -232,6 +302,11 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                   </p>
                   <p className="text-xs text-gray-700 leading-relaxed">{result.checklistSummary}</p>
                 </div>
+              )}
+
+              {/* 承認前に回収リスク評価を表示 */}
+              {result?.recallAssessment && (
+                <RecallAssessmentBox text={result.recallAssessment} isEn={isEn} />
               )}
 
               <div className="space-y-2">
@@ -272,7 +347,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
             </div>
           )}
 
-          {/* Rejected */}
+          {/* ── Rejected ── */}
           {status === 'rejected' && result && (
             <div className="bg-gray-100 border border-gray-200 rounded-2xl p-4">
               <p className="text-xs text-gray-500 font-semibold mb-1">
@@ -282,9 +357,15 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
             </div>
           )}
 
-          {/* Completed results */}
+          {/* ── Completed results ── */}
           {status === 'completed' && result && (
             <div className="space-y-4">
+
+              {/* Recall assessment */}
+              {recallText && (
+                <RecallAssessmentBox text={recallText} isEn={isEn} />
+              )}
+
               {/* Checklist */}
               {result.checklist && result.checklist.length > 0 && (
                 <div>
@@ -314,33 +395,26 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
 
               {/* CAPA report */}
               {capaText && (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                      {isEn ? '📝 CAPA Report Draft' : '📝 CAPA 報告書ドラフト'}
-                    </p>
-                    <div className="flex gap-1.5">
-                      <button
-                        onClick={handleCopy}
-                        className="text-[10px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg active:scale-95 transition-all font-medium"
-                      >
-                        {copied ? (isEn ? '✅ Copied' : '✅ コピー完了') : (isEn ? '📋 Copy' : '📋 コピー')}
-                      </button>
-                      <button
-                        onClick={() => window.print()}
-                        className="text-[10px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg active:scale-95 transition-all font-medium"
-                      >
-                        {isEn ? '🖨️ Print' : '🖨️ 印刷'}
-                      </button>
-                    </div>
-                  </div>
-                  <textarea
-                    value={capaText}
-                    onChange={e => setCapaText(e.target.value)}
-                    className="w-full text-xs p-3.5 rounded-2xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-400/40 resize-none leading-relaxed"
-                    rows={10}
-                  />
-                </div>
+                <ReportTextArea
+                  label={isEn ? '📝 CAPA Report Draft' : '📝 CAPA 報告書ドラフト'}
+                  text={capaText}
+                  onTextChange={setCapaText}
+                  copied={copiedCapa}
+                  onCopy={() => copy(capaText, setCopiedCapa)}
+                  isEn={isEn}
+                />
+              )}
+
+              {/* Customer report */}
+              {customerReportText && (
+                <ReportTextArea
+                  label={isEn ? '📨 Customer Notification Draft' : '📨 取引先向け第一報ドラフト'}
+                  text={customerReportText}
+                  onTextChange={setCustomerReportText}
+                  copied={copiedReport}
+                  onCopy={() => copy(customerReportText, setCopiedReport)}
+                  isEn={isEn}
+                />
               )}
 
               {/* Saved confirmation */}
@@ -373,7 +447,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
             </div>
           )}
 
-          {/* Error */}
+          {/* ── Error ── */}
           {status === 'error' && (
             <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2.5">
               <p className="text-xs font-semibold text-red-700">
@@ -381,7 +455,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
               </p>
               <p className="text-[10px] text-red-600 leading-relaxed break-all">{errorMsg}</p>
               <button
-                onClick={() => void runAgent()}
+                onClick={() => { setStatus('preflight') }}
                 className="text-xs px-3 py-2 bg-red-500 text-white rounded-xl font-medium active:scale-95 transition-all"
               >
                 {isEn ? 'Retry' : 'やり直す'}
@@ -391,6 +465,85 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
 
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── 自主回収リスク評価ボックス ─────────────────────────────────────
+
+function RecallAssessmentBox({ text, isEn }: { text: string; isEn: boolean }) {
+  const [expanded, setExpanded] = useState(false)
+  const preview = text.slice(0, 180)
+  const hasMore = text.length > 180
+
+  return (
+    <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4 space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="text-base">⚖️</span>
+        <h3 className="text-xs font-bold text-orange-800">
+          {isEn ? 'Recall Risk Assessment (Decision Support)' : '自主回収リスク評価（判断材料）'}
+        </h3>
+      </div>
+      <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+        <p className="text-[10px] font-bold text-red-700">
+          {isEn
+            ? '⚠️ This is decision-support material only. NOT a final determination. Always consult your supervisor and the local health authority.'
+            : '⚠️ これは判断材料です。最終判断ではありません。必ず責任者および保健所に相談してください。'}
+        </p>
+      </div>
+      <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
+        {expanded ? text : preview}
+        {hasMore && !expanded && '…'}
+      </div>
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(v => !v)}
+          className="text-[10px] text-orange-600 font-semibold underline"
+        >
+          {expanded ? (isEn ? 'Show less' : '閉じる') : (isEn ? 'Show more' : 'すべて表示')}
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ── 報告書テキストエリア（共通） ──────────────────────────────────
+
+function ReportTextArea({
+  label, text, onTextChange, copied, onCopy, isEn,
+}: {
+  label: string
+  text: string
+  onTextChange: (v: string) => void
+  copied: boolean
+  onCopy: () => void
+  isEn: boolean
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{label}</p>
+        <div className="flex gap-1.5">
+          <button
+            onClick={onCopy}
+            className="text-[10px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg active:scale-95 transition-all font-medium"
+          >
+            {copied ? (isEn ? '✅ Copied' : '✅ コピー完了') : (isEn ? '📋 Copy' : '📋 コピー')}
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="text-[10px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg active:scale-95 transition-all font-medium"
+          >
+            {isEn ? '🖨️ Print' : '🖨️ 印刷'}
+          </button>
+        </div>
+      </div>
+      <textarea
+        value={text}
+        onChange={e => onTextChange(e.target.value)}
+        className="w-full text-xs p-3.5 rounded-2xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-400/40 resize-none leading-relaxed"
+        rows={10}
+      />
     </div>
   )
 }
