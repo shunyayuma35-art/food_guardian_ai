@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
 import { listIncidents } from '@/lib/firestore'
-import { DISCOVERY_PROCESS_LABELS, INCIDENT_STATUS_LABELS } from '@/lib/types'
+import { DISCOVERY_PROCESS_LABELS } from '@/lib/types'
 import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
 import IncidentCard from '@/components/IncidentCard'
@@ -219,10 +219,16 @@ export default function ListPage() {
     return aiIncidents.filter((inc) => {
       // アーカイブ表示切り替え
       if (showArchived ? !inc.archived_at : inc.archived_at) return false
+      // 状態フィルタ（Firestore の closed = Supabase の resolved）
+      if (filterStatus) {
+        const matchStatus = filterStatus === 'closed' ? 'resolved' : filterStatus
+        const normalized = inc.status === 'pending' ? 'open' : inc.status
+        if (normalized !== matchStatus) return false
+      }
       if (q && !inc.title.toLowerCase().includes(q) && !inc.location.toLowerCase().includes(q) && !inc.description.toLowerCase().includes(q)) return false
       return true
     })
-  }, [aiIncidents, search, showArchived])
+  }, [aiIncidents, search, showArchived, filterStatus])
 
   if (loading) {
     return (
@@ -356,7 +362,7 @@ export default function ListPage() {
         }}
       />
 
-      <header className="bg-white/85 backdrop-blur-xl border-b border-orange-100 shadow-sm px-5 py-4 sticky top-0 z-40">
+      <header className="bg-white border-b border-orange-100 shadow-sm px-5 py-4 sticky top-0 z-40">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
             <button onClick={() => router.push('/')} className="back-btn shrink-0" aria-label={t('common.back')}>
@@ -388,9 +394,9 @@ export default function ListPage() {
               className="text-xs bg-white border border-orange-200 text-gray-600 rounded-xl px-3 py-2 shrink-0 focus:border-orange-400 focus:outline-none font-medium"
             >
               <option value="">{t('list.allStatus')}</option>
-              {Object.entries(INCIDENT_STATUS_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
+              <option value="open">{t('list.status.open')}</option>
+              <option value="investigating">{t('list.status.investigating')}</option>
+              <option value="closed">{t('list.status.resolved')}</option>
             </select>
 
             <select
@@ -583,13 +589,20 @@ export default function ListPage() {
               <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🔍</div>
-              <p className="text-gray-500 font-medium text-base">
+            <div className="text-center py-10">
+              <div className="text-5xl mb-3">📋</div>
+              <p className="text-gray-500 font-medium text-sm">
                 {incidents.length === 0 ? t('list.noRecords') : t('list.noFiltered')}
               </p>
               {incidents.length === 0 && (
-                <button onClick={() => router.push('/record')} className="btn-primary mt-5 text-sm px-6">
+                <p className="text-xs text-gray-400 mt-2 leading-relaxed px-4">
+                  {isEn
+                    ? 'Records created via the registration form or saved by the AI agent appear here.'
+                    : '異物登録フォーム（＋ボタン）やAIエージェントが保存した記録がここに表示されます。'}
+                </p>
+              )}
+              {incidents.length === 0 && (
+                <button onClick={() => router.push('/record')} className="btn-primary mt-4 text-sm px-6">
                   {t('home.firstRecord')}
                 </button>
               )}

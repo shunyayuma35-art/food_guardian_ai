@@ -160,9 +160,9 @@ export interface EstimationResult {
 export type IncidentStatus = 'open' | 'investigating' | 'closed'
 
 export const INCIDENT_STATUS_LABELS: Record<IncidentStatus, string> = {
-  open: '対応中',
+  open: '未対応',
   investigating: '調査中',
-  closed: '完了',
+  closed: '解決済み',
 }
 
 export interface Incident {

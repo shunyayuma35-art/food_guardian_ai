@@ -212,6 +212,56 @@ function getStoredLang(): string {
   return localStorage.getItem('foodeye_lang') ?? 'ja'
 }
 
+/**
+ * 「画像を解析」(/api/analyze-foreign-matter) のテキスト結果から
+ * エージェントに渡す AnalysisResult を生成する。
+ * urgency を確実に取り出し、候補名は 1 件合成する（確率 75 固定）。
+ */
+function parseImageAnalysisToAnalysis(text: string, isEn: boolean): AnalysisResult | undefined {
+  if (!text) return undefined
+
+  // ── urgency ──
+  let urgency: 'high' | 'medium' | 'low' = 'medium'
+  if (isEn) {
+    const m = text.match(/\[Urgency\][^\n]*(High|Medium|Low)/i)
+    if (m) urgency = m[1].toLowerCase() as 'high' | 'medium' | 'low'
+    else if (/urgency[^.\n]*\bHigh\b/i.test(text)) urgency = 'high'
+    else if (/urgency[^.\n]*\bLow\b/i.test(text)) urgency = 'low'
+  } else {
+    if (/【緊急度】\s*高/.test(text) || /緊急度[：:]\s*高/.test(text)) urgency = 'high'
+    else if (/【緊急度】\s*低/.test(text) || /緊急度[：:]\s*低/.test(text)) urgency = 'low'
+  }
+
+  // ── 候補名（先頭行から抽出）──
+  const firstLine = text.split('\n').find(l => l.trim()) ?? ''
+  let candidateName = isEn ? 'Unknown foreign matter' : '不明な異物'
+  if (isEn) {
+    const m = firstLine.match(/Estimated foreign matter[：:]\s*([^(（\n]+)/i)
+    if (m) candidateName = m[1].trim()
+  } else {
+    const m = firstLine.match(/推定される異物[：:]\s*([^（(\n]+)/)
+    if (m) candidateName = m[1].trim()
+    else if (firstLine.trim()) candidateName = firstLine.replace(/（.*?）/g, '').trim().slice(0, 30)
+  }
+
+  // ── 目視特徴（物理的特徴セクション）──
+  const visualFeatures: string[] = []
+  const sect = isEn
+    ? text.match(/\[Physical features?\][^\n]*\n?([^\[]+)/i)
+    : text.match(/【物理的特徴】[^\n]*\n?([^【]+)/)
+  if (sect) {
+    const parts = sect[1].trim().split(/[・,、]+/).map(s => s.trim()).filter(s => s.length > 1 && s.length < 20).slice(0, 5)
+    visualFeatures.push(...parts)
+  }
+
+  return {
+    urgency,
+    candidates: [{ name: candidateName, probability: 75, reason: '' }],
+    visualFeatures,
+    quickReplies: [],
+  }
+}
+
 /** 検索結果表示用：Markdown 記号を除去してプレーンテキストにする */
 function stripMarkdown(text: string): string {
   return text
@@ -442,6 +492,8 @@ export default function AiChatPage() {
         role: 'assistant',
         content: '',
         imageAnalysis: data,
+        // テキスト結果から構造化データを生成してエージェントボタンを有効化
+        analysis: parseImageAnalysisToAnalysis(data.result ?? '', getStoredLang() === 'en'),
         imageUrl: imageUrl ?? undefined,
         timestamp: new Date(),
       };
@@ -671,7 +723,7 @@ export default function AiChatPage() {
       if (searchMsg?.searchResult) {
         resultTitle = isEn
           ? `AI Search: Foreign Matter Info — ${dateStr}`
-          : `Claude検索: 異物・害虫情報 — ${dateStr}`;
+          : `AI検索: 異物・害虫情報 — ${dateStr}`;
         resultContent = isEn
           ? [
               `[AI Search Result]`,
@@ -681,7 +733,7 @@ export default function AiChatPage() {
               ...messages.filter((m) => m.role === 'user').map((m) => `Q: ${m.content}`),
             ].join('\n')
           : [
-              `【Claude検索結果】`,
+              `【AI検索結果】`,
               searchMsg.searchResult.result,
               '',
               `【検索クエリ】`,
