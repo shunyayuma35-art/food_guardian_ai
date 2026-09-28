@@ -3,12 +3,12 @@ import { getSupabaseAdmin } from '@/lib/supabase'
 
 // Claude APIの解析結果をincidentsテーブルに自動保存するエンドポイント
 // 使用例: POST /api/claude-save
-// Body: { title, location, description, status?, image_url?, source? }
+// Body: { title, location, description, status?, image_url?, lang? }
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { title, location, description, status = 'investigating', image_url = null, source } = body
-    console.log('[POST /api/claude-save] received', { title: title?.slice(0, 30), status, hasSource: !!source })
+    const { title, location, description, status = 'investigating', image_url = null, lang } = body
+    console.log('[POST /api/claude-save] received', { title: title?.slice(0, 30), status, lang })
 
     if (!title || !description) {
       return NextResponse.json({ error: 'title と description は必須です' }, { status: 400 })
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       description,
       status,
       image_url,
-      ...(source ? { source } : {}),
+      ...(lang ? { lang } : {}),
     }
 
     const db = getSupabaseAdmin()

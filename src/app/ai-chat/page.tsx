@@ -705,6 +705,7 @@ export default function AiChatPage() {
           location: isEn ? '(Recorded from AI chat)' : '（AI対話から記録）',
           description: resultContent,
           status: 'open',
+          lang,
         }),
       });
       if (!res.ok) throw new Error('save failed');

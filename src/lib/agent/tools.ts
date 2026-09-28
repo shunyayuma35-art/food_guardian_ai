@@ -309,6 +309,7 @@ async function saveIncidentToSupabase(
   location: string,
   description: string,
   urgency: string,
+  lang = 'ja',
 ): Promise<string> {
   const { getSupabaseAdmin } = await import('../supabase')
   const db = getSupabaseAdmin()
@@ -322,6 +323,7 @@ async function saveIncidentToSupabase(
         location: location || '',
         description,
         status: urgency === 'high' ? 'investigating' : 'open',
+        lang,
       },
     ])
     .select()
@@ -430,6 +432,7 @@ export async function executeTool(
         args.location ?? '',
         args.description ?? '',
         args.urgency ?? ctx.urgency,
+        ctx.lang,
       )
       ctx.partialResult.savedIncidentId = id
       const msg =

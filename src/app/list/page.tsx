@@ -20,11 +20,15 @@ type AiIncident = {
   description: string
   status: string
   image_url: string | null
+  archived_at:    string | null
+  archived_by:    string | null
+  archive_reason: string | null
+  lang:           string | null
 }
 
 export default function ListPage() {
   const { user, loading } = useAuth()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const router = useRouter()
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [fetching, setFetching] = useState(true)
@@ -37,6 +41,15 @@ export default function ListPage() {
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const uploadTargetId = useRef<number | null>(null)
+  // アーカイブ・削除・状態変更
+  const [showArchived, setShowArchived] = useState(false)
+  const [archiveModal, setArchiveModal] = useState<{ id: number; title: string } | null>(null)
+  const [archiveReason, setArchiveReason] = useState('')
+  const [archiverName, setArchiverName] = useState('')
+  const [archiving, setArchiving] = useState(false)
+  const [deleteModal, setDeleteModal] = useState<{ id: number; title: string } | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   const AI_STATUS_LABELS: Record<string, string> = {
     investigating: t('list.status.investigating'),
@@ -50,6 +63,91 @@ export default function ListPage() {
     resolved: 'bg-green-100 text-green-700',
     pending: 'bg-red-100 text-red-700',
     open: 'bg-red-100 text-red-700',
+  }
+
+  const isEn = lang === 'en'
+
+  // AI記録の状態サイクル
+  function nextAiStatus(current: string): string {
+    const cycle = ['open', 'investigating', 'resolved']
+    const normalized = current === 'pending' ? 'open' : current
+    const idx = cycle.indexOf(normalized)
+    return cycle[(idx + 1) % cycle.length]
+  }
+
+  async function handleStatusChangeAi(id: number, current: string) {
+    const next = nextAiStatus(current)
+    try {
+      const res = await fetch(`/api/incidents/${id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ status: next }),
+      })
+      if (!res.ok) throw new Error('status update failed')
+      setAiIncidents(prev => prev.map(i => i.id === id ? { ...i, status: next } : i))
+    } catch {
+      toast.error(isEn ? 'Failed to update status' : '状態の更新に失敗しました')
+    }
+  }
+
+  async function handleArchiveAi(id: number, reason: string, by: string) {
+    setArchiving(true)
+    try {
+      const res = await fetch(`/api/incidents/${id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          archived_at: new Date().toISOString(),
+          archived_by: by,
+          archive_reason: reason,
+        }),
+      })
+      if (!res.ok) throw new Error('archive failed')
+      setAiIncidents(prev => prev.map(i =>
+        i.id === id ? { ...i, archived_at: new Date().toISOString(), archived_by: by, archive_reason: reason } : i
+      ))
+      setArchiveModal(null)
+      setArchiveReason('')
+      setArchiverName('')
+      toast.success(isEn ? 'Archived successfully' : 'アーカイブしました')
+    } catch {
+      toast.error(isEn ? 'Archive failed. SQL may not have been run yet.' : 'アーカイブ失敗。SQLが未実行の可能性があります')
+    } finally {
+      setArchiving(false)
+    }
+  }
+
+  async function handleUnarchiveAi(id: number) {
+    try {
+      const res = await fetch(`/api/incidents/${id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ archived_at: null, archived_by: null, archive_reason: null }),
+      })
+      if (!res.ok) throw new Error('unarchive failed')
+      setAiIncidents(prev => prev.map(i =>
+        i.id === id ? { ...i, archived_at: null, archived_by: null, archive_reason: null } : i
+      ))
+      toast.success(isEn ? 'Restored from archive' : 'アーカイブを解除しました')
+    } catch {
+      toast.error(isEn ? 'Restore failed' : '復元に失敗しました')
+    }
+  }
+
+  async function handleDeleteAi(id: number) {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/incidents/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('delete failed')
+      setAiIncidents(prev => prev.filter(i => i.id !== id))
+      setDeleteModal(null)
+      setDeleteConfirm('')
+      toast.success(isEn ? 'Deleted permanently' : '完全に削除しました')
+    } catch {
+      toast.error(isEn ? 'Delete failed' : '削除に失敗しました')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   useEffect(() => {
@@ -119,10 +217,12 @@ export default function ListPage() {
   const filteredAi = useMemo(() => {
     const q = search.toLowerCase()
     return aiIncidents.filter((inc) => {
+      // アーカイブ表示切り替え
+      if (showArchived ? !inc.archived_at : inc.archived_at) return false
       if (q && !inc.title.toLowerCase().includes(q) && !inc.location.toLowerCase().includes(q) && !inc.description.toLowerCase().includes(q)) return false
       return true
     })
-  }, [aiIncidents, search])
+  }, [aiIncidents, search, showArchived])
 
   if (loading) {
     return (
@@ -132,7 +232,7 @@ export default function ListPage() {
     )
   }
 
-  const totalCount = incidents.length + aiIncidents.length
+  const totalCount = incidents.length + aiIncidents.filter(i => !i.archived_at).length
 
   return (
     <div className="min-h-screen pb-24">
@@ -144,6 +244,101 @@ export default function ListPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={lightboxPhoto} alt="" className="max-w-full max-h-full object-contain rounded-2xl" />
           <button className="absolute top-5 right-5 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white text-xl hover:bg-white/30">✕</button>
+        </div>
+      )}
+
+      {/* ── アーカイブモーダル ── */}
+      {archiveModal && (
+        <div className="fixed inset-0 z-[300] bg-black/60 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-xl">
+            <h3 className="text-sm font-bold text-gray-800">
+              📦 {isEn ? 'Archive this record?' : 'アーカイブしますか？'}
+            </h3>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              {isEn
+                ? 'Records are kept for HACCP compliance. They will not be deleted.'
+                : 'HACCPの記録保持のため、データは削除されません。一覧から非表示になります。'}
+            </p>
+            <p className="text-xs font-semibold text-gray-700 line-clamp-2">「{archiveModal.title}」</p>
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={archiveReason}
+                onChange={e => setArchiveReason(e.target.value)}
+                placeholder={isEn ? 'Reason (required)' : 'アーカイブ理由（必須）'}
+                className="w-full text-xs px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400/50"
+              />
+              <input
+                type="text"
+                value={archiverName}
+                onChange={e => setArchiverName(e.target.value)}
+                placeholder={isEn ? 'Your name (required)' : '実施者名（必須）'}
+                className="w-full text-xs px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400/50"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleArchiveAi(archiveModal.id, archiveReason.trim(), archiverName.trim())}
+                disabled={archiving || !archiveReason.trim() || !archiverName.trim()}
+                className="flex-1 py-2.5 bg-orange-500 text-white text-xs font-bold rounded-xl disabled:opacity-40 active:scale-95 transition-all"
+              >
+                {archiving ? '…' : (isEn ? '📦 Archive' : '📦 アーカイブ')}
+              </button>
+              <button
+                onClick={() => { setArchiveModal(null); setArchiveReason(''); setArchiverName('') }}
+                className="px-4 py-2.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-xl active:scale-95"
+              >
+                {isEn ? 'Cancel' : 'キャンセル'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 完全削除モーダル ── */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-[300] bg-black/60 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-white w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-xl">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">⚠️</span>
+              <h3 className="text-sm font-bold text-red-700">
+                {isEn ? 'Permanent Delete' : '完全削除'}
+              </h3>
+            </div>
+            <p className="text-xs text-gray-600 leading-relaxed">
+              {isEn
+                ? 'This action cannot be undone. The record will be permanently deleted.'
+                : 'この操作は元に戻せません。記録が完全に削除されます。'}
+            </p>
+            <p className="text-xs font-semibold text-gray-700 line-clamp-2">「{deleteModal.title}」</p>
+            <div>
+              <p className="text-xs text-gray-500 mb-1.5">
+                {isEn ? 'Type DELETE to confirm:' : '確認のため「削除」と入力:'}
+              </p>
+              <input
+                type="text"
+                value={deleteConfirm}
+                onChange={e => setDeleteConfirm(e.target.value)}
+                placeholder={isEn ? 'DELETE' : '削除'}
+                className="w-full text-xs px-3 py-2.5 rounded-xl border border-red-200 focus:outline-none focus:ring-2 focus:ring-red-400/50"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleDeleteAi(deleteModal.id)}
+                disabled={deleting || deleteConfirm !== (isEn ? 'DELETE' : '削除')}
+                className="flex-1 py-2.5 bg-red-500 text-white text-xs font-bold rounded-xl disabled:opacity-40 active:scale-95 transition-all"
+              >
+                {deleting ? '…' : (isEn ? '🗑️ Delete' : '🗑️ 完全削除')}
+              </button>
+              <button
+                onClick={() => { setDeleteModal(null); setDeleteConfirm('') }}
+                className="px-4 py-2.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-xl active:scale-95"
+              >
+                {isEn ? 'Cancel' : 'キャンセル'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -237,32 +432,86 @@ export default function ListPage() {
 
         {/* AI解析セクション */}
         <div>
-          <h2 className="text-sm font-bold text-gray-600 mb-3 flex items-center gap-2">
-            <span className="text-base">🤖</span> {t('list.aiSection')}
-            <span className="text-xs font-normal text-gray-400">{t('list.supabaseSaved')}</span>
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-bold text-gray-600 flex items-center gap-2">
+              <span className="text-base">🤖</span> {t('list.aiSection')}
+              <span className="text-xs font-normal text-gray-400">{t('list.supabaseSaved')}</span>
+            </h2>
+            <button
+              onClick={() => setShowArchived(v => !v)}
+              className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${
+                showArchived
+                  ? 'bg-amber-100 border-amber-300 text-amber-700'
+                  : 'bg-gray-100 border-gray-200 text-gray-500 hover:border-gray-300'
+              }`}
+            >
+              {showArchived
+                ? (isEn ? '← Active' : '← 通常表示')
+                : (isEn ? '📦 Archived' : '📦 アーカイブ')}
+            </button>
+          </div>
           {aiFetching ? (
             <div className="flex justify-center py-6">
               <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filteredAi.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-sm">{t('list.noAi')}</div>
+            <div className="text-center py-8 text-gray-400 text-sm">
+              {showArchived
+                ? (isEn ? 'No archived records' : 'アーカイブされた記録はありません')
+                : t('list.noAi')}
+            </div>
           ) : (
             <div className="space-y-3">
               {filteredAi.map((inc) => (
-                <div key={inc.id} className="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div
+                  key={inc.id}
+                  className={`bg-white rounded-2xl border p-4 shadow-sm ${inc.archived_at ? 'border-amber-200 bg-amber-50/30 opacity-80' : 'border-blue-100'}`}
+                >
+                  {/* ── タイトル行：ステータス（タップで変更）・言語バッジ ── */}
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="font-bold text-gray-800 text-sm leading-snug">{inc.title}</p>
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full shrink-0 ${AI_STATUS_COLORS[inc.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                      {AI_STATUS_LABELS[inc.status] ?? inc.status}
-                    </span>
+                    <p className={`font-bold text-gray-800 text-sm leading-snug flex-1 ${inc.archived_at ? 'text-gray-500' : ''}`}>
+                      {inc.title}
+                    </p>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* 言語バッジ */}
+                      {inc.lang && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200 uppercase">
+                          {inc.lang}
+                        </span>
+                      )}
+                      {/* 状態バッジ（アーカイブ済み以外はタップで変更可） */}
+                      {inc.archived_at ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                          📦 {isEn ? 'Archived' : 'アーカイブ済'}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleStatusChangeAi(inc.id, inc.status)}
+                          title={isEn ? 'Tap to change status' : 'タップで状態変更'}
+                          className={`text-xs font-bold px-2 py-1 rounded-full active:scale-95 transition-all cursor-pointer ${AI_STATUS_COLORS[inc.status] ?? 'bg-gray-100 text-gray-600'}`}
+                        >
+                          {AI_STATUS_LABELS[inc.status] ?? inc.status}
+                        </button>
+                      )}
+                    </div>
                   </div>
+
                   {inc.location && (
                     <p className="text-xs text-gray-500 mb-1">📍 {inc.location}</p>
                   )}
                   <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{inc.description?.replace(/\*\*/g, '')}</p>
 
-                  {inc.image_url ? (
+                  {/* アーカイブ情報 */}
+                  {inc.archived_at && (
+                    <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-[10px] text-amber-700 space-y-0.5">
+                      <p>📦 {isEn ? 'Archived' : 'アーカイブ日'}: {new Date(inc.archived_at).toLocaleDateString(isEn ? 'en-US' : 'ja-JP')}</p>
+                      {inc.archive_reason && <p>📝 {isEn ? 'Reason' : '理由'}: {inc.archive_reason}</p>}
+                      {inc.archived_by && <p>👤 {isEn ? 'By' : '実施者'}: {inc.archived_by}</p>}
+                    </div>
+                  )}
+
+                  {/* 写真 */}
+                  {!inc.archived_at && (inc.image_url ? (
                     <button
                       type="button"
                       className="mt-3 w-full aspect-video rounded-xl overflow-hidden bg-gray-100 border border-gray-200 hover:opacity-80 transition-opacity"
@@ -287,11 +536,37 @@ export default function ListPage() {
                         <><span>📷</span> {t('list.addPhoto').replace('📷 ', '')}</>
                       )}
                     </button>
-                  )}
+                  ))}
 
-                  <p className="text-xs text-gray-400 mt-2">
-                    {new Date(inc.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-xs text-gray-400">
+                      {new Date(inc.created_at).toLocaleDateString(isEn ? 'en-US' : 'ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </p>
+                    {/* アクションボタン */}
+                    <div className="flex gap-1.5">
+                      {inc.archived_at ? (
+                        <button
+                          onClick={() => handleUnarchiveAi(inc.id)}
+                          className="text-[10px] px-2.5 py-1 bg-amber-50 border border-amber-300 text-amber-700 rounded-lg font-medium active:scale-95 transition-all"
+                        >
+                          {isEn ? '↩ Restore' : '↩ 元に戻す'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setArchiveModal({ id: inc.id, title: inc.title })}
+                          className="text-[10px] px-2.5 py-1 bg-gray-100 border border-gray-200 text-gray-500 rounded-lg font-medium active:scale-95 transition-all hover:bg-gray-200"
+                        >
+                          {isEn ? '📦 Archive' : '📦 アーカイブ'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { setDeleteModal({ id: inc.id, title: inc.title }); setDeleteConfirm('') }}
+                        className="text-[10px] px-2.5 py-1 bg-red-50 border border-red-200 text-red-500 rounded-lg font-medium active:scale-95 transition-all hover:bg-red-100"
+                      >
+                        {isEn ? '🗑️ Delete' : '🗑️ 削除'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
