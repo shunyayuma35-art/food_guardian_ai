@@ -6,6 +6,7 @@ import { useLang } from '@/context/LanguageContext'
 import ImageEnhancer from '@/components/ImageEnhancer'
 import ForeignMatterVisualizer from '@/components/ForeignMatterVisualizer'
 import ComparisonPanel from '@/components/ComparisonPanel'
+import AgentPanel from '@/components/AgentPanel'
 import toast from 'react-hot-toast'
 import { compressImage, compressDataUrl } from '@/lib/compressImage'
 
@@ -95,8 +96,8 @@ function AnalysisCard({ analysis, urgencyLabels, candidatesLabel, visualLabel }:
   )
 }
 
-function MessageBubble({ msg, onQuickReply, analysisRef }: { msg: Message; onQuickReply: (text: string) => void; analysisRef?: RefObject<HTMLDivElement> }) {
-  const { t } = useLang()
+function MessageBubble({ msg, onQuickReply, analysisRef, onStartAgent }: { msg: Message; onQuickReply: (text: string) => void; analysisRef?: RefObject<HTMLDivElement>; onStartAgent?: (analysis: AnalysisResult) => void }) {
+  const { t, lang } = useLang()
   const urgencyLabels = {
     high:   { text: t('aichat.urgency.high'), bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500', textColor: 'text-red-700' },
     medium: { text: t('aichat.urgency.medium'), bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-500', textColor: 'text-amber-700' },
@@ -131,7 +132,19 @@ function MessageBubble({ msg, onQuickReply, analysisRef }: { msg: Message; onQui
         )}
 
         {/* AI 解析カード */}
-        {msg.analysis && <AnalysisCard analysis={msg.analysis} urgencyLabels={urgencyLabels} candidatesLabel={t('aichat.candidates')} visualLabel={t('aichat.visualFeatures')} />}
+        {msg.analysis && (
+          <>
+            <AnalysisCard analysis={msg.analysis} urgencyLabels={urgencyLabels} candidatesLabel={t('aichat.candidates')} visualLabel={t('aichat.visualFeatures')} />
+            {onStartAgent && (
+              <button
+                onClick={() => onStartAgent(msg.analysis!)}
+                className="mt-2 w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold rounded-xl active:scale-95 transition-all shadow-sm flex items-center justify-center gap-1.5"
+              >
+                🤖 {lang === 'en' ? 'Start AI Agent Response' : 'エージェントで対応を進める'}
+              </button>
+            )}
+          </>
+        )}
 
         {/* Claude 検索結果 */}
         {msg.searchResult && (
@@ -222,6 +235,8 @@ export default function AiChatPage() {
   const [visualizerDataUrl, setVisualizerDataUrl] = useState<string | null>(null)
   const [showVisualizer, setShowVisualizer] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [agentPanelOpen, setAgentPanelOpen] = useState(false)
+  const [agentAnalysis, setAgentAnalysis] = useState<AnalysisResult | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
   const [usageRemaining, setUsageRemaining] = useState<number | null>(null)
@@ -785,6 +800,7 @@ export default function AiChatPage() {
               msg={msg}
               onQuickReply={handleQuickReply}
               analysisRef={isLastAnalysis ? lastAnalysisRef : undefined}
+              onStartAgent={(a) => { setAgentAnalysis(a); setAgentPanelOpen(true) }}
             />
           )
         })}
@@ -1015,6 +1031,16 @@ export default function AiChatPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Agent panel */}
+      {agentPanelOpen && agentAnalysis && (
+        <AgentPanel
+          analysis={agentAnalysis}
+          lang={lang}
+          userHint={userHint}
+          onClose={() => setAgentPanelOpen(false)}
+        />
       )}
 
       {/* Forensic visualizer modal */}

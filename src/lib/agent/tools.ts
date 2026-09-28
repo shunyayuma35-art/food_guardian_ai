@@ -220,15 +220,15 @@ async function saveIncidentToSupabase(
   const { getSupabaseAdmin } = await import('../supabase')
   const db = getSupabaseAdmin()
 
+  const agentPrefix = '🤖 Agent: '
   const { data, error } = await db
     .from('incidents')
     .insert([
       {
-        title: title || 'Agent Record',
+        title: agentPrefix + (title || 'Foreign Matter Incident'),
         location: location || '',
         description,
         status: urgency === 'high' ? 'investigating' : 'open',
-        source: 'agent',
       },
     ])
     .select()

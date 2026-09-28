@@ -32,7 +32,7 @@ if (-not $DryRun) {
 }
 Write-Host "NEXT_PUBLIC_* keys for build: $($publicLines.Count) (values hidden)"
 
-# Extract non-NEXT_PUBLIC_* as runtime env vars
+# Extract non-NEXT_PUBLIC_* as runtime env vars (includes AGENT_SESSION_SECRET automatically)
 $runtimeVars = [System.Collections.Generic.List[string]]::new()
 Get-Content $envFile | ForEach-Object {
     $line = $_.Trim()
