@@ -95,7 +95,7 @@
 | 5 | 一覧の状態が "open" のまま → 翻訳ラベルを追加 | `src/app/list/page.tsx` |
 | 6 | 一覧の本文に `**` が出る → 表示時に除去 | `src/app/list/page.tsx` |
 | 7 | ページ移動で言語設定が戻らないか確認（コード確認のみ） | `src/context/LanguageContext.tsx` |
-| 8 | ✅ `/api/backup` と `/api/inspections` を Supabase 対応に完全移行。`firestore.ts` の検査記録関数を API ルート経由に変更し、API ルートは Supabase を使用。`/api/backup` POST は Cloud Run で no-op（200 OK）を返す。SQL は `docs/supabase-inspections.sql` | `src/app/api/inspections/route.ts`, `src/app/api/inspections/[id]/route.ts`, `src/app/api/backup/route.ts`, `src/lib/firestore.ts`, `docs/supabase-inspections.sql` |
+| 8 | ✅ Cloud Run EACCES を完全解消。検査記録の保存・取得を Firestore（既存・Cloud Run 動作済み）に統一。ホームページの検査統計取得も `fetch('/api/inspections?...')` → `listInspections()` 直呼び出しに変更。`/api/backup` POST は no-op（200 OK）。`/api/inspections` API ルートは Supabase テーブル作成後に有効化できる設計で残置。 | `src/lib/firestore.ts`, `src/app/page.tsx`, `src/app/api/backup/route.ts`, `docs/supabase-inspections.sql` |
 
 ---
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
-import { listIncidents, listReports } from '@/lib/firestore'
+import { listIncidents, listReports, listInspections } from '@/lib/firestore'
 import { DEMO_MODE } from '@/lib/firebase'
 import {
   DISCOVERY_PROCESS_LABELS, CLAIM_ROUTE_LABELS, INSPECTION_RESULT_LABELS,
@@ -197,7 +197,7 @@ export default function DashboardPage() {
     Promise.all([
       listIncidents(user.uid),
       listReports(user.uid),
-      fetch(`/api/inspections?userId=${user.uid}`).then((r) => r.json()).catch(() => []),
+      listInspections(user.uid).catch(() => []),
     ])
       .then(([inc, rep, insp]) => {
         setIncidents(inc)
