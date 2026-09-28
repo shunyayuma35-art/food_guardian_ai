@@ -99,9 +99,22 @@
 
 ---
 
-## フェーズ2: 異物対応エージェント（バックエンド）
+## フェーズ2: 異物対応エージェント（バックエンド） ✅ 完了
 
 **目的**: 審査基準②（自律性・エージェントらしさ）の核心部分を実装する。
+
+**実装完了** (2026-09-28):
+- `src/lib/foreign-matter-db.ts`: FOREIGN_MATTER_DB を共有モジュールに抽出
+- `src/lib/agent/types.ts`: AgentInput / AgentStep / PartialResult / AgentSessionData / AgentRunResult
+- `src/lib/agent/tools.ts`: 6ツール（get_knowledge / search_similar_incidents / create_action_checklist / submit_for_approval / draft_capa_report / save_incident）
+- `src/lib/agent/loop.ts`: Gemini FC + Anthropic tool_use 両対応・最大8ステップ・85秒タイムアウト・承認ゲート
+- `src/app/api/agent/run/route.ts`: POST /api/agent/run
+- `src/app/api/agent/confirm/route.ts`: POST /api/agent/confirm（承認後ループ再開）
+- 保存先: Firestore（`createIncident()` 経由）に統一（実態に合わせて計画書の Supabase 記載を修正）
+
+**実態に合わせた変更**:
+- 過去事例検索 (`search_similar_incidents`) → Supabase ではなく Firestore `listIncidents()` を使用
+- save_incident → `createIncident()` (Firestore) を使用
 
 ### 新規 API エンドポイント
 
