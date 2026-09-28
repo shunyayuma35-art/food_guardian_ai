@@ -142,7 +142,9 @@ export async function findIncidentsByLot(lotNumber: string, userId?: string): Pr
   return snap.docs.map((d) => ({ ...d.data(), id: d.id } as Incident))
 }
 
-// ── 検査記録 ─────────────────────────────────────────────────────
+// ── 検査記録（Supabase / API ルート経由） ──────────────────────────
+// 本番: /api/inspections → Supabase（Cloud Run 対応）
+// DEMO_MODE: localStorage（デモ・ローカル開発用）
 
 const INSP_KEY = 'fe_inspections'
 
@@ -158,7 +160,18 @@ export async function createInspectionRecord(
     localSet(INSP_KEY, list)
     return id
   }
-  return fbAdd('inspections', { ...data, id })
+
+  const record: InspectionRecord = { ...data, id, createdAt: now, updatedAt: now }
+  const res = await fetch('/api/inspections', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error ?? '検査記録の保存に失敗しました')
+  }
+  return id
 }
 
 export async function listInspections(userId?: string): Promise<InspectionRecord[]> {
@@ -166,12 +179,19 @@ export async function listInspections(userId?: string): Promise<InspectionRecord
     const list = localGet<InspectionRecord>(INSP_KEY)
     return userId ? list.filter((i) => i.createdBy === userId) : list
   }
-  return fbList('inspections', userId) as Promise<InspectionRecord[]>
+  const params = userId ? `?userId=${encodeURIComponent(userId)}` : ''
+  const res = await fetch(`/api/inspections${params}`)
+  if (!res.ok) return []
+  const data = await res.json()
+  return Array.isArray(data) ? data : []
 }
 
 export async function getInspection(id: string): Promise<InspectionRecord | null> {
   if (DEMO_MODE) return localGet<InspectionRecord>(INSP_KEY).find((i) => i.id === id) ?? null
-  return fbGet('inspections', id) as Promise<InspectionRecord | null>
+  const res = await fetch(`/api/inspections/${encodeURIComponent(id)}`)
+  if (res.status === 404) return null
+  if (!res.ok) throw new Error('データ取得に失敗しました')
+  return res.json()
 }
 
 export async function updateInspection(id: string, data: Partial<InspectionRecord>): Promise<void> {
@@ -182,12 +202,27 @@ export async function updateInspection(id: string, data: Partial<InspectionRecor
     localSet(INSP_KEY, list)
     return
   }
-  await fbUpdate('inspections', id, data as Record<string, unknown>)
+  const res = await fetch(`/api/inspections/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error ?? '更新に失敗しました')
+  }
 }
 
 export async function deleteInspection(id: string): Promise<void> {
-  if (DEMO_MODE) { localSet(INSP_KEY, localGet<InspectionRecord>(INSP_KEY).filter((i) => i.id !== id)); return }
-  await fbDelete('inspections', id)
+  if (DEMO_MODE) {
+    localSet(INSP_KEY, localGet<InspectionRecord>(INSP_KEY).filter((i) => i.id !== id))
+    return
+  }
+  const res = await fetch(`/api/inspections/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error ?? '削除に失敗しました')
+  }
 }
 
 // ── マスターデータ ────────────────────────────────────────────────

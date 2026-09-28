@@ -95,9 +95,7 @@
 | 5 | 一覧の状態が "open" のまま → 翻訳ラベルを追加 | `src/app/list/page.tsx` |
 | 6 | 一覧の本文に `**` が出る → 表示時に除去 | `src/app/list/page.tsx` |
 | 7 | ページ移動で言語設定が戻らないか確認（コード確認のみ） | `src/context/LanguageContext.tsx` |
-| 8 | `/api/backup` と `/api/inspections` が Cloud Run で `EACCES: permission denied, mkdir '/app/data'` → `file-store.ts` の `ensureDir()` をエラー無視に変更し、read は `[]` を返すグレースフルフォールバックにする（write は引き続き失敗するが、ページがクラッシュしなくなる） | `src/lib/file-store.ts` |
-
-> **item 8 設計メモ（大きすぎる場合は方針のみ）**: Supabase への完全移行（`inspections` テーブル作成 → API 書き換え）は工数が大きいため、フェーズ1では「Cloud Run で read が 500 にならない」最小限の修正（ensureDir エラーを握りつぶす）に留め、write 失敗は許容する。backup 機能は Cloud Run では動作しないが、自動バックアップの失敗はページ側で無視しているため UX への影響は最小。本格移行はフェーズ2以降で検討。
+| 8 | ✅ `/api/backup` と `/api/inspections` を Supabase 対応に完全移行。`firestore.ts` の検査記録関数を API ルート経由に変更し、API ルートは Supabase を使用。`/api/backup` POST は Cloud Run で no-op（200 OK）を返す。SQL は `docs/supabase-inspections.sql` | `src/app/api/inspections/route.ts`, `src/app/api/inspections/[id]/route.ts`, `src/app/api/backup/route.ts`, `src/lib/firestore.ts`, `docs/supabase-inspections.sql` |
 
 ---
 
