@@ -7,6 +7,7 @@ import ImageEnhancer from '@/components/ImageEnhancer'
 import ForeignMatterVisualizer from '@/components/ForeignMatterVisualizer'
 import ComparisonPanel from '@/components/ComparisonPanel'
 import AgentPanel from '@/components/AgentPanel'
+import ForeignMatterBBoxView, { type BBox } from '@/components/ForeignMatterBBoxView'
 import toast from 'react-hot-toast'
 import { compressImage, compressDataUrl } from '@/lib/compressImage'
 
@@ -23,6 +24,7 @@ interface SearchResult {
 
 interface ImageAnalysisResult {
   result: string
+  bbox?: BBox
 }
 
 interface Message {
@@ -163,6 +165,14 @@ function MessageBubble({ msg, onQuickReply, analysisRef, onStartAgent }: { msg: 
             <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
               {msg.imageAnalysis.result}
             </div>
+            {/* バウンディングボックス自動ズーム */}
+            {msg.imageUrl && msg.imageAnalysis.bbox && (
+              <ForeignMatterBBoxView
+                imageDataUrl={msg.imageUrl}
+                bbox={msg.imageAnalysis.bbox}
+                isEn={lang === 'en'}
+              />
+            )}
           </div>
         )}
 

@@ -130,7 +130,11 @@ Line 1 (required): Estimated foreign matter: [name] (Confidence: High/Medium/Low
 [Urgency] High / Medium / Low (reason)
 [Immediate action] Bullet points
 
-Note: External specialist assessment is required for definitive identification.${langInst}`
+Note: External specialist assessment is required for definitive identification.
+
+IMPORTANT — append this as the very last line (required):
+[BBOX]{"y":0.0,"x":0.0,"h":0.0,"w":0.0}[/BBOX]
+y=top edge, x=left edge, h=height, w=width (all 0.0–1.0 fraction of image dimensions). Enclose the foreign matter with a margin. If not clearly visible, use {"y":0.3,"x":0.3,"h":0.4,"w":0.4}.${langInst}`
         : `食品工場の異物特定専門家として画像を分析してください。
 
 ${FOREIGN_MATTER_DB}
@@ -147,7 +151,11 @@ ${FOREIGN_MATTER_DB}
 【緊急度】高・中・低（理由）
 【即時対応】箇条書き
 
-末尾：確定診断には外部専門機関の鑑定が必要です${langInst}`
+末尾：確定診断には外部専門機関の鑑定が必要です
+
+重要 — 最後の行に必ず以下を追記（省略不可）：
+[BBOX]{"y":0.0,"x":0.0,"h":0.0,"w":0.0}[/BBOX]
+y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜1.0の比率）。異物を余裕を持って囲む。見えない場合は{"y":0.3,"x":0.3,"h":0.4,"w":0.4}を使用。${langInst}`
 
     const userText = structured
       ? isEn
@@ -168,22 +176,45 @@ ${FOREIGN_MATTER_DB}
       timeoutPromise,
     ]) as Awaited<ReturnType<typeof callAI>>;
 
-    const text = aiResult.text.trim();
-    if (text.length === 0) {
+    let rawText = aiResult.text.trim();
+    if (rawText.length === 0) {
       return NextResponse.json({ error: '画像を解析できませんでした。より明確な画像をお試しください。' }, { status: 422 });
     }
 
     const remaining = MAX_MONTHLY - (usage.count + 1)
 
+    // [BBOX]{...}[/BBOX] をパースして表示テキストから除去
+    type BBox = { x: number; y: number; w: number; h: number }
+    let bbox: BBox | null = null
+    const bboxMatch = rawText.match(/\[BBOX\]([\s\S]*?)\[\/BBOX\]/i)
+    if (bboxMatch) {
+      try {
+        const parsed = JSON.parse(bboxMatch[1].trim())
+        const clamp = (v: number) => Math.max(0, Math.min(1, Number(v) || 0))
+        bbox = {
+          y: clamp(parsed.y ?? parsed.yMin ?? parsed.y_min ?? 0.3),
+          x: clamp(parsed.x ?? parsed.xMin ?? parsed.x_min ?? 0.3),
+          h: clamp(parsed.h ?? parsed.height ?? (parsed.yMax ?? parsed.y_max ?? 0.7) - (parsed.y ?? 0.3)),
+          w: clamp(parsed.w ?? parsed.width  ?? (parsed.xMax ?? parsed.x_max ?? 0.7) - (parsed.x ?? 0.3)),
+        }
+      } catch { /* ignore */ }
+      rawText = rawText.replace(bboxMatch[0], '').trim()
+    }
+
     let quickResult: Record<string, unknown> | null = null
     if (structured) {
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         try { quickResult = JSON.parse(jsonMatch[0]) } catch { /* ignore */ }
       }
     }
 
-    const finalRes = NextResponse.json({ result: text, remaining, ...(quickResult ? { quickResult } : {}) })
+    const finalRes = NextResponse.json({
+      result: rawText,
+      remaining,
+      ...(quickResult ? { quickResult } : {}),
+      ...(bbox ? { bbox } : {}),
+    })
     finalRes.cookies.set(USAGE_COOKIE, `${usage.month}:${usage.count + 1}`, {
       httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 40,
     })
