@@ -42,12 +42,14 @@ export default function ListPage() {
     investigating: t('list.status.investigating'),
     resolved: t('list.status.resolved'),
     pending: t('list.status.open'),
+    open: t('list.status.open'),
   }
 
   const AI_STATUS_COLORS: Record<string, string> = {
     investigating: 'bg-yellow-100 text-yellow-700',
     resolved: 'bg-green-100 text-green-700',
     pending: 'bg-red-100 text-red-700',
+    open: 'bg-red-100 text-red-700',
   }
 
   useEffect(() => {
@@ -258,7 +260,7 @@ export default function ListPage() {
                   {inc.location && (
                     <p className="text-xs text-gray-500 mb-1">📍 {inc.location}</p>
                   )}
-                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{inc.description}</p>
+                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{inc.description?.replace(/\*\*/g, '')}</p>
 
                   {inc.image_url ? (
                     <button

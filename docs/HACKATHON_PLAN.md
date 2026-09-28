@@ -95,6 +95,9 @@
 | 5 | 一覧の状態が "open" のまま → 翻訳ラベルを追加 | `src/app/list/page.tsx` |
 | 6 | 一覧の本文に `**` が出る → 表示時に除去 | `src/app/list/page.tsx` |
 | 7 | ページ移動で言語設定が戻らないか確認（コード確認のみ） | `src/context/LanguageContext.tsx` |
+| 8 | `/api/backup` と `/api/inspections` が Cloud Run で `EACCES: permission denied, mkdir '/app/data'` → `file-store.ts` の `ensureDir()` をエラー無視に変更し、read は `[]` を返すグレースフルフォールバックにする（write は引き続き失敗するが、ページがクラッシュしなくなる） | `src/lib/file-store.ts` |
+
+> **item 8 設計メモ（大きすぎる場合は方針のみ）**: Supabase への完全移行（`inspections` テーブル作成 → API 書き換え）は工数が大きいため、フェーズ1では「Cloud Run で read が 500 にならない」最小限の修正（ensureDir エラーを握りつぶす）に留め、write 失敗は許容する。backup 機能は Cloud Run では動作しないが、自動バックアップの失敗はページ側で無視しているため UX への影響は最小。本格移行はフェーズ2以降で検討。
 
 ---
 
@@ -135,7 +138,7 @@
 ### 制御・セキュリティ
 
 - **最大ステップ数**: 6（無限ループ防止）
-- **タイムアウト**: 25秒（Cloud Run のリクエスト上限 60秒 に対して余裕を持たせる）
+- **タイムアウト**: 90秒（エージェントループ全体で最大 90秒。Cloud Run のデフォルトタイムアウトは 300秒 なので現状は問題ないが、念のため `deploy-cloudrun.ps1` に `--timeout 120` を追記する案を検討すること（変更は次回デプロイ時））
 - **許可ツールリスト**: `config` で定義。使えないツールを呼ぼうとしたら拒否
 - **型検証**: zod でツール入力・出力を検証
 - **承認ゲート**: 緊急度「高」（金属・ガラス・硬質異物）の場合、`save_incident` と `draft_capa_report` の確定前に停止。承認情報は**サーバーのメモリに持たない**（Cloud Run は停止・複数台のため）。承認に必要なセッションデータ（解析結果・途中のステップ）を画面側で保持し、`/api/agent/confirm` に送って再検証する

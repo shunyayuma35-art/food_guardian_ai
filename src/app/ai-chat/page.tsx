@@ -138,7 +138,7 @@ function MessageBubble({ msg, onQuickReply, analysisRef }: { msg: Message; onQui
           <div className="mt-2 rounded-xl border border-blue-200 bg-blue-50 p-3">
             <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide mb-2">{t('aichat.searchResult')}</p>
             <div className="text-xs text-gray-800 leading-relaxed whitespace-pre-wrap">
-              {msg.searchResult.result}
+              {stripMarkdown(msg.searchResult.result)}
             </div>
           </div>
         )}
@@ -197,6 +197,16 @@ function TypingIndicator() {
 function getStoredLang(): string {
   if (typeof window === 'undefined') return 'ja'
   return localStorage.getItem('foodeye_lang') ?? 'ja'
+}
+
+/** 検索結果表示用：Markdown 記号を除去してプレーンテキストにする */
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/^[-*]\s+/gm, '• ')
+    .trim()
 }
 
 export default function AiChatPage() {
@@ -312,7 +322,7 @@ export default function AiChatPage() {
       const res = await fetch('/api/claude-search', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, lang: getStoredLang() }),
         signal: AbortSignal.timeout(30000),
       });
 
@@ -580,56 +590,88 @@ export default function AiChatPage() {
   }, [sendMessage])
 
   const saveAsIncident = useCallback(async () => {
+    const lang = getStoredLang();
+    const isEn = lang === 'en';
+    const dateStr = new Date().toLocaleDateString(isEn ? 'en-US' : 'ja-JP');
+
     // AI解析結果を最優先で探す
     let resultContent = '';
     let resultTitle = '';
-    
+
     const aiAnalysisMsg = messages.find((m) => m.role === 'assistant' && m.analysis);
     if (aiAnalysisMsg && aiAnalysisMsg.analysis) {
       const analysis = aiAnalysisMsg.analysis;
       const topCandidate = analysis.candidates[0];
-      resultTitle = `AI解析: ${topCandidate?.name ?? '異物混入事故'} — ${new Date().toLocaleDateString('ja-JP')}`;
-      resultContent = [
-        `【AI解析結果】`,
-        `推定異物：${topCandidate?.name ?? '不明'} (${topCandidate?.probability ?? 0}%)`,
-        `緊急度：${analysis.urgency === 'high' ? '高' : analysis.urgency === 'medium' ? '中' : '低'}`,
-        `目視特徴：${analysis.visualFeatures.join('、')}`,
-        '',
-        `【AI対話内容】`,
-        ...messages
-          .filter((m) => m.role !== 'assistant' || !m.analysis)
-          .slice(0, 5)
-          .map((m) => `${m.role === 'user' ? 'Q' : 'A'}: ${m.content}`),
-      ].join('\n');
+      const urgencyLabel = isEn
+        ? (analysis.urgency === 'high' ? 'High' : analysis.urgency === 'medium' ? 'Medium' : 'Low')
+        : (analysis.urgency === 'high' ? '高' : analysis.urgency === 'medium' ? '中' : '低');
+      resultTitle = isEn
+        ? `AI Analysis: ${topCandidate?.name ?? 'Foreign Matter Incident'} — ${dateStr}`
+        : `AI解析: ${topCandidate?.name ?? '異物混入事故'} — ${dateStr}`;
+      resultContent = isEn
+        ? [
+            `[AI Analysis Result]`,
+            `Estimated Foreign Matter: ${topCandidate?.name ?? 'Unknown'} (${topCandidate?.probability ?? 0}%)`,
+            `Urgency: ${urgencyLabel}`,
+            `Visual Features: ${analysis.visualFeatures.join(', ')}`,
+            '',
+            `[AI Chat History]`,
+            ...messages.filter((m) => m.role !== 'assistant' || !m.analysis).slice(0, 5).map((m) => `${m.role === 'user' ? 'Q' : 'A'}: ${m.content}`),
+          ].join('\n')
+        : [
+            `【AI解析結果】`,
+            `推定異物：${topCandidate?.name ?? '不明'} (${topCandidate?.probability ?? 0}%)`,
+            `緊急度：${urgencyLabel}`,
+            `目視特徴：${analysis.visualFeatures.join('、')}`,
+            '',
+            `【AI対話内容】`,
+            ...messages.filter((m) => m.role !== 'assistant' || !m.analysis).slice(0, 5).map((m) => `${m.role === 'user' ? 'Q' : 'A'}: ${m.content}`),
+          ].join('\n');
     } else if (messages.some((m) => m.imageAnalysis)) {
       // 画像解析結果を保存
       const imageMsg = messages.find((m) => m.imageAnalysis);
       if (imageMsg?.imageAnalysis) {
-        resultTitle = `画像解析: 異物特定結果 — ${new Date().toLocaleDateString('ja-JP')}`;
-        resultContent = [
-          `【画像解析結果】`,
-          imageMsg.imageAnalysis.result,
-          '',
-          `【対話情報】`,
-          ...messages
-            .filter((m) => m.role === 'user')
-            .map((m) => `Q: ${m.content}`),
-        ].join('\n');
+        resultTitle = isEn
+          ? `Image Analysis: Foreign Matter Result — ${dateStr}`
+          : `画像解析: 異物特定結果 — ${dateStr}`;
+        resultContent = isEn
+          ? [
+              `[Image Analysis Result]`,
+              imageMsg.imageAnalysis.result,
+              '',
+              `[Chat History]`,
+              ...messages.filter((m) => m.role === 'user').map((m) => `Q: ${m.content}`),
+            ].join('\n')
+          : [
+              `【画像解析結果】`,
+              imageMsg.imageAnalysis.result,
+              '',
+              `【対話情報】`,
+              ...messages.filter((m) => m.role === 'user').map((m) => `Q: ${m.content}`),
+            ].join('\n');
       }
     } else if (messages.some((m) => m.searchResult)) {
       // Claude検索結果を保存
       const searchMsg = messages.find((m) => m.searchResult);
       if (searchMsg?.searchResult) {
-        resultTitle = `Claude検索: 異物・害虫情報 — ${new Date().toLocaleDateString('ja-JP')}`;
-        resultContent = [
-          `【Claude検索結果】`,
-          searchMsg.searchResult.result,
-          '',
-          `【検索クエリ】`,
-          ...messages
-            .filter((m) => m.role === 'user')
-            .map((m) => `Q: ${m.content}`),
-        ].join('\n');
+        resultTitle = isEn
+          ? `AI Search: Foreign Matter Info — ${dateStr}`
+          : `Claude検索: 異物・害虫情報 — ${dateStr}`;
+        resultContent = isEn
+          ? [
+              `[AI Search Result]`,
+              searchMsg.searchResult.result,
+              '',
+              `[Search Queries]`,
+              ...messages.filter((m) => m.role === 'user').map((m) => `Q: ${m.content}`),
+            ].join('\n')
+          : [
+              `【Claude検索結果】`,
+              searchMsg.searchResult.result,
+              '',
+              `【検索クエリ】`,
+              ...messages.filter((m) => m.role === 'user').map((m) => `Q: ${m.content}`),
+            ].join('\n');
       }
     }
 
@@ -645,7 +687,7 @@ export default function AiChatPage() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           title: resultTitle,
-          location: '（AI対話から記録）',
+          location: isEn ? '(Recorded from AI chat)' : '（AI対話から記録）',
           description: resultContent,
           status: 'open',
         }),

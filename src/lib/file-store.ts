@@ -11,7 +11,11 @@ import { withFileLock } from './file-lock'
 const DATA_DIR = join(process.cwd(), 'data')
 
 function ensureDir() {
-  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true })
+  try {
+    if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true })
+  } catch {
+    // Cloud Run: read-only filesystem — silently ignore so reads return []
+  }
 }
 
 function filePath(name: string) {

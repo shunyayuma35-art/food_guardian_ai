@@ -3,12 +3,23 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const REQUEST_TIMEOUT_MS = 30000;
 
-const SYSTEM_PROMPT = '食品工場の異物・害虫問題の専門家として【概要】【発生原因】【対策】【法令・基準】の形式で日本語で回答してください。';
+function buildPrompts(lang: string, query: string): { systemPrompt: string; userMessage: string } {
+  if (lang === 'en') {
+    return {
+      systemPrompt: 'You are an expert on foreign matter and pest issues in food factories. Answer in English using the format: [Overview] [Causes] [Countermeasures] [Laws & Standards].',
+      userMessage: `Investigate foreign matter / pest issue in food factory: ${query.trim()}`,
+    };
+  }
+  return {
+    systemPrompt: '食品工場の異物・害虫問題の専門家として【概要】【発生原因】【対策】【法令・基準】の形式で日本語で回答してください。',
+    userMessage: `食品工場での異物・害虫問題を調査：${query.trim()}`,
+  };
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { query } = body;
+    const { query, lang = 'ja' } = body;
 
     if (!query || typeof query !== 'string') {
       return NextResponse.json(
@@ -28,7 +39,7 @@ export async function POST(req: NextRequest) {
       setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT_MS)
     );
 
-    const userMessage = `食品工場での異物・害虫問題を調査：${query.trim()}`;
+    const { systemPrompt, userMessage } = buildPrompts(lang, query);
     let text: string;
 
     if (process.env.AI_PROVIDER === 'gemini') {
@@ -45,9 +56,9 @@ export async function POST(req: NextRequest) {
           model: process.env.GEMINI_MODEL ?? 'gemini-3.8-flash',
           contents: [{ role: 'user', parts: [{ text: userMessage }] }],
           config: {
-            systemInstruction: SYSTEM_PROMPT,
+            systemInstruction: systemPrompt,
             tools: [{ googleSearch: {} }],
-            maxOutputTokens: 1000,
+            maxOutputTokens: 2000,
           } as Parameters<typeof ai.models.generateContent>[0]['config'],
         }),
         timeoutPromise,
@@ -60,9 +71,9 @@ export async function POST(req: NextRequest) {
       const response = await Promise.race([
         client.messages.create({
           model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
+          max_tokens: 2000,
           tools: [{ type: 'web_search_20250305' as 'web_search_20250305', name: 'web_search' }],
-          system: SYSTEM_PROMPT,
+          system: systemPrompt,
           messages: [{ role: 'user', content: userMessage }],
         }),
         timeoutPromise,
