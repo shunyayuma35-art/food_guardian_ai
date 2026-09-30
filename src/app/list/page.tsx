@@ -240,6 +240,36 @@ export default function ListPage() {
 
   const totalCount = incidents.length + aiIncidents.filter(i => !i.archived_at).length
 
+  // ── 傾向分析データ（アーカイブ除外） ──────────────────────────────
+  const activeAi = useMemo(() => aiIncidents.filter(i => !i.archived_at), [aiIncidents])
+
+  const trendByMonth = useMemo(() => {
+    const map: Record<string, number> = {}
+    activeAi.forEach(inc => {
+      const ym = inc.created_at.slice(0, 7) // "YYYY-MM"
+      map[ym] = (map[ym] ?? 0) + 1
+    })
+    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).slice(-6)
+  }, [activeAi])
+
+  const trendByLocation = useMemo(() => {
+    const map: Record<string, number> = {}
+    activeAi.forEach(inc => {
+      const loc = inc.location?.trim()
+      if (loc) map[loc] = (map[loc] ?? 0) + 1
+    })
+    return Object.entries(map).sort(([, a], [, b]) => b - a).slice(0, 5)
+  }, [activeAi])
+
+  const trendByStatus = useMemo(() => {
+    const map: Record<string, number> = { open: 0, investigating: 0, resolved: 0 }
+    activeAi.forEach(inc => {
+      const s = inc.status === 'pending' ? 'open' : inc.status
+      if (s in map) map[s]++
+    })
+    return map
+  }, [activeAi])
+
   return (
     <div className="min-h-screen pb-24">
       {lightboxPhoto && (
@@ -435,6 +465,95 @@ export default function ListPage() {
             t('list.guide.tip1'),
           ]}
         />
+
+        {/* 傾向分析 */}
+        {activeAi.length > 0 && (
+          <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-4 space-y-4">
+            <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+              <span>📊</span>
+              {isEn ? 'Trend Analysis' : '傾向分析'}
+              <span className="text-xs font-normal text-gray-400">
+                ({isEn ? 'excl. archived' : 'アーカイブ除く'})
+              </span>
+            </h2>
+
+            {/* 月別件数 */}
+            {trendByMonth.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  {isEn ? 'Monthly Incidents' : '月別件数'}
+                </p>
+                <div className="space-y-1.5">
+                  {trendByMonth.map(([ym, cnt]) => {
+                    const maxCnt = Math.max(...trendByMonth.map(([, c]) => c), 1)
+                    const pct = Math.round((cnt / maxCnt) * 100)
+                    const label = isEn
+                      ? new Date(ym + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+                      : new Date(ym + '-01').toLocaleDateString('ja-JP', { year: 'numeric', month: 'short' })
+                    return (
+                      <div key={ym} className="flex items-center gap-2">
+                        <span className="text-[10px] text-gray-500 w-14 shrink-0">{label}</span>
+                        <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                          <div
+                            className="h-2.5 rounded-full bg-orange-400 transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-600 w-5 text-right">{cnt}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 状態内訳 */}
+            <div>
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                {isEn ? 'Status Breakdown' : '状態内訳'}
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { key: 'open', label: t('list.status.open'), color: 'bg-red-100 text-red-700 border-red-200' },
+                  { key: 'investigating', label: t('list.status.investigating'), color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+                  { key: 'resolved', label: t('list.status.resolved'), color: 'bg-green-100 text-green-700 border-green-200' },
+                ].map(({ key, label, color }) => (
+                  <div key={key} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold ${color}`}>
+                    <span className="font-extrabold text-sm">{trendByStatus[key] ?? 0}</span>
+                    <span>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 場所別 */}
+            {trendByLocation.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                  {isEn ? 'Top Locations' : '場所別 Top 5'}
+                </p>
+                <div className="space-y-1.5">
+                  {trendByLocation.map(([loc, cnt]) => {
+                    const maxCnt = Math.max(...trendByLocation.map(([, c]) => c), 1)
+                    const pct = Math.round((cnt / maxCnt) * 100)
+                    return (
+                      <div key={loc} className="flex items-center gap-2">
+                        <span className="text-[10px] text-gray-600 truncate flex-1 max-w-[120px]">📍 {loc}</span>
+                        <div className="w-24 bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                          <div
+                            className="h-2.5 rounded-full bg-blue-400 transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-600 w-5 text-right">{cnt}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* AI解析セクション */}
         <div>

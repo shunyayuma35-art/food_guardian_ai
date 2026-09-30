@@ -26,7 +26,7 @@ const GCP_PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? ''
 const GCP_LOCATION = process.env.GOOGLE_CLOUD_LOCATION ?? 'asia-northeast1'
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash'
 const AGENT_TIMEOUT_MS = 85_000
-const MAX_STEPS = 8
+const MAX_STEPS = 10
 /** userHint の最大文字数 */
 const MAX_HINT_LEN = 500
 
@@ -182,6 +182,10 @@ function buildSystemPrompt(
       : `3b. assess_recall_risk — 出荷状況に基づいて自主回収リスクを評価する（判断材料提示のみ・最終決定はしない）\n`
     : ''
 
+  const trendStep = isEn
+    ? `5b. check_trend_alert — before saving, check if the same foreign matter type or location has had 3+ incidents in the past 30 days; if so, include the alert in the CAPA report\n`
+    : `5b. check_trend_alert — 保存前に、同じ異物の種類・同じ場所で直近30日間に3件以上の事故がないか確認する。あれば CAPA 報告書に傾向アラートとして記録\n`
+
   const recallApprovalNote = hasRecallFlow
     ? isEn
       ? `\nIMPORTANT: draft_customer_report ALWAYS requires submit_for_approval first, regardless of urgency.`
@@ -209,7 +213,7 @@ Visual features: ${input.analysisResult.visualFeatures.join(', ')}${hint}${shipm
 3. create_action_checklist — generate action checklist
 ${recallSteps}4. submit_for_approval — REQUIRED for HIGH urgency or when recall risk was assessed (stops agent and waits for human approval)
 5. (after approval) draft_capa_report — create CAPA report
-6. save_incident — save incident record to database${draftCustomerStep}
+${trendStep}6. save_incident — save incident record to database${draftCustomerStep}
 
 IMPORTANT: For HIGH urgency, you MUST call submit_for_approval before calling draft_capa_report or save_incident.${recallApprovalNote}
 Respond entirely in English.${injectionWarning}`
@@ -229,7 +233,7 @@ Respond entirely in English.${injectionWarning}`
 3. create_action_checklist — 対応チェックリストを生成する
 ${recallSteps}4. submit_for_approval — 緊急度「高」または回収リスク評価を行った場合は必須（ここでエージェントが一時停止し、人間の承認を待つ）
 5. （承認後）draft_capa_report — CAPA 報告書を作成する
-6. save_incident — 事故記録を Supabase に保存する${draftCustomerStep}
+${trendStep}6. save_incident — 事故記録を Supabase に保存する${draftCustomerStep}
 
 重要: 緊急度「最高/高」の場合、submit_for_approval なしに draft_capa_report や save_incident を呼んではいけません。${recallApprovalNote}
 日本語で回答してください。${injectionWarning}`

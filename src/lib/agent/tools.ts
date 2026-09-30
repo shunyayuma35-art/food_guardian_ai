@@ -303,6 +303,77 @@ Mark all placeholder fields with [PLACEHOLDER].`
   return callAIText(system, userText, 1500)
 }
 
+/** Supabase の incidents テーブルで直近30日の傾向を確認し、繰り返しパターンがあれば警告 */
+async function checkTrendAlert(
+  matterType: string,
+  location: string,
+  lang: string,
+): Promise<string> {
+  try {
+    const { getSupabaseAdmin } = await import('../supabase')
+    const db = getSupabaseAdmin()
+
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+    const safeMatter = matterType.replace(/[%_\\]/g, (c) => `\\${c}`).slice(0, 60)
+    const safeLocation = location.replace(/[%_\\]/g, (c) => `\\${c}`).slice(0, 60)
+
+    // 同じ異物の種類（タイトル・説明で検索）
+    const { data: byType } = await db
+      .from('incidents')
+      .select('id, title, location, created_at')
+      .or(`title.ilike.%${safeMatter}%,description.ilike.%${safeMatter}%`)
+      .gte('created_at', since)
+      .is('archived_at', null)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    // 同じ場所（ロケーションで検索）
+    const { data: byLocation } = safeLocation
+      ? await db
+          .from('incidents')
+          .select('id, title, location, created_at')
+          .ilike('location', `%${safeLocation}%`)
+          .gte('created_at', since)
+          .is('archived_at', null)
+          .order('created_at', { ascending: false })
+          .limit(20)
+      : { data: null }
+
+    const typeCount = byType?.length ?? 0
+    const locationCount = byLocation?.length ?? 0
+    const isEn = lang === 'en'
+
+    const alerts: string[] = []
+    if (typeCount >= 3) {
+      alerts.push(
+        isEn
+          ? `⚠️ TREND ALERT: ${typeCount} incidents involving "${matterType}" in the past 30 days. Repeated occurrence detected — include in CAPA report and consider systemic root cause analysis.`
+          : `⚠️ 傾向アラート: 直近30日間で「${matterType}」に関する事故が${typeCount}件あります。繰り返し発生しています — CAPA報告書に記録し、根本原因の体系的な分析を検討してください。`,
+      )
+    }
+    if (safeLocation && locationCount >= 3) {
+      const locLabel = isEn ? location : location
+      alerts.push(
+        isEn
+          ? `⚠️ LOCATION ALERT: ${locationCount} incidents at "${locLabel}" in the past 30 days. Focus corrective actions on this area.`
+          : `⚠️ 場所アラート: 直近30日間で「${locLabel}」での事故が${locationCount}件あります。この場所への集中的な是正処置を検討してください。`,
+      )
+    }
+
+    if (alerts.length === 0) {
+      return isEn
+        ? `No trend alerts. Type count (30d): ${typeCount}${safeLocation ? `, Location count (30d): ${locationCount}` : ''}.`
+        : `傾向アラートなし。直近30日: 同種 ${typeCount}件${safeLocation ? `、同場所 ${locationCount}件` : ''}。`
+    }
+
+    return alerts.join('\n\n')
+  } catch (err) {
+    return lang === 'en'
+      ? `Trend check error: ${String(err)}`
+      : `傾向チェックでエラーが発生しました: ${String(err)}`
+  }
+}
+
 /** Supabase の incidents テーブルに異物事故を保存 */
 async function saveIncidentToSupabase(
   title: string,
@@ -442,6 +513,16 @@ export async function executeTool(
       return { output: msg }
     }
 
+    case 'check_trend_alert': {
+      const alert = await checkTrendAlert(
+        args.matter_type ?? '',
+        args.location ?? '',
+        ctx.lang,
+      )
+      ctx.partialResult.trendAlert = alert
+      return { output: alert }
+    }
+
     case 'assess_recall_risk': {
       const assessment = await assessRecallRisk(
         args.matter_type ?? '',
@@ -559,6 +640,19 @@ export const TOOL_DECLARATIONS_GEMINI = [
     },
   },
   {
+    name: 'check_trend_alert',
+    description:
+      '直近30日間で同じ異物の種類・同じ場所の事故が繰り返し発生していないかを確認し、3件以上なら傾向アラートを生成する。save_incident の前に必ず呼ぶこと',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        matter_type: { type: 'STRING', description: '異物の種類・名称' },
+        location: { type: 'STRING', description: '発見場所・ライン番号（不明なら空文字）' },
+      },
+      required: ['matter_type'],
+    },
+  },
+  {
     name: 'assess_recall_risk',
     description:
       '異物種別・緊急度・出荷状況から自主回収リスクを評価し、判断材料を提示する。AIは最終判断せず必ず相談先を提示する',
@@ -671,6 +765,19 @@ export const TOOL_DECLARATIONS_ANTHROPIC = [
         urgency: { type: 'string', description: '緊急度（high/medium/low）' },
       },
       required: ['product_name', 'description', 'urgency'],
+    },
+  },
+  {
+    name: 'check_trend_alert',
+    description:
+      '直近30日間で同じ異物の種類・同じ場所の事故が繰り返し発生していないかを確認し、3件以上なら傾向アラートを生成する。save_incident の前に必ず呼ぶこと',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        matter_type: { type: 'string', description: '異物の種類・名称' },
+        location: { type: 'string', description: '発見場所・ライン番号（不明なら空文字）' },
+      },
+      required: ['matter_type'],
     },
   },
   {

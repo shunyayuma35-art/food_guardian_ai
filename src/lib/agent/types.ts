@@ -32,6 +32,8 @@ export interface PartialResult {
   recallAssessment?: string
   /** 取引先向け第一報ドラフト */
   customerReport?: string
+  /** 傾向分析アラート（直近30日の同種・同場所の件数警告） */
+  trendAlert?: string
 }
 
 export interface AgentSessionData {

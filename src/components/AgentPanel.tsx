@@ -27,6 +27,7 @@ const TOOL_LABELS: Record<string, { ja: string; en: string; icon: string }> = {
   draft_capa_report:        { ja: 'CAPA報告書を作成',     en: 'Drafting CAPA report',           icon: '📝' },
   save_incident:            { ja: '異物事故を記録',       en: 'Saving incident record',         icon: '💾' },
   draft_customer_report:    { ja: '取引先への第一報を作成', en: 'Drafting customer notification', icon: '📨' },
+  check_trend_alert:        { ja: '傾向アラートを確認',   en: 'Checking trend alerts',          icon: '📊' },
 }
 
 type PanelStatus = 'preflight' | 'running' | 'awaiting_approval' | 'completed' | 'rejected' | 'error'
@@ -360,6 +361,18 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
           {/* ── Completed results ── */}
           {status === 'completed' && result && (
             <div className="space-y-4">
+
+              {/* Trend alert */}
+              {result.trendAlert && /⚠️/.test(result.trendAlert) && (
+                <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
+                  <p className="text-xs font-bold text-orange-700 mb-2">
+                    📊 {isEn ? 'Trend Alert' : '傾向アラート'}
+                  </p>
+                  <p className="text-xs text-orange-800 leading-relaxed whitespace-pre-line">
+                    {result.trendAlert}
+                  </p>
+                </div>
+              )}
 
               {/* Recall assessment */}
               {recallText && (
