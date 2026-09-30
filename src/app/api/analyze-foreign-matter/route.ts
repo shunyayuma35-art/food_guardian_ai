@@ -132,9 +132,15 @@ Line 1 (required): Estimated foreign matter: [name] (Confidence: High/Medium/Low
 
 Note: External specialist assessment is required for definitive identification.
 
-IMPORTANT — append this as the very last line (required):
+SIZE ESTIMATION: Look for reference objects (ruler, coin, credit card, pen, finger/hand).
+- If found: output [SIZE]Estimated: approx. Xmm (reference: [object name])[/SIZE]
+- If not found: output [SIZE]No reference object found — photograph with a coin or ruler to enable size estimation[/SIZE]
+Mark all size values as estimated.
+
+IMPORTANT — append these as the very last two lines (required):
 [BBOX]{"y":0.0,"x":0.0,"h":0.0,"w":0.0}[/BBOX]
-y=top edge, x=left edge, h=height, w=width (all 0.0–1.0 fraction of image dimensions). Enclose the foreign matter with a margin. If not clearly visible, use {"y":0.3,"x":0.3,"h":0.4,"w":0.4}.${langInst}`
+y=top edge, x=left edge, h=height, w=width (all 0.0–1.0 fraction of image dimensions). Enclose the foreign matter with a margin. If not clearly visible, use {"y":0.3,"x":0.3,"h":0.4,"w":0.4}.
+[SIZE]...[/SIZE]${langInst}`
         : `食品工場の異物特定専門家として画像を分析してください。
 
 ${FOREIGN_MATTER_DB}
@@ -153,9 +159,15 @@ ${FOREIGN_MATTER_DB}
 
 末尾：確定診断には外部専門機関の鑑定が必要です
 
-重要 — 最後の行に必ず以下を追記（省略不可）：
+大きさの推定：定規・コイン・クレジットカード・ペン・指・手などの基準物体が写っている場合、異物のおよその大きさを推定してください。
+- 基準物体あり: [SIZE]推定: 約Xmm（基準：[物体名]との比較）[/SIZE]
+- 基準物体なし: [SIZE]参照なし — コインや定規と一緒に撮影すると大きさを推定できます[/SIZE]
+大きさはすべて「推定値」として扱うこと。
+
+重要 — 最後の2行に必ず以下を追記（省略不可）：
 [BBOX]{"y":0.0,"x":0.0,"h":0.0,"w":0.0}[/BBOX]
-y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜1.0の比率）。異物を余裕を持って囲む。見えない場合は{"y":0.3,"x":0.3,"h":0.4,"w":0.4}を使用。${langInst}`
+y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜1.0の比率）。異物を余裕を持って囲む。見えない場合は{"y":0.3,"x":0.3,"h":0.4,"w":0.4}を使用。
+[SIZE]...[/SIZE]${langInst}`
 
     const userText = structured
       ? isEn
@@ -201,6 +213,14 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
       rawText = rawText.replace(bboxMatch[0], '').trim()
     }
 
+    // [SIZE]...[/SIZE] をパースして表示テキストから除去
+    let sizeEstimate: string | null = null
+    const sizeMatch = rawText.match(/\[SIZE\]([\s\S]*?)\[\/SIZE\]/i)
+    if (sizeMatch) {
+      sizeEstimate = sizeMatch[1].trim()
+      rawText = rawText.replace(sizeMatch[0], '').trim()
+    }
+
     let quickResult: Record<string, unknown> | null = null
     if (structured) {
       const jsonMatch = rawText.match(/\{[\s\S]*\}/)
@@ -214,6 +234,7 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
       remaining,
       ...(quickResult ? { quickResult } : {}),
       ...(bbox ? { bbox } : {}),
+      ...(sizeEstimate ? { sizeEstimate } : {}),
     })
     finalRes.cookies.set(USAGE_COOKIE, `${usage.month}:${usage.count + 1}`, {
       httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 40,

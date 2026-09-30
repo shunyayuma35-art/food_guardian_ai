@@ -8,9 +8,10 @@ interface Props {
   imageDataUrl: string
   bbox: BBox
   isEn?: boolean
+  sizeEstimate?: string
 }
 
-export default function ForeignMatterBBoxView({ imageDataUrl, bbox, isEn = false }: Props) {
+export default function ForeignMatterBBoxView({ imageDataUrl, bbox, isEn = false, sizeEstimate }: Props) {
   const zoomRef = useRef<HTMLCanvasElement>(null)
   const fullRef = useRef<HTMLCanvasElement>(null)
   const [ready, setReady] = useState(false)
@@ -89,8 +90,32 @@ export default function ForeignMatterBBoxView({ imageDataUrl, bbox, isEn = false
     </div>
   )
 
+  // 「参照なし」メッセージかどうかを判定
+  const hasNoRef = sizeEstimate
+    ? /参照なし|No reference/i.test(sizeEstimate)
+    : false
+
   return (
     <div className="mt-3 space-y-2">
+      {/* サイズ推定 */}
+      {sizeEstimate && (
+        <div className={`flex items-start gap-2 px-3 py-2 rounded-xl text-xs ${
+          hasNoRef
+            ? 'bg-gray-50 border border-gray-200 text-gray-500'
+            : 'bg-amber-50 border border-amber-200 text-amber-800'
+        }`}>
+          <span className="shrink-0 mt-0.5">{hasNoRef ? '📏' : '📐'}</span>
+          <div>
+            <span className="font-semibold">{isEn ? 'Size' : '大きさ'}: </span>
+            {sizeEstimate}
+            {!hasNoRef && (
+              <span className="ml-1 text-[10px] text-amber-600">
+                ({isEn ? 'estimated value — actual measurement required' : '推定値・正確な測定は実測が必要'})
+              </span>
+            )}
+          </div>
+        </div>
+      )}
       {/* ズーム拡大 */}
       <div className="rounded-xl overflow-hidden border border-red-200 bg-black">
         <div className="px-2.5 py-1.5 bg-gray-950 flex items-center gap-1.5">

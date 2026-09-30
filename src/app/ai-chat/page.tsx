@@ -25,6 +25,7 @@ interface SearchResult {
 interface ImageAnalysisResult {
   result: string
   bbox?: BBox
+  sizeEstimate?: string
 }
 
 interface Message {
@@ -170,6 +171,7 @@ function MessageBubble({ msg, onQuickReply, analysisRef, onStartAgent }: { msg: 
               <ForeignMatterBBoxView
                 imageDataUrl={msg.imageUrl}
                 bbox={msg.imageAnalysis.bbox}
+                sizeEstimate={msg.imageAnalysis.sizeEstimate}
                 isEn={lang === 'en'}
               />
             )}
