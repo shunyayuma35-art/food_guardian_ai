@@ -182,6 +182,8 @@ export default function DashboardPage() {
   const [reports, setReports] = useState<Report[]>([])
   const [inspections, setInspections] = useState<InspectionRecord[]>([])
   const [fetching, setFetching] = useState(true)
+  type AiInc = { created_at: string; status: string; archived_at: string | null }
+  const [aiIncidents, setAiIncidents] = useState<AiInc[]>([])
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [backupList, setBackupList] = useState<{ name: string; files: string[] }[]>([])
   const [showBackup, setShowBackup] = useState(false)
@@ -207,6 +209,13 @@ export default function DashboardPage() {
       .catch(console.error)
       .finally(() => setFetching(false))
   }, [user])
+
+  useEffect(() => {
+    fetch('/api/incidents')
+      .then((r) => r.json())
+      .then((data) => setAiIncidents(Array.isArray(data) ? data : []))
+      .catch(console.error)
+  }, [])
 
   // 自動バックアップ（1日1回）
   useEffect(() => {
@@ -282,6 +291,20 @@ export default function DashboardPage() {
   const todayIncidents = incidents.filter((i) => new Date(i.createdAt).toDateString() === today).length
   const internalCount = incidents.filter(i => (i.occurrenceType ?? 'internal') === 'internal').length
   const externalCount = incidents.filter(i => i.occurrenceType === 'external').length
+
+  // Supabase AI incidents の統計（アーカイブ除外）
+  const activeAi = aiIncidents.filter((i) => !i.archived_at)
+  const aiTodayCount = activeAi.filter((i) => i.created_at.startsWith(todayStr)).length
+  const aiActiveCount = activeAi.filter((i) => {
+    const s = i.status === 'pending' ? 'open' : i.status
+    return s === 'open' || s === 'investigating'
+  }).length
+  const aiTotalCount = activeAi.length
+
+  // 表示用合計（Firestore + Supabase）
+  const displayToday = todayIncidents + aiTodayCount
+  const displayActive = openCount + investigatingCount + aiActiveCount
+  const displayTotal = incidents.length + aiTotalCount
 
   // 検査統計
   const todayInsp = inspections.filter((i) => i.inspectionDate === todayStr).length
@@ -417,9 +440,9 @@ export default function DashboardPage() {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('home.sectionIncident')}</p>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { value: todayIncidents, label: t('home.stats.today'), color: 'text-red-500', bg: 'bg-red-50' },
-              { value: openCount + investigatingCount, label: t('home.stats.active'), color: 'text-orange-500', bg: 'bg-orange-50' },
-              { value: incidents.length, label: t('home.stats.total'), color: 'text-gray-800', bg: 'bg-white' },
+              { value: displayToday, label: t('home.stats.today'), color: 'text-red-500', bg: 'bg-red-50' },
+              { value: displayActive, label: t('home.stats.active'), color: 'text-orange-500', bg: 'bg-orange-50' },
+              { value: displayTotal, label: t('home.stats.total'), color: 'text-gray-800', bg: 'bg-white' },
             ].map(({ value, label, color, bg }) => (
               <div key={label} className={`${bg} rounded-2xl border border-orange-100 shadow-sm p-3 text-center`}>
                 <p className={`text-2xl font-extrabold ${color}`}>{value}</p>

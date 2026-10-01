@@ -1,16 +1,15 @@
 'use client'
 
+const AI_CHAT_LOC_RE = /Recorded from AI chat|AI対話から記録|AIチャット|AI chat/i
+
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
-import { listIncidents } from '@/lib/firestore'
-import { DISCOVERY_PROCESS_LABELS } from '@/lib/types'
 import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
-import IncidentCard from '@/components/IncidentCard'
 import toast from 'react-hot-toast'
-import type { Incident, DiscoveryProcess, IncidentStatus } from '@/lib/types'
+import type { IncidentStatus } from '@/lib/types'
 
 type AiIncident = {
   id: number
@@ -30,11 +29,8 @@ export default function ListPage() {
   const { user, loading } = useAuth()
   const { t, lang } = useLang()
   const router = useRouter()
-  const [incidents, setIncidents] = useState<Incident[]>([])
-  const [fetching, setFetching] = useState(true)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<IncidentStatus | ''>('')
-  const [filterProcess, setFilterProcess] = useState<DiscoveryProcess | ''>('')
   const [aiIncidents, setAiIncidents] = useState<AiIncident[]>([])
   const [aiFetching, setAiFetching] = useState(true)
   const [uploadingId, setUploadingId] = useState<number | null>(null)
@@ -155,14 +151,6 @@ export default function ListPage() {
   }, [user, loading, router])
 
   useEffect(() => {
-    if (!user) return
-    listIncidents(user.uid)
-      .then(setIncidents)
-      .catch(console.error)
-      .finally(() => setFetching(false))
-  }, [user])
-
-  useEffect(() => {
     fetch('/api/incidents')
       .then((r) => r.json())
       .then((data) => setAiIncidents(Array.isArray(data) ? data : []))
@@ -198,22 +186,6 @@ export default function ListPage() {
     }
   }
 
-  const filtered = useMemo(() => {
-    return incidents.filter((inc) => {
-      const q = search.toLowerCase()
-      if (
-        q &&
-        !inc.productName.toLowerCase().includes(q) &&
-        !inc.lotNumber.toLowerCase().includes(q) &&
-        !inc.factory.toLowerCase().includes(q) &&
-        !inc.operator.toLowerCase().includes(q)
-      ) return false
-      if (filterStatus && inc.status !== filterStatus) return false
-      if (filterProcess && inc.discoveryProcess !== filterProcess) return false
-      return true
-    })
-  }, [incidents, search, filterStatus, filterProcess])
-
   const filteredAi = useMemo(() => {
     const q = search.toLowerCase()
     return aiIncidents.filter((inc) => {
@@ -238,7 +210,7 @@ export default function ListPage() {
     )
   }
 
-  const totalCount = incidents.length + aiIncidents.filter(i => !i.archived_at).length
+  const totalCount = aiIncidents.filter(i => !i.archived_at).length
 
   // ── 傾向分析データ（アーカイブ除外） ──────────────────────────────
   const activeAi = useMemo(() => aiIncidents.filter(i => !i.archived_at), [aiIncidents])
@@ -256,7 +228,8 @@ export default function ListPage() {
     const map: Record<string, number> = {}
     activeAi.forEach(inc => {
       const loc = inc.location?.trim()
-      if (loc) map[loc] = (map[loc] ?? 0) + 1
+      if (!loc || AI_CHAT_LOC_RE.test(loc)) return
+      map[loc] = (map[loc] ?? 0) + 1
     })
     return Object.entries(map).sort(([, a], [, b]) => b - a).slice(0, 5)
   }, [activeAi])
@@ -429,20 +402,9 @@ export default function ListPage() {
               <option value="closed">{t('list.status.resolved')}</option>
             </select>
 
-            <select
-              value={filterProcess}
-              onChange={(e) => setFilterProcess(e.target.value as DiscoveryProcess | '')}
-              className="text-xs bg-white border border-orange-200 text-gray-600 rounded-xl px-3 py-2 shrink-0 focus:border-orange-400 focus:outline-none font-medium"
-            >
-              <option value="">{t('list.allProcess')}</option>
-              {Object.entries(DISCOVERY_PROCESS_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
-              ))}
-            </select>
-
-            {(search || filterStatus || filterProcess) && (
+            {(search || filterStatus) && (
               <button
-                onClick={() => { setSearch(''); setFilterStatus(''); setFilterProcess('') }}
+                onClick={() => { setSearch(''); setFilterStatus('') }}
                 className="text-xs text-orange-500 hover:text-orange-600 font-bold px-2 py-2 shrink-0"
               >
                 ✕ {t('common.clear')}
@@ -698,46 +660,6 @@ export default function ListPage() {
           )}
         </div>
 
-        {/* 異物事故記録セクション */}
-        <div>
-          <h2 className="text-sm font-bold text-gray-600 mb-3 flex items-center gap-2">
-            <span className="text-base">📋</span> {t('list.incidentSection')}
-          </h2>
-          {fetching ? (
-            <div className="flex justify-center py-12">
-              <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="text-5xl mb-3">📋</div>
-              <p className="text-gray-500 font-medium text-sm">
-                {incidents.length === 0 ? t('list.noRecords') : t('list.noFiltered')}
-              </p>
-              {incidents.length === 0 && (
-                <p className="text-xs text-gray-400 mt-2 leading-relaxed px-4">
-                  {isEn
-                    ? 'Records created via the registration form or saved by the AI agent appear here.'
-                    : '異物登録フォーム（＋ボタン）やAIエージェントが保存した記録がここに表示されます。'}
-                </p>
-              )}
-              {incidents.length === 0 && (
-                <button onClick={() => router.push('/record')} className="btn-primary mt-4 text-sm px-6">
-                  {t('home.firstRecord')}
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filtered.map((inc) => (
-                <IncidentCard key={inc.id} incident={inc} />
-              ))}
-              <p className="text-xs text-gray-400 text-center pt-2 font-medium">
-                {t('list.showing').replace('{n}', String(filtered.length))}
-                {filtered.length !== incidents.length && `（${t('list.totalCount').replace('{n}', String(incidents.length))}）`}
-              </p>
-            </div>
-          )}
-        </div>
       </div>
 
       <Navigation />
