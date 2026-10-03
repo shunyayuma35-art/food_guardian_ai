@@ -440,17 +440,25 @@ export default function DashboardPage() {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('home.sectionIncident')}</p>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { value: displayToday, label: t('home.stats.today'), color: 'text-red-500', bg: 'bg-red-50' },
-              { value: displayActive, label: t('home.stats.active'), color: 'text-orange-500', bg: 'bg-orange-50' },
-              { value: displayTotal, label: t('home.stats.total'), color: 'text-gray-800', bg: 'bg-white' },
-            ].map(({ value, label, color, bg }) => (
-              <div key={label} className={`${bg} rounded-2xl border border-orange-100 shadow-sm p-3 text-center`}>
+              { value: displayToday, label: t('home.stats.today'), color: 'text-red-500', bg: 'bg-red-50', filter: 'today' },
+              { value: displayActive, label: t('home.stats.active'), color: 'text-orange-500', bg: 'bg-orange-50', filter: 'active' },
+              { value: displayTotal, label: t('home.stats.total'), color: 'text-gray-800', bg: 'bg-white', filter: 'all' },
+            ].map(({ value, label, color, bg, filter }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') sessionStorage.setItem('listFilter', filter)
+                  router.push('/list')
+                }}
+                className={`${bg} rounded-2xl border border-orange-100 shadow-sm p-3 text-center active:scale-95 transition-all hover:shadow-md hover:border-orange-200 cursor-pointer w-full`}
+              >
                 <p className={`text-2xl font-extrabold ${color}`}>{value}</p>
                 <p className="text-[10px] text-gray-500 mt-0.5 font-medium">{label}</p>
-              </div>
+                <p className="text-[8px] text-orange-400 mt-0.5">→</p>
+              </button>
             ))}
           </div>
-
         </div>
 
         {/* 検査記録統計 */}
@@ -458,14 +466,23 @@ export default function DashboardPage() {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('home.sectionInsp')}</p>
           <div className="grid grid-cols-3 gap-2 mt-2">
             {[
-              { value: todayInsp, label: t('home.stats.todayInsp'), color: 'text-teal-600', bg: 'bg-teal-50' },
-              { value: inspFail, label: t('home.stats.fail'), color: 'text-red-500', bg: 'bg-red-50' },
-              { value: totalReject, label: t('home.stats.rejected'), color: 'text-amber-600', bg: 'bg-amber-50' },
-            ].map(({ value, label, color, bg }) => (
-              <div key={label} className={`${bg} rounded-2xl border border-teal-100 shadow-sm p-3 text-center`}>
+              { value: todayInsp, label: t('home.stats.todayInsp'), color: 'text-teal-600', bg: 'bg-teal-50', filter: 'today' },
+              { value: inspFail, label: t('home.stats.fail'), color: 'text-red-500', bg: 'bg-red-50', filter: 'fail' },
+              { value: totalReject, label: t('home.stats.rejected'), color: 'text-amber-600', bg: 'bg-amber-50', filter: 'all' },
+            ].map(({ value, label, color, bg, filter }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') sessionStorage.setItem('inspFilter', filter)
+                  router.push('/inspection')
+                }}
+                className={`${bg} rounded-2xl border border-teal-100 shadow-sm p-3 text-center active:scale-95 transition-all hover:shadow-md hover:border-teal-200 cursor-pointer w-full`}
+              >
                 <p className={`text-2xl font-extrabold ${color}`}>{value}</p>
                 <p className="text-[10px] text-gray-500 mt-0.5 font-medium">{label}</p>
-              </div>
+                <p className="text-[8px] text-teal-400 mt-0.5">→</p>
+              </button>
             ))}
           </div>
         </div>

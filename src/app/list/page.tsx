@@ -2,6 +2,15 @@
 
 const AI_CHAT_LOC_RE = /Recorded from AI chat|AI対話から記録|AIチャット|AI chat/i
 
+function fixLegacyText(text: string | null | undefined): string {
+  if (!text) return ''
+  return text
+    .replace(/Claude検索結果/g, 'AI検索結果')
+    .replace(/Claude検索/g, 'AI検索')
+    .replace(/Claude Search Result/gi, 'AI Search Result')
+    .replace(/Claude Search/gi, 'AI Search')
+}
+
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
@@ -156,6 +165,21 @@ export default function ListPage() {
       .then((data) => setAiIncidents(Array.isArray(data) ? data : []))
       .catch(console.error)
       .finally(() => setAiFetching(false))
+  }, [])
+
+  // ホーム画面のカードタップで渡された初期フィルタを適用
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const f = sessionStorage.getItem('listFilter')
+    if (!f) return
+    sessionStorage.removeItem('listFilter')
+    if (f === 'today') {
+      const todayStr = new Date().toISOString().slice(0, 10)
+      setSearch(todayStr)
+    } else if (f === 'active') {
+      setFilterStatus('open')
+    }
+    // 'all' はフィルタなし
   }, [])
 
   async function handlePhotoUpload(file: File, incidentId: number) {
@@ -557,7 +581,7 @@ export default function ListPage() {
                   {/* ── タイトル行：ステータス（タップで変更）・言語バッジ ── */}
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <p className={`font-bold text-gray-800 text-sm leading-snug flex-1 ${inc.archived_at ? 'text-gray-500' : ''}`}>
-                      {inc.title}
+                      {fixLegacyText(inc.title)}
                     </p>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {/* 言語バッジ */}
@@ -586,7 +610,7 @@ export default function ListPage() {
                   {inc.location && (
                     <p className="text-xs text-gray-500 mb-1">📍 {inc.location}</p>
                   )}
-                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{inc.description?.replace(/\*\*/g, '')}</p>
+                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{fixLegacyText(inc.description)?.replace(/\*\*/g, '')}</p>
 
                   {/* アーカイブ情報 */}
                   {inc.archived_at && (

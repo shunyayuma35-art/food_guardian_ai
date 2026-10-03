@@ -222,6 +222,35 @@ export default function RecordPage() {
           claimPhotos: claimPhotoURLs,
         } : {}),
       })
+
+      // Supabase にも保存して事故一覧・ホーム統計に反映
+      const lang = getStoredLang()
+      const isEn = lang === 'en'
+      const topEst = estimations[0]
+      const supabaseTitle = isEn
+        ? `Form Record: ${productName}${lotNumber ? ` (Lot: ${lotNumber})` : ''}`
+        : `登録フォーム: ${productName}${lotNumber ? `（ロット: ${lotNumber}）` : ''}`
+      const supabaseLoc = [factory, lineNumber].filter(Boolean).join(' / ') ||
+        (isEn ? 'Not specified' : '未指定')
+      const supabaseDesc = [
+        isEn ? `[Foreign Matter Estimation] ${topEst?.category ?? 'Unknown'} (${topEst?.probability ?? 0}%)` : `【異物推定】${topEst?.category ?? '不明'} (${topEst?.probability ?? 0}%)`,
+        comment ? (isEn ? `[Notes] ${comment}` : `【備考】${comment}`) : '',
+        isEn ? `[Discovery Process] ${discoveryProcess}` : `【発見工程】${discoveryProcess}`,
+      ].filter(Boolean).join('\n')
+
+      await fetch('/api/incidents', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: supabaseTitle,
+          location: supabaseLoc,
+          description: supabaseDesc,
+          status: 'open',
+          image_url: photoURLs[0] ?? null,
+          lang,
+        }),
+      }).catch(() => { /* 一覧連携失敗は致命的でないため無視 */ })
+
       toast.success('✅ ' + t('toast.saved'))
       router.push(`/record/${id}`)
     } catch (err) {

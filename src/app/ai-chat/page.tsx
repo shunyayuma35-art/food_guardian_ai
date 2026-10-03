@@ -310,6 +310,7 @@ export default function AiChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const lastAnalysisRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const imageFileRef = useRef<File | null>(null)
   const chatHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
   const dragCounterRef = useRef(0)
@@ -816,20 +817,20 @@ export default function AiChatPage() {
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-100 shadow-sm px-4 pt-safe-top">
         <div className="max-w-2xl mx-auto flex items-center justify-between h-14">
-          <div>
-            <h1 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
-              <span className="text-xl">🔬</span>
-              {t('aichat.title')}
+          <div className="min-w-0 flex-1 mr-2">
+            <h1 className="text-sm font-bold text-gray-900 flex items-center gap-1 whitespace-nowrap">
+              <span className="text-lg shrink-0">🔬</span>
+              <span className="truncate">{t('aichat.title')}</span>
             </h1>
-            <p className="text-[10px] text-gray-400 leading-none">{t('aichat.subtitle')}</p>
+            <p className="text-[10px] text-gray-400 leading-none truncate">{t('aichat.subtitle')}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             {hasAnalysis && (
               <>
                 {visualizerDataUrl && (
                   <button
                     onClick={() => setShowVisualizer(true)}
-                    className="text-xs px-3 py-1.5 bg-teal-600 text-white rounded-lg font-medium active:scale-95 transition-all shadow-sm"
+                    className="w-8 h-8 flex items-center justify-center bg-teal-600 text-white rounded-lg active:scale-95 transition-all shadow-sm"
                     title={t('aichat.vizOpen')}
                   >
                     🔬
@@ -837,7 +838,7 @@ export default function AiChatPage() {
                 )}
                 <button
                   onClick={handlePrint}
-                  className="text-xs px-3 py-1.5 bg-gray-500 text-white rounded-lg font-medium active:scale-95 transition-all shadow-sm"
+                  className="text-[11px] px-2 py-1.5 bg-gray-500 text-white rounded-lg font-medium active:scale-95 transition-all shadow-sm whitespace-nowrap"
                 >
                   {t('report.print')}
                 </button>
@@ -845,7 +846,7 @@ export default function AiChatPage() {
             )}
             <button
               onClick={resetChat}
-              className="text-xs px-2.5 py-1.5 bg-gray-100 text-gray-600 rounded-lg font-medium active:scale-95 transition-all"
+              className="text-[11px] px-2 py-1.5 bg-gray-100 text-gray-600 rounded-lg font-medium active:scale-95 transition-all whitespace-nowrap"
             >
               {t('aichat.reset')}
             </button>
@@ -895,10 +896,22 @@ export default function AiChatPage() {
           {showPanel ? t('aichat.panelClose') : t('aichat.panelOpen')}
         </button>
 
-        {/* 折りたたみパネル */}
+        {/* 折りたたみパネル（検索・写真・保存） */}
         {showPanel && (
-          <div className="px-3 pb-2 space-y-2 border-t border-gray-100 max-h-[40vh] overflow-y-auto">
-            {/* Claude 検索 */}
+          <div className="px-3 pb-2 space-y-2 border-t border-gray-100 max-h-[45vh] overflow-y-auto">
+            {/* 保存ボタン（解析結果あり時のみ） */}
+            {hasAnalysis && (
+              <div className="pt-2">
+                <button
+                  onClick={saveAsIncident}
+                  disabled={saving}
+                  className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-1.5"
+                >
+                  {saving ? t('common.saving') : t('aichat.save')}
+                </button>
+              </div>
+            )}
+            {/* AI 検索 */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl overflow-hidden mt-2">
               <div className="px-3 py-2 space-y-2">
                 <p className="text-[10px] font-semibold text-blue-700 flex items-center gap-1">
@@ -938,13 +951,22 @@ export default function AiChatPage() {
 
             {/* 写真エリア */}
             {!imageUrl ? (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full h-20 border-2 border-dashed border-orange-300 rounded-xl bg-orange-50/60 flex flex-col items-center justify-center gap-1 active:bg-orange-100 transition-colors"
-              >
-                <span className="text-2xl">📷</span>
-                <span className="text-xs text-orange-500 font-medium">{t('aichat.photoAddDrop')}</span>
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="h-16 border-2 border-dashed border-orange-300 rounded-xl bg-orange-50/60 flex flex-col items-center justify-center gap-0.5 active:bg-orange-100 transition-colors"
+                >
+                  <span className="text-xl">📷</span>
+                  <span className="text-xs text-orange-500 font-medium">{lang === 'en' ? 'Camera' : 'カメラ'}</span>
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-16 border-2 border-dashed border-orange-300 rounded-xl bg-orange-50/60 flex flex-col items-center justify-center gap-0.5 active:bg-orange-100 transition-colors"
+                >
+                  <span className="text-xl">🖼️</span>
+                  <span className="text-xs text-orange-500 font-medium">{lang === 'en' ? 'Gallery' : 'ギャラリー'}</span>
+                </button>
+              </div>
             ) : (
               <div className="p-3 bg-white rounded-xl border-2 border-orange-200 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
@@ -993,28 +1015,25 @@ export default function AiChatPage() {
           </div>
         )}
 
-        {/* 保存ボタン（解析結果あり時のみ表示） */}
-        {hasAnalysis && (
-          <div className="px-3 pb-1.5">
-            <button
-              onClick={saveAsIncident}
-              disabled={saving}
-              className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-1.5"
-            >
-              {saving ? t('common.saving') : t('aichat.save')}
-            </button>
-          </div>
-        )}
         {/* 入力行 */}
-        <div className="flex gap-2 items-end px-3 pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
+        <div className="flex gap-1.5 items-end px-3 pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
           {!imageUrl && (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-10 h-10 shrink-0 flex items-center justify-center bg-orange-50 border border-orange-200 rounded-xl text-lg active:scale-95 transition-all"
-              title={t('aichat.photoAddTitle')}
-            >
-              📷
-            </button>
+            <>
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                className="w-9 h-9 shrink-0 flex items-center justify-center bg-orange-50 border border-orange-200 rounded-xl text-base active:scale-95 transition-all"
+                title={lang === 'en' ? 'Camera' : 'カメラ撮影'}
+              >
+                📷
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-9 h-9 shrink-0 flex items-center justify-center bg-orange-50 border border-orange-200 rounded-xl text-base active:scale-95 transition-all"
+                title={lang === 'en' ? 'Gallery' : 'ギャラリー'}
+              >
+                🖼️
+              </button>
+            </>
           )}
           <textarea
             value={input}
@@ -1052,6 +1071,14 @@ export default function AiChatPage() {
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
         onChange={handleFileChange}
         className="hidden"
       />

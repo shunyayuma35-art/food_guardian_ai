@@ -21,10 +21,10 @@ export default function FloatingLanguageButton() {
   }, [])
 
   return (
-    <div ref={ref} className="fixed bottom-[72px] right-3 z-[100] no-print flex flex-col items-end gap-2">
+    <div ref={ref} className="fixed bottom-[175px] right-2 z-[100] no-print flex flex-col items-end gap-1.5">
       {/* 言語リスト（上に展開） */}
       {open && (
-        <div className="absolute bottom-28 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden w-48 mb-1">
+        <div className="absolute bottom-24 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden w-48 mb-1">
           <div className="px-3 py-2 border-b border-gray-50">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Language / 言語</p>
           </div>
@@ -55,21 +55,21 @@ export default function FloatingLanguageButton() {
         onClick={lock}
         title={t('lock.button')}
         aria-label={t('lock.button')}
-        className="w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 flex flex-col items-center justify-center gap-0 hover:shadow-xl hover:border-red-300 hover:bg-red-50 transition-all active:scale-95 group"
+        className="w-9 h-9 rounded-full bg-white/90 shadow-md border border-gray-200 flex flex-col items-center justify-center hover:shadow-lg hover:border-red-300 hover:bg-red-50 transition-all active:scale-95 group"
       >
-        <span className="text-xl leading-none group-hover:scale-110 transition-transform">🔒</span>
-        <span className="text-[8px] text-gray-400 font-semibold leading-none mt-0.5 group-hover:text-red-400">LOCK</span>
+        <span className="text-base leading-none group-hover:scale-110 transition-transform">🔒</span>
+        <span className="text-[7px] text-gray-400 font-semibold leading-none group-hover:text-red-400">LOCK</span>
       </button>
 
       {/* 🌐 言語ボタン */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 flex flex-col items-center justify-center gap-0 hover:shadow-xl hover:border-orange-200 transition-all active:scale-95"
+        className="w-9 h-9 rounded-full bg-white/90 shadow-md border border-gray-200 flex flex-col items-center justify-center hover:shadow-lg hover:border-orange-200 transition-all active:scale-95"
         aria-label="言語を切替"
       >
-        <span className="text-xl leading-none">{current.flag}</span>
-        <span className="text-[8px] text-gray-400 font-semibold leading-none mt-0.5">LANG</span>
+        <span className="text-base leading-none">{current.flag}</span>
+        <span className="text-[7px] text-gray-400 font-semibold leading-none">LANG</span>
       </button>
     </div>
   )
