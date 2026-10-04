@@ -158,7 +158,7 @@ export default function InspectionNewPage() {
   const isMetal = deviceType === 'metal_detector'
 
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen pb-[calc(13rem+env(safe-area-inset-bottom,0px))]">
       <header className="bg-white/85 backdrop-blur-xl border-b border-teal-100 shadow-sm px-5 py-4 sticky top-0 z-40">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <button onClick={() => router.push('/inspection')} className="back-btn">←</button>

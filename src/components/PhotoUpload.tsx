@@ -67,6 +67,11 @@ export default function PhotoUpload({ label, photos, onChange, icon = '📷' }: 
           🖼️ ギャラリー
         </button>
       </div>
+      <p className="text-[10px] text-gray-400 mt-1 text-center leading-relaxed">
+        カメラが開かない場合は Chrome でページを開いてください
+        <br />
+        <span className="text-[9px] opacity-70">(If camera doesn't open, use Chrome browser)</span>
+      </p>
 
       <input
         ref={cameraRef}

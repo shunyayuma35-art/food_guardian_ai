@@ -240,7 +240,7 @@ export default function SensoryNewPage() {
   }
 
   return (
-    <div className="min-h-screen pb-36">
+    <div className="min-h-screen pb-[calc(13rem+env(safe-area-inset-bottom,0px))]">
       {/* ヘッダー */}
       <header className="bg-white/85 backdrop-blur-xl border-b border-blue-100 shadow-sm px-5 py-4 sticky top-0 z-40">
         <div className="max-w-2xl mx-auto flex items-center gap-3">

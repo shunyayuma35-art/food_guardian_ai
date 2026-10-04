@@ -270,7 +270,7 @@ export default function RecordPage() {
   }
 
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen pb-[calc(13rem+env(safe-area-inset-bottom,0px))]">
       {showQR && <QRScanner onScan={handleQRScan} onClose={() => setShowQR(false)} />}
 
       <header className="bg-white/85 backdrop-blur-xl border-b border-orange-100 shadow-sm px-5 py-4 sticky top-0 z-40 no-print">
@@ -652,7 +652,7 @@ export default function RecordPage() {
           )}
           <div className="flex-1">
             {step < STEPS.length - 1 ? (
-              <button onClick={() => setStep(step + 1)} className="btn-primary w-full text-base">
+              <button onClick={() => setStep(step + 1)} className="btn-primary w-full text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                 {t('common.next')}：{STEP_ICONS[step + 1]} {STEPS[step + 1]} →
               </button>
             ) : (

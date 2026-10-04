@@ -808,7 +808,8 @@ export default function AiChatPage() {
 
   return (
     <div
-      className="flex flex-col h-screen bg-gray-50 relative"
+      className="flex flex-col h-[100dvh] bg-gray-50 relative"
+      style={{ minHeight: '100vh' }}
       onDragEnter={handlePageDragEnter}
       onDragOver={handlePageDragOver}
       onDragLeave={handlePageDragLeave}
