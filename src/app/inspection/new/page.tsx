@@ -158,7 +158,7 @@ export default function InspectionNewPage() {
   const isMetal = deviceType === 'metal_detector'
 
   return (
-    <div className="min-h-screen pb-[calc(13rem+env(safe-area-inset-bottom,0px))]">
+    <div className="min-h-screen">
       <header className="bg-white/85 backdrop-blur-xl border-b border-teal-100 shadow-sm px-5 py-4 sticky top-0 z-40">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <button onClick={() => router.push('/inspection')} className="back-btn">←</button>
@@ -433,6 +433,7 @@ export default function InspectionNewPage() {
               rows={2} className="input-field resize-none" placeholder={t('common.specialNote')} />
           </div>
         </div>
+        <div style={{ height: 'calc(168px + env(safe-area-inset-bottom, 0px))' }} aria-hidden="true" />
       </div>
 
       <div className="fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-teal-100 p-4 shadow-[0_-4px_20px_rgba(20,184,166,0.08)]">

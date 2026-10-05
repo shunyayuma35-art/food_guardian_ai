@@ -856,7 +856,7 @@ export default function AiChatPage() {
       </header>
 
       {/* チャットエリア */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 pb-40 max-w-2xl w-full mx-auto">
+      <div className="flex-1 overflow-y-auto px-4 py-3 max-w-2xl w-full mx-auto">
         {/* メッセージ一覧 */}
         {messages.map((msg, idx) => {
           const isLastAnalysis = msg.imageAnalysis != null &&
@@ -873,6 +873,7 @@ export default function AiChatPage() {
         })}
 
         {loading && <TypingIndicator />}
+        <div style={{ height: 'calc(168px + env(safe-area-inset-bottom, 0px))', flexShrink: 0 }} aria-hidden="true" />
         <div ref={messagesEndRef} />
       </div>
 

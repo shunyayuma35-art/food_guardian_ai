@@ -270,7 +270,7 @@ export default function RecordPage() {
   }
 
   return (
-    <div className="min-h-screen pb-[calc(13rem+env(safe-area-inset-bottom,0px))]">
+    <div className="min-h-screen">
       {showQR && <QRScanner onScan={handleQRScan} onClose={() => setShowQR(false)} />}
 
       <header className="bg-white/85 backdrop-blur-xl border-b border-orange-100 shadow-sm px-5 py-4 sticky top-0 z-40 no-print">
@@ -641,6 +641,7 @@ export default function RecordPage() {
             </div>
           </div>
         )}
+        <div style={{ height: 'calc(168px + env(safe-area-inset-bottom, 0px))' }} aria-hidden="true" />
       </div>
 
       <div className="fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-orange-100 p-4 no-print shadow-[0_-4px_20px_rgba(251,146,60,0.08)]">
