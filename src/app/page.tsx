@@ -182,7 +182,15 @@ export default function DashboardPage() {
   const [reports, setReports] = useState<Report[]>([])
   const [inspections, setInspections] = useState<InspectionRecord[]>([])
   const [fetching, setFetching] = useState(true)
-  type AiInc = { created_at: string; status: string; archived_at: string | null }
+  type AiInc = {
+    id: number
+    created_at: string
+    title: string | null
+    location: string | null
+    status: string
+    archived_at: string | null
+    image_url: string | null
+  }
   const [aiIncidents, setAiIncidents] = useState<AiInc[]>([])
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [backupList, setBackupList] = useState<{ name: string; files: string[] }[]>([])
@@ -721,7 +729,7 @@ export default function DashboardPage() {
             <div className="flex justify-center py-8">
               <div className="w-8 h-8 border-4 border-orange-400 border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : incidents.length === 0 ? (
+          ) : incidents.length === 0 && activeAi.length === 0 ? (
             <div className="card p-8 text-center">
               <div className="text-5xl mb-3">📝</div>
               <p className="text-gray-500 text-sm font-medium">{t('home.noData')}</p>
@@ -731,10 +739,39 @@ export default function DashboardPage() {
                 </button>
               </Link>
             </div>
-          ) : (
+          ) : incidents.length > 0 ? (
             <div className="space-y-3">
               {incidents.slice(0, 3).map((inc) => (
                 <IncidentCard key={inc.id} incident={inc} />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {activeAi.slice(0, 3).map((inc) => (
+                <Link key={inc.id} href="/list">
+                  <div className="card p-4 active:scale-[0.99] transition-all hover:shadow-md cursor-pointer">
+                    <div className="flex items-start gap-3">
+                      {inc.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={inc.image_url} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 bg-orange-50" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-2xl shrink-0">🔍</div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-800 truncate">{inc.title ?? '—'}</p>
+                        {inc.location && <p className="text-xs text-gray-500 truncate mt-0.5">{inc.location}</p>}
+                        <p className="text-[10px] text-gray-400 mt-1">{new Date(inc.created_at).toLocaleDateString('ja-JP')}</p>
+                      </div>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        inc.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                        inc.status === 'investigating' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {inc.status === 'resolved' ? '解決済' : inc.status === 'investigating' ? '調査中' : '未対応'}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
           )}

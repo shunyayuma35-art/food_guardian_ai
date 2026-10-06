@@ -34,6 +34,21 @@ export default function IncidentDetailPage() {
   const [pdcaNotes, setPdcaNotes] = useState('')
   const [savingPdca, setSavingPdca] = useState(false)
 
+  // AI根本原因分析
+  const [showCausePanel, setShowCausePanel] = useState(false)
+  const [causeLoading, setCauseLoading] = useState(false)
+  const [causeText, setCauseText] = useState('')
+  const [correctiveText, setCorrectiveText] = useState('')
+  const [preventiveText, setPreventiveText] = useState('')
+  const [verifyText, setVerifyText] = useState('')
+  const [aiCauseRaw, setAiCauseRaw] = useState('')
+  const [aiCorrectiveRaw, setAiCorrectiveRaw] = useState('')
+  const [aiPreventiveRaw, setAiPreventiveRaw] = useState('')
+  const [aiVerifyRaw, setAiVerifyRaw] = useState('')
+  const [verifierName, setVerifierName] = useState('')
+  const [savingCause, setSavingCause] = useState(false)
+  const [causeVerifiedAt, setCauseVerifiedAt] = useState('')
+
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
   }, [user, loading, router])
@@ -51,11 +66,90 @@ export default function IncidentDetailPage() {
           setPdcaStatus(data.pdcaStatus)
           setPdcaDeadline(data.pdcaDeadline ?? '')
           setPdcaNotes(data.pdcaNotes ?? '')
+          // AI分析保存済みデータを復元
+          if (data.editedCause || data.aiCauseRaw) {
+            setCauseText(data.editedCause ?? data.aiCauseRaw ?? '')
+            setCorrectiveText(data.editedCorrective ?? data.aiCorrectiveRaw ?? '')
+            setPreventiveText(data.editedPreventive ?? data.aiPreventiveRaw ?? '')
+            setVerifyText(data.editedVerify ?? data.aiVerifyRaw ?? '')
+            setAiCauseRaw(data.aiCauseRaw ?? '')
+            setAiCorrectiveRaw(data.aiCorrectiveRaw ?? '')
+            setAiPreventiveRaw(data.aiPreventiveRaw ?? '')
+            setAiVerifyRaw(data.aiVerifyRaw ?? '')
+            setVerifierName(data.causeVerifiedBy ?? '')
+            setCauseVerifiedAt(data.causeVerifiedAt ?? '')
+            if (data.aiCauseRaw) setShowCausePanel(true)
+          }
         }
       })
       .catch(() => toast.error('データの取得に失敗しました'))
       .finally(() => setFetching(false))
   }, [id, user, router])
+
+  async function handleGenerateCause() {
+    if (!incident) return
+    setCauseLoading(true)
+    try {
+      const res = await fetch('/api/ai-cause', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ incident, lang: typeof window !== 'undefined' ? (localStorage.getItem('foodeye_lang') ?? 'ja') : 'ja' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'AI error')
+      setAiCauseRaw(data.cause ?? '')
+      setAiCorrectiveRaw(data.corrective ?? '')
+      setAiPreventiveRaw(data.preventive ?? '')
+      setAiVerifyRaw(data.verify ?? '')
+      setCauseText(data.cause ?? '')
+      setCorrectiveText(data.corrective ?? '')
+      setPreventiveText(data.preventive ?? '')
+      setVerifyText(data.verify ?? '')
+      setShowCausePanel(true)
+      toast.success('AI分析を生成しました')
+    } catch (err) {
+      toast.error('AI分析の生成に失敗しました')
+      console.error(err)
+    } finally {
+      setCauseLoading(false)
+    }
+  }
+
+  async function handleSaveCause() {
+    if (!incident || !verifierName.trim()) {
+      toast.error('確認者名を入力してください')
+      return
+    }
+    setSavingCause(true)
+    try {
+      const verifiedAt = new Date().toISOString()
+      await updateIncident(incident.id, {
+        aiCauseRaw,
+        aiCorrectiveRaw,
+        aiPreventiveRaw,
+        aiVerifyRaw,
+        editedCause: causeText,
+        editedCorrective: correctiveText,
+        editedPreventive: preventiveText,
+        editedVerify: verifyText,
+        causeVerifiedBy: verifierName,
+        causeVerifiedAt: verifiedAt,
+      })
+      setCauseVerifiedAt(verifiedAt)
+      setIncident(prev => prev ? {
+        ...prev,
+        aiCauseRaw, aiCorrectiveRaw, aiPreventiveRaw, aiVerifyRaw,
+        editedCause: causeText, editedCorrective: correctiveText,
+        editedPreventive: preventiveText, editedVerify: verifyText,
+        causeVerifiedBy: verifierName, causeVerifiedAt: verifiedAt,
+      } : prev)
+      toast.success('確認済みとして保存しました ✅')
+    } catch {
+      toast.error('保存に失敗しました')
+    } finally {
+      setSavingCause(false)
+    }
+  }
 
   async function handleStatusChange(status: IncidentStatus) {
     if (!incident) return
@@ -435,6 +529,96 @@ export default function IncidentDetailPage() {
             className="w-full py-3 bg-indigo-500 text-white font-bold text-sm rounded-2xl shadow-md shadow-indigo-200 disabled:opacity-50 hover:bg-indigo-600 transition-all">
             {savingPdca ? '保存中...' : '💾 PDCA状況を保存'}
           </button>
+        </div>
+
+        {/* AI 根本原因分析（4M） */}
+        <div className="card p-4 no-print">
+          <div className="flex items-center justify-between mb-3">
+            <p className="section-title mb-0">🧠 AI根本原因・是正処置</p>
+            {causeVerifiedAt && (
+              <span className="text-[10px] text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 font-semibold">
+                ✅ {new Date(causeVerifiedAt).toLocaleDateString('ja-JP')} 確認済
+              </span>
+            )}
+          </div>
+
+          {!showCausePanel ? (
+            <button
+              onClick={handleGenerateCause}
+              disabled={causeLoading}
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold text-sm rounded-2xl shadow-md shadow-purple-200 transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+              {causeLoading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  AI分析中...
+                </>
+              ) : (
+                <>🧠 AIで原因・是正を作成</>
+              )}
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <div className="bg-yellow-50 border border-yellow-300 rounded-xl px-3 py-2">
+                <p className="text-yellow-700 text-xs font-semibold">
+                  ⚠️ AIによる仮説です。現場確認のうえ編集してください。
+                </p>
+              </div>
+
+              {[
+                { label: '📋 推定原因（4M分析）', value: causeText, setter: setCauseText, raw: aiCauseRaw, rows: 6 },
+                { label: '🔧 是正処置（今回の対処）', value: correctiveText, setter: setCorrectiveText, raw: aiCorrectiveRaw, rows: 4 },
+                { label: '🛡️ 予防処置（再発防止）', value: preventiveText, setter: setPreventiveText, raw: aiPreventiveRaw, rows: 4 },
+                { label: '🔍 確認すべき事項', value: verifyText, setter: setVerifyText, raw: aiVerifyRaw, rows: 3 },
+              ].map(({ label, value, setter, raw, rows }) => (
+                <div key={label}>
+                  <label className="text-xs font-bold text-gray-600 mb-1 block">{label}</label>
+                  <textarea
+                    value={value}
+                    onChange={(e) => setter(e.target.value)}
+                    rows={rows}
+                    className="input-field resize-y text-sm"
+                  />
+                  {raw && raw !== value && (
+                    <button
+                      type="button"
+                      onClick={() => setter(raw)}
+                      className="text-[10px] text-purple-500 hover:text-purple-700 mt-1"
+                    >
+                      ↩ AI原文に戻す
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              <div>
+                <label className="label">確認者名 <span className="text-red-400">*</span></label>
+                <input
+                  value={verifierName}
+                  onChange={(e) => setVerifierName(e.target.value)}
+                  className="input-field"
+                  placeholder="例: 品質管理部 山田太郎"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleGenerateCause}
+                  disabled={causeLoading}
+                  className="flex-1 py-2.5 bg-purple-100 text-purple-700 font-bold text-xs rounded-xl hover:bg-purple-200 disabled:opacity-50 transition-all"
+                >
+                  {causeLoading ? 'AI分析中...' : '🔄 再生成'}
+                </button>
+                <button
+                  onClick={handleSaveCause}
+                  disabled={savingCause || !verifierName.trim()}
+                  className="flex-2 flex-1 py-2.5 bg-green-500 text-white font-bold text-sm rounded-xl shadow-md shadow-green-200 disabled:opacity-50 hover:bg-green-600 transition-all"
+                >
+                  {savingCause ? '保存中...' : '✅ 確認済みとして保存'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* AI 報告書・エクスポート */}

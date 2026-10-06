@@ -198,6 +198,17 @@ export interface Incident {
   pdcaStatus?: PdcaStatus
   pdcaDeadline?: string
   pdcaNotes?: string
+  // AI根本原因分析（4M）
+  aiCauseRaw?: string
+  aiCorrectiveRaw?: string
+  aiPreventiveRaw?: string
+  aiVerifyRaw?: string
+  editedCause?: string
+  editedCorrective?: string
+  editedPreventive?: string
+  editedVerify?: string
+  causeVerifiedBy?: string
+  causeVerifiedAt?: string
 }
 
 export type PdcaStatus = 'planned' | 'doing' | 'checking' | 'done'
