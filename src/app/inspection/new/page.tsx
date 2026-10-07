@@ -10,6 +10,7 @@ import UsageGuide from '@/components/UsageGuide'
 import { createInspectionRecord } from '@/lib/firestore'
 import toast from 'react-hot-toast'
 import DateInput from '@/components/DateInput'
+import { formatLocalDate } from '@/lib/utils'
 import {
   DEVICE_TYPE_LABELS,
   INSPECTION_RESULT_LABELS,
@@ -18,7 +19,7 @@ import {
   type TestPieceCheck,
 } from '@/lib/types'
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => formatLocalDate()
 const nowTime = () => new Date().toTimeString().slice(0, 5)
 
 function emptyCheck(time: string): TestPieceCheck {

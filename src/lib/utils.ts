@@ -1,3 +1,19 @@
+/** ローカル日付を YYYY-MM-DD で返す。toISOString() は UTC 変換するため使わない。 */
+export function formatLocalDate(date: Date = new Date()): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/** ローカル日付に n 日加算して YYYY-MM-DD で返す */
+export function addLocalDays(base: string, n: number): string {
+  const [y, mo, d] = base.split('-').map(Number)
+  const dt = new Date(y, mo - 1, d)
+  dt.setDate(dt.getDate() + n)
+  return formatLocalDate(dt)
+}
+
 export function formatDate(dateStr: string): string {
   if (!dateStr) return '-'
   try {

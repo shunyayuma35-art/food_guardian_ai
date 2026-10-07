@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
 import { listIncidents, listReports, listInspections } from '@/lib/firestore'
 import { parseAiTitle, parseAiLocation } from '@/lib/ai-label'
+import { formatLocalDate } from '@/lib/utils'
 import { DEMO_MODE } from '@/lib/firebase'
 import {
   DISCOVERY_PROCESS_LABELS, CLAIM_ROUTE_LABELS, INSPECTION_RESULT_LABELS,
@@ -230,7 +231,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user) return
     const key = 'foodeye_last_backup'
-    const todayStr = new Date().toISOString().slice(0, 10)
+    const todayStr = formatLocalDate()
     const lastBackup = localStorage.getItem(key)
     if (lastBackup !== todayStr) {
       fetch('/api/backup', { method: 'POST' })
@@ -251,7 +252,7 @@ export default function DashboardPage() {
       await fetch('/api/backup', { method: 'POST' })
       const list = await fetch('/api/backup').then((r) => r.json())
       setBackupList(list)
-      localStorage.setItem('foodeye_last_backup', new Date().toISOString().slice(0, 10))
+      localStorage.setItem('foodeye_last_backup', formatLocalDate())
       alert(t('home.alert.backupOk'))
     } catch {
       alert(t('home.alert.backupFail'))
@@ -293,7 +294,7 @@ export default function DashboardPage() {
     )
   }
 
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = formatLocalDate()
   const today = new Date().toDateString()
   const openCount = incidents.filter((i) => i.status === 'open').length
   const investigatingCount = incidents.filter((i) => i.status === 'investigating').length

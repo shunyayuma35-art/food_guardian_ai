@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
+import { formatLocalDate } from '@/lib/utils'
 
 interface Marker { id: number; x: number; y: number }
 interface PixelInfo { r: number; g: number; b: number; luminance: number; hex: string }
@@ -40,7 +41,7 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
 
   const [managementId, setManagementId] = useState('')
   const [proc,         setProc]         = useState('')
-  const [detectedAt,   setDetectedAt]   = useState(() => new Date().toISOString().slice(0, 10))
+  const [detectedAt,   setDetectedAt]   = useState(() => formatLocalDate())
 
   const [cw,       setCw]       = useState(0)
   const [ch,       setCh]       = useState(0)

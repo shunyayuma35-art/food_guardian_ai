@@ -1,6 +1,7 @@
 'use client'
 
 import { parseAiTitle, parseAiLocation } from '@/lib/ai-label'
+import { formatLocalDate } from '@/lib/utils'
 
 const AI_CHAT_LOC_RE = /Recorded from AI chat|AI対話から記録|AIチャット|AI chat|\[AI_CHAT\]/i
 
@@ -176,8 +177,7 @@ export default function ListPage() {
     if (!f) return
     sessionStorage.removeItem('listFilter')
     if (f === 'today') {
-      const todayStr = new Date().toISOString().slice(0, 10)
-      setSearch(todayStr)
+      setSearch(formatLocalDate())
     } else if (f === 'active') {
       setFilterStatus('open')
     }

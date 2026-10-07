@@ -11,6 +11,7 @@ import ForeignMatterBBoxView, { type BBox } from '@/components/ForeignMatterBBox
 import toast from 'react-hot-toast'
 import { compressImage, compressDataUrl } from '@/lib/compressImage'
 import { encodeAiTitle, AI_CHAT_LOC_MARKER } from '@/lib/ai-label'
+import { formatLocalDate } from '@/lib/utils'
 
 interface AnalysisResult {
   urgency: 'high' | 'medium' | 'low'
@@ -679,7 +680,7 @@ export default function AiChatPage() {
   const saveAsIncident = useCallback(async () => {
     const lang = getStoredLang();
     const isEn = lang === 'en';
-    const isoDate = new Date().toISOString().slice(0, 10);
+    const isoDate = formatLocalDate();
 
     // AI解析結果を最優先で探す
     let resultContent = '';

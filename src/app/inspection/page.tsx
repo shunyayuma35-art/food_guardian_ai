@@ -9,6 +9,7 @@ import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
 import { type InspectionRecord, type DeviceType } from '@/lib/types'
 import { listInspections } from '@/lib/firestore'
+import { formatLocalDate } from '@/lib/utils'
 
 const RESULT_BADGE: Record<string, string> = {
   pass: 'bg-green-100 text-green-700',
@@ -45,7 +46,7 @@ export default function InspectionListPage() {
     return true
   })
 
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = formatLocalDate()
   const todayCount = records.filter((r) => r.inspectionDate === todayStr).length
   const failCount = records.filter((r) => r.result !== 'pass').length
   const totalReject = records.reduce((s, r) => s + (r.rejectCount || 0), 0)

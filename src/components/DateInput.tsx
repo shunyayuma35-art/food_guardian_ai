@@ -1,6 +1,7 @@
 'use client'
 
 import { useLang } from '@/context/LanguageContext'
+import { formatLocalDate, addLocalDays } from '@/lib/utils'
 
 interface DateInputProps {
   value: string
@@ -24,11 +25,8 @@ function toDatetimeLocal(iso: string): string {
 
 /** 日付文字列の自動整形（全角数字・区切り文字を正規化して YYYY-MM-DD に変換） */
 function normalizeDate(raw: string): string {
-  // 全角→半角
   const half = raw.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
-  // 区切り文字をハイフンに統一
   const normalized = half.replace(/[./・]/g, '-').replace(/\s/g, '')
-  // YYYY-MM-DD or YYYYMMDD
   if (/^\d{8}$/.test(normalized)) {
     return `${normalized.slice(0,4)}-${normalized.slice(4,6)}-${normalized.slice(6,8)}`
   }
@@ -39,15 +37,10 @@ function normalizeDate(raw: string): string {
   return raw
 }
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function addDays(base: string, n: number): string {
-  const [y, mo, d] = (base || todayISO()).split('-').map(Number)
-  const dt = new Date(y, mo - 1, d)
-  dt.setDate(dt.getDate() + n)
-  return dt.toISOString().slice(0, 10)
+/** ローカル日時を datetime-local 文字列 (YYYY-MM-DDTHH:mm) で返す */
+function nowDatetimeLocal(): string {
+  const now = new Date()
+  return `${formatLocalDate(now)}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
 }
 
 export default function DateInput({
@@ -59,13 +52,11 @@ export default function DateInput({
   baseDate,
   warnIfBeforeDate,
 }: DateInputProps) {
-  const { t, lang } = useLang()
+  const { lang } = useLang()
   const isJa = lang !== 'en'
-  const today = todayISO()
-  const yesterday = addDays(today, -1)
+  const today = formatLocalDate()
+  const yesterday = addLocalDays(today, -1)
 
-  // datetime-local の場合、value は YYYY-MM-DDTHH:mm
-  // date の場合、value は YYYY-MM-DD
   const inputValue = type === 'datetime-local' ? toDatetimeLocal(value) : value
 
   function handleChange(raw: string) {
@@ -77,21 +68,14 @@ export default function DateInput({
   }
 
   function setToday() {
-    if (type === 'datetime-local') {
-      const now = new Date()
-      const local = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
-      onChange(local)
-    } else {
-      onChange(today)
-    }
+    onChange(type === 'datetime-local' ? nowDatetimeLocal() : today)
   }
 
   function setYesterday() {
     if (type === 'datetime-local') {
       const d = new Date()
       d.setDate(d.getDate() - 1)
-      const local = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
-      onChange(local)
+      onChange(`${formatLocalDate(d)}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`)
     } else {
       onChange(yesterday)
     }
@@ -100,7 +84,6 @@ export default function DateInput({
   const base = baseDate || today
   const usingTodayAsBase = !baseDate
 
-  // 製造日より前の警告
   const dateValue = type === 'datetime-local' ? value?.slice(0, 10) : value
   const showWarn = !!warnIfBeforeDate && !!dateValue && dateValue < warnIfBeforeDate
 
@@ -132,7 +115,7 @@ export default function DateInput({
             <button
               key={n}
               type="button"
-              onClick={() => onChange(addDays(base, n))}
+              onClick={() => onChange(addLocalDays(base, n))}
               className={btnClass}
             >
               {n >= 365

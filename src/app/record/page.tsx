@@ -8,7 +8,7 @@ import { createIncident } from '@/lib/firestore'
 import { uploadPhotos } from '@/lib/storage'
 import { estimateForeignMaterial } from '@/lib/estimation'
 import { compressImage } from '@/lib/compressImage'
-import { parseQRCode } from '@/lib/utils'
+import { parseQRCode, formatLocalDate } from '@/lib/utils'
 import {
   createEmptyFeatures,
   DISCOVERY_PROCESS_LABELS,
@@ -55,7 +55,7 @@ export default function RecordPage() {
   const [operator, setOperator] = useState('')
 
   const [claimSource, setClaimSource] = useState('')
-  const [claimDate, setClaimDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [claimDate, setClaimDate] = useState(() => formatLocalDate())
   const [claimContent, setClaimContent] = useState('')
   const [claimRoute, setClaimRoute] = useState<ClaimRoute>('consumer_to_store')
   const [claimPhotos, setClaimPhotos] = useState<File[]>([])
