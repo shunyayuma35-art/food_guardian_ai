@@ -97,6 +97,9 @@ export async function POST(req: NextRequest) {
       )
     }
     console.error('[POST /api/agent/confirm]', err)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    const userMsg = msg.includes('INVALID_ARGUMENT') || msg.includes('function response')
+      ? 'AIの処理でエラーが起きました。もう一度お試しください。'
+      : msg
+    return NextResponse.json({ error: userMsg }, { status: 500 })
   }
 }

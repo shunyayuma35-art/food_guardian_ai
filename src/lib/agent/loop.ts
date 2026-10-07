@@ -26,7 +26,7 @@ const GCP_PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? ''
 const GCP_LOCATION = process.env.GOOGLE_CLOUD_LOCATION ?? 'asia-northeast1'
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash'
 const AGENT_TIMEOUT_MS = 85_000
-const MAX_STEPS = 10
+const MAX_STEPS = 8
 /** userHint の最大文字数 */
 const MAX_HINT_LEN = 500
 
@@ -297,13 +297,17 @@ async function runGeminiLoop(
       },
     })
 
-    const responseParts = response.candidates?.[0]?.content?.parts ?? []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fcPart = responseParts.find((p: any) => p.functionCall)
+    // モデル応答のコンテンツを受け取ったまま履歴に追加（フィールドを削除・作り直しない）
+    const modelContent = response.candidates?.[0]?.content
+    const responseParts = modelContent?.parts ?? []
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const textPart = responseParts.find((p: any) => p.text)?.text ?? ''
 
-    if (!fcPart?.functionCall) {
+    // 全 functionCall を取得（複数返る場合があるため find ではなく filter）
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fcParts = responseParts.filter((p: any) => p.functionCall)
+
+    if (fcParts.length === 0) {
       // ツール呼び出しなし → 完了 or 承認ゲート強制
       if (
         input.analysisResult.urgency === 'high' &&
@@ -311,8 +315,8 @@ async function runGeminiLoop(
         !ctx.approvalCalled &&
         partialResult.checklist
       ) {
-        // AI がチェックリスト生成後に submit_for_approval を呼ばず終了しようとした → 強制承認待ち
         console.warn('[agent/gemini] urgency=high: forcing awaiting_approval (checklist exists, no approval called)')
+        contents.push(modelContent)
         const sessionData: AgentSessionData = {
           provider: 'gemini',
           contents,
@@ -327,23 +331,48 @@ async function runGeminiLoop(
       return { status: 'completed', steps, result: partialResult }
     }
 
-    const { name = '', args = {} } = fcPart.functionCall
-    contents.push({ role: 'model', parts: responseParts })
+    // モデル応答を履歴に追加（受け取ったまま）
+    contents.push(modelContent)
 
-    const toolResult = await executeTool(name, args as Record<string, string>, ctx)
+    // 全 functionCall を順番に実行し、同数の functionResponse を収集
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const functionResponses: any[] = []
+    let triggerApproval = false
 
-    const stepEntry: AgentStep = {
-      step: steps.length + 1,
-      tool: name,
-      inputSummary: JSON.stringify(args).slice(0, 120),
-      resultSummary: toolResult.output.slice(0, 200),
-      durationMs: Date.now() - t0,
-      timestamp: new Date().toISOString(),
+    for (const fcPart of fcParts) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { name = '', args = {}, id } = fcPart.functionCall as any
+      let output: string
+      try {
+        const toolResult = await executeTool(name, args as Record<string, string>, ctx)
+        output = toolResult.output
+        if (toolResult.triggerApproval) triggerApproval = true
+        const stepEntry: AgentStep = {
+          step: steps.length + 1,
+          tool: name,
+          inputSummary: JSON.stringify(args).slice(0, 120),
+          resultSummary: output.slice(0, 200),
+          durationMs: Date.now() - t0,
+          timestamp: new Date().toISOString(),
+        }
+        steps.push(stepEntry)
+        logStep(stepEntry, input.analysisResult.urgency)
+      } catch (err) {
+        // ツール失敗時も functionResponse の数を合わせる
+        output = JSON.stringify({ error: err instanceof Error ? err.message : String(err) })
+        console.error(`[agent/gemini] tool "${name}" threw:`, err)
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fr: any = { name, response: { output } }
+      if (id) fr.id = id
+      functionResponses.push({ functionResponse: fr })
     }
-    steps.push(stepEntry)
-    logStep(stepEntry, input.analysisResult.urgency)
 
-    if (toolResult.triggerApproval) {
+    // 全 functionResponse を1つの user ターンにまとめる
+    contents.push({ role: 'user', parts: functionResponses })
+
+    if (triggerApproval) {
       const sessionData: AgentSessionData = {
         provider: 'gemini',
         contents,
@@ -354,11 +383,6 @@ async function runGeminiLoop(
       }
       return { status: 'awaiting_approval', steps, result: partialResult, sessionData }
     }
-
-    contents.push({
-      role: 'user',
-      parts: [{ functionResponse: { name, response: { output: toolResult.output } } }],
-    })
   }
 
   partialResult.summary =

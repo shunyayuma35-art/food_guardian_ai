@@ -82,7 +82,17 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
       })
       const data = await res.json()
       if (!res.ok) {
-        setErrorMsg(data.error ?? (isEn ? 'Agent error' : 'エージェントエラー'))
+        const rawErr = data.error ?? (isEn ? 'Agent error' : 'エージェントエラー')
+        const friendlyErr = isEn
+          ? 'An error occurred in AI processing. Please try again.'
+          : 'AIの処理でエラーが起きました。もう一度お試しください。'
+        const isApiErr = typeof rawErr === 'string' && (
+          rawErr.includes('INVALID_ARGUMENT') ||
+          rawErr.includes('function response') ||
+          rawErr.includes('function call')
+        )
+        console.error('[AgentPanel] API error:', rawErr)
+        setErrorMsg(isApiErr ? friendlyErr : rawErr)
         setStatus('error')
         return
       }
@@ -98,7 +108,11 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
         setRecallText(data.result?.recallAssessment ?? '')
       }
     } catch (err) {
-      setErrorMsg(String(err))
+      console.error('[AgentPanel] fetch error:', err)
+      setErrorMsg(isEn
+        ? 'An error occurred in AI processing. Please try again.'
+        : 'AIの処理でエラーが起きました。もう一度お試しください。'
+      )
       setStatus('error')
     }
   }

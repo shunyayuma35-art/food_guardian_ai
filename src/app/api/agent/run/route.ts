@@ -69,6 +69,10 @@ export async function POST(req: NextRequest) {
       )
     }
     console.error('[POST /api/agent/run]', err)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    // Gemini API エラーは詳細をサーバーログに残し、ユーザーには汎用メッセージを返す
+    const userMsg = msg.includes('INVALID_ARGUMENT') || msg.includes('function response')
+      ? 'AIの処理でエラーが起きました。もう一度お試しください。'
+      : msg
+    return NextResponse.json({ error: userMsg }, { status: 500 })
   }
 }
