@@ -407,7 +407,7 @@ export default function RecordPage() {
               <input value={lotNumber} onChange={(e) => setLotNumber(e.target.value)}
                 className="input-field" placeholder="例: L2024-0512-001" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">{t('record.mfgDate')}</label>
                 <DateInput value={manufacturingDate} onChange={setManufacturingDate} />
@@ -417,8 +417,6 @@ export default function RecordPage() {
                 <DateInput
                   value={expiryDate}
                   onChange={setExpiryDate}
-                  showDaysOffset={[3, 7, 14, 30, 90, 180, 365]}
-                  baseDate={manufacturingDate || undefined}
                   warnIfBeforeDate={manufacturingDate || undefined}
                 />
               </div>
