@@ -227,11 +227,8 @@ export default function RecordPage() {
       const lang = getStoredLang()
       const isEn = lang === 'en'
       const topEst = estimations[0]
-      const supabaseTitle = isEn
-        ? `Form Record: ${productName}${lotNumber ? ` (Lot: ${lotNumber})` : ''}`
-        : `登録フォーム: ${productName}${lotNumber ? `（ロット: ${lotNumber}）` : ''}`
-      const supabaseLoc = [factory, lineNumber].filter(Boolean).join(' / ') ||
-        (isEn ? 'Not specified' : '未指定')
+      const supabaseTitle = `${productName}${lotNumber ? ` (${lotNumber})` : ''}`
+      const supabaseLoc = [factory, lineNumber].filter(Boolean).join(' / ')
       const supabaseDesc = [
         isEn ? `[Foreign Matter Estimation] ${topEst?.category ?? 'Unknown'} (${topEst?.probability ?? 0}%)` : `【異物推定】${topEst?.category ?? '不明'} (${topEst?.probability ?? 0}%)`,
         comment ? (isEn ? `[Notes] ${comment}` : `【備考】${comment}`) : '',

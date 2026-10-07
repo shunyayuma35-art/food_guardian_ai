@@ -10,6 +10,7 @@ import AgentPanel from '@/components/AgentPanel'
 import ForeignMatterBBoxView, { type BBox } from '@/components/ForeignMatterBBoxView'
 import toast from 'react-hot-toast'
 import { compressImage, compressDataUrl } from '@/lib/compressImage'
+import { encodeAiTitle, AI_CHAT_LOC_MARKER } from '@/lib/ai-label'
 
 interface AnalysisResult {
   urgency: 'high' | 'medium' | 'low'
@@ -672,7 +673,7 @@ export default function AiChatPage() {
   const saveAsIncident = useCallback(async () => {
     const lang = getStoredLang();
     const isEn = lang === 'en';
-    const dateStr = new Date().toLocaleDateString(isEn ? 'en-US' : 'ja-JP');
+    const isoDate = new Date().toISOString().slice(0, 10);
 
     // AI解析結果を最優先で探す
     let resultContent = '';
@@ -685,9 +686,7 @@ export default function AiChatPage() {
       const urgencyLabel = isEn
         ? (analysis.urgency === 'high' ? 'High' : analysis.urgency === 'medium' ? 'Medium' : 'Low')
         : (analysis.urgency === 'high' ? '高' : analysis.urgency === 'medium' ? '中' : '低');
-      resultTitle = isEn
-        ? `AI Analysis: ${topCandidate?.name ?? 'Foreign Matter Incident'} — ${dateStr}`
-        : `AI解析: ${topCandidate?.name ?? '異物混入事故'} — ${dateStr}`;
+      resultTitle = encodeAiTitle('ai_analysis', isoDate, topCandidate?.name ?? '');
       resultContent = isEn
         ? [
             `[AI Analysis Result]`,
@@ -711,9 +710,7 @@ export default function AiChatPage() {
       // 画像解析結果を保存
       const imageMsg = messages.find((m) => m.imageAnalysis);
       if (imageMsg?.imageAnalysis) {
-        resultTitle = isEn
-          ? `Image Analysis: Foreign Matter Result — ${dateStr}`
-          : `画像解析: 異物特定結果 — ${dateStr}`;
+        resultTitle = encodeAiTitle('image_analysis', isoDate);
         resultContent = isEn
           ? [
               `[Image Analysis Result]`,
@@ -734,9 +731,7 @@ export default function AiChatPage() {
       // Claude検索結果を保存
       const searchMsg = messages.find((m) => m.searchResult);
       if (searchMsg?.searchResult) {
-        resultTitle = isEn
-          ? `AI Search: Foreign Matter Info — ${dateStr}`
-          : `AI検索: 異物・害虫情報 — ${dateStr}`;
+        resultTitle = encodeAiTitle('ai_search', isoDate);
         resultContent = isEn
           ? [
               `[AI Search Result]`,
@@ -767,7 +762,7 @@ export default function AiChatPage() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           title: resultTitle,
-          location: isEn ? '(Recorded from AI chat)' : '（AI対話から記録）',
+          location: AI_CHAT_LOC_MARKER,
           description: resultContent,
           status: 'open',
           lang,

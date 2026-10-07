@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
 import { listIncidents, listReports, listInspections } from '@/lib/firestore'
+import { parseAiTitle, parseAiLocation } from '@/lib/ai-label'
 import { DEMO_MODE } from '@/lib/firebase'
 import {
   DISCOVERY_PROCESS_LABELS, CLAIM_ROUTE_LABELS, INSPECTION_RESULT_LABELS,
@@ -176,7 +177,7 @@ function HeatmapChart({ rows }: {
 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const router = useRouter()
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [reports, setReports] = useState<Report[]>([])
@@ -758,16 +759,16 @@ export default function DashboardPage() {
                         <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-2xl shrink-0">🔍</div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-800 truncate">{inc.title ?? '—'}</p>
-                        {inc.location && <p className="text-xs text-gray-500 truncate mt-0.5">{inc.location}</p>}
-                        <p className="text-[10px] text-gray-400 mt-1">{new Date(inc.created_at).toLocaleDateString('ja-JP')}</p>
+                        <p className="text-sm font-bold text-gray-800 truncate">{parseAiTitle(inc.title, lang) || '—'}</p>
+                        {inc.location && <p className="text-xs text-gray-500 truncate mt-0.5">{parseAiLocation(inc.location, lang)}</p>}
+                        <p className="text-[10px] text-gray-400 mt-1">{new Date(inc.created_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'ja-JP')}</p>
                       </div>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
                         inc.status === 'resolved' ? 'bg-green-100 text-green-700' :
                         inc.status === 'investigating' ? 'bg-yellow-100 text-yellow-700' :
                         'bg-red-100 text-red-700'
                       }`}>
-                        {inc.status === 'resolved' ? '解決済' : inc.status === 'investigating' ? '調査中' : '未対応'}
+                        {inc.status === 'resolved' ? t('list.status.resolved') : inc.status === 'investigating' ? t('list.status.investigating') : t('list.status.open')}
                       </span>
                     </div>
                   </div>

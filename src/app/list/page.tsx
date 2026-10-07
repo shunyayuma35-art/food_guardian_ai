@@ -1,6 +1,8 @@
 'use client'
 
-const AI_CHAT_LOC_RE = /Recorded from AI chat|AI対話から記録|AIチャット|AI chat/i
+import { parseAiTitle, parseAiLocation } from '@/lib/ai-label'
+
+const AI_CHAT_LOC_RE = /Recorded from AI chat|AI対話から記録|AIチャット|AI chat|\[AI_CHAT\]/i
 
 function fixLegacyText(text: string | null | undefined): string {
   if (!text) return ''
@@ -221,7 +223,11 @@ export default function ListPage() {
         const normalized = inc.status === 'pending' ? 'open' : inc.status
         if (normalized !== matchStatus) return false
       }
-      if (q && !inc.title.toLowerCase().includes(q) && !inc.location.toLowerCase().includes(q) && !inc.description.toLowerCase().includes(q)) return false
+      if (q) {
+        const displayTitle = parseAiTitle(inc.title, lang).toLowerCase()
+        const displayLoc = parseAiLocation(inc.location, lang).toLowerCase()
+        if (!displayTitle.includes(q) && !displayLoc.includes(q) && !inc.description.toLowerCase().includes(q)) return false
+      }
       return true
     })
   }, [aiIncidents, search, showArchived, filterStatus])
@@ -581,7 +587,7 @@ export default function ListPage() {
                   {/* ── タイトル行：ステータス（タップで変更）・言語バッジ ── */}
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <p className={`font-bold text-gray-800 text-sm leading-snug flex-1 ${inc.archived_at ? 'text-gray-500' : ''}`}>
-                      {fixLegacyText(inc.title)}
+                      {parseAiTitle(fixLegacyText(inc.title), lang)}
                     </p>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {/* 言語バッジ */}
@@ -608,7 +614,7 @@ export default function ListPage() {
                   </div>
 
                   {inc.location && (
-                    <p className="text-xs text-gray-500 mb-1">📍 {inc.location}</p>
+                    <p className="text-xs text-gray-500 mb-1">📍 {parseAiLocation(inc.location, lang)}</p>
                   )}
                   <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{fixLegacyText(inc.description)?.replace(/\*\*/g, '')}</p>
 
