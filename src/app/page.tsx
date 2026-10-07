@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
-import { listIncidents, listReports, listInspections } from '@/lib/firestore'
+import { listIncidents, listReports, listInspections, initDemoData, resetDemoData } from '@/lib/firestore'
 import { parseAiTitle, parseAiLocation } from '@/lib/ai-label'
 import { formatLocalDate } from '@/lib/utils'
 import { DEMO_MODE } from '@/lib/firebase'
@@ -206,18 +206,19 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) return
-    Promise.all([
-      listIncidents(user.uid),
-      listReports(user.uid),
-      listInspections(user.uid).catch(() => []),
-    ])
-      .then(([inc, rep, insp]) => {
-        setIncidents(inc)
-        setReports(rep)
-        setInspections(Array.isArray(insp) ? insp : [])
-      })
-      .catch(console.error)
-      .finally(() => setFetching(false))
+    const load = async () => {
+      if (DEMO_MODE) await initDemoData()
+      const [inc, rep, insp] = await Promise.all([
+        listIncidents(user.uid),
+        listReports(user.uid),
+        listInspections(user.uid).catch(() => [] as InspectionRecord[]),
+      ])
+      setIncidents(inc)
+      setReports(rep)
+      setInspections(Array.isArray(insp) ? insp : [])
+      setFetching(false)
+    }
+    load().catch(console.error)
   }, [user])
 
   useEffect(() => {
@@ -245,6 +246,19 @@ export default function DashboardPage() {
         .catch((err) => console.warn('[自動バックアップ] 失敗:', err))
     }
   }, [user])
+
+  async function handleResetDemo() {
+    if (!confirm(t('home.resetDemoConfirm'))) return
+    await resetDemoData()
+    const [inc, rep, insp] = await Promise.all([
+      listIncidents(user!.uid),
+      listReports(user!.uid),
+      listInspections(user!.uid).catch(() => [] as InspectionRecord[]),
+    ])
+    setIncidents(inc)
+    setReports(rep)
+    setInspections(Array.isArray(insp) ? insp : [])
+  }
 
   async function runManualBackup() {
     setBackupRunning(true)
@@ -399,6 +413,19 @@ export default function DashboardPage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-5 py-6 space-y-6">
+
+        {/* デモ版バナー */}
+        {DEMO_MODE && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+            <p className="text-xs text-amber-700 font-medium leading-tight">{t('home.demoBanner')}</p>
+            <button
+              onClick={handleResetDemo}
+              className="shrink-0 text-[10px] text-amber-600 border border-amber-300 rounded-lg px-2 py-1 font-semibold bg-white active:scale-95 transition-all whitespace-nowrap"
+            >
+              {t('home.resetDemo')}
+            </button>
+          </div>
+        )}
 
         {/* ── ヒーロー：キャラクター + ウェルカム ── */}
         <div className="relative overflow-hidden bg-gradient-to-br from-orange-400 via-amber-400 to-rose-400 rounded-3xl shadow-lg shadow-orange-200">

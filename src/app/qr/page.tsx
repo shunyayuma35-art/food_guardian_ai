@@ -7,6 +7,7 @@ import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
 import FoodEyeLogo from '@/components/FoodEyeLogo'
 import { useLang } from '@/context/LanguageContext'
+import { DEMO_MODE } from '@/lib/firebase'
 import toast from 'react-hot-toast'
 
 export default function QRPage() {
@@ -96,6 +97,11 @@ export default function QRPage() {
           <p className="text-white/80 text-sm mt-1 whitespace-pre-line">
             {t('qr.banner.desc')}
           </p>
+          {DEMO_MODE && (
+            <p className="text-white/60 text-[10px] mt-2 leading-relaxed">
+              {t('qr.demo.note')}
+            </p>
+          )}
         </div>
 
         {/* 接続状態バナー */}

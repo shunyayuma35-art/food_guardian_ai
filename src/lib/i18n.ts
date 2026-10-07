@@ -131,6 +131,7 @@ export type TranslationKey =
   | 'home.chart.trend' | 'home.chart.trend14days'
   | 'home.chart.heatmapTitle' | 'home.chart.heatmapDesc'
   | 'home.chart.matchAlert' | 'home.chart.matchSuffix'
+  | 'home.demoBanner' | 'home.resetDemo' | 'home.resetDemoConfirm'
   | 'home.alert.backupOk' | 'home.alert.backupFail'
   | 'home.alert.restoreOk' | 'home.alert.restoreFail' | 'home.confirm.restore'
   // list page
@@ -156,6 +157,7 @@ export type TranslationKey =
   | 'qr.phone.title'
   | 'qr.phone.step1' | 'qr.phone.step2' | 'qr.phone.step3' | 'qr.phone.step4'
   | 'qr.caution.title' | 'qr.caution.1' | 'qr.caution.2' | 'qr.caution.3'
+  | 'qr.demo.note'
   // occurrence types (record page)
   | 'record.occurrenceType.internal' | 'record.occurrenceType.external'
   // device types and inspection results (inspection page)
@@ -304,6 +306,9 @@ const ja: Dict = {
   'toast.aiApplied': '✅ 特徴チェックにAI推定を反映しました',
   // home
   'home.demo': '（デモ）',
+  'home.demoBanner': 'デモ版：登録したデータはこの端末にのみ保存されます',
+  'home.resetDemo': '🔄 デモデータをリセット',
+  'home.resetDemoConfirm': 'デモデータをリセットしますか？\n登録したデータはすべて削除され、初期サンプルデータに戻ります。',
   'home.internalBadge': '🏭 社内 {n}件',
   'home.externalBadge': '📦 外部 {n}件',
   'home.guide.title': '📖 FoodEye 使い方・操作手順',
@@ -364,7 +369,8 @@ const ja: Dict = {
   // qr page
   'qr.pageTitle': 'QRコード共有',
   'qr.pageSubtitle': 'スタッフのスマホ・タブレットに展開',
-  'qr.banner.desc': '同じ Wi-Fi のスマホ・タブレットから\nすぐにアクセスできます',
+  'qr.banner.desc': 'スマホ・タブレット・PCから\nすぐにアクセスできます',
+  'qr.demo.note': '※ デモ版では各端末に別々に保存されます。本番では会社ごとにクラウドで共有されます',
   'qr.cloud.status': '✅ スマホ・タブレット・PC どこからでも接続できます',
   'qr.cloud.desc': 'インターネット接続があれば、Wi-Fi不要でどの端末からでもアクセスできます。',
   'qr.local.status': '⚠️ スマホから接続できない状態です',
@@ -562,6 +568,9 @@ const en: Dict = {
   'toast.aiApplied': '✅ AI estimate applied to feature checklist',
   // home
   'home.demo': '(Demo)',
+  'home.demoBanner': 'Demo: data you enter is stored only on this device',
+  'home.resetDemo': '🔄 Reset Demo Data',
+  'home.resetDemoConfirm': 'Reset demo data?\nAll entered data will be deleted and initial sample data will be restored.',
   'home.internalBadge': '🏭 Internal {n}',
   'home.externalBadge': '📦 External {n}',
   'home.guide.title': '📖 FoodEye – How to Use',
@@ -622,7 +631,8 @@ const en: Dict = {
   // qr page
   'qr.pageTitle': 'QR Code Share',
   'qr.pageSubtitle': 'Deploy to staff smartphones & tablets',
-  'qr.banner.desc': 'Access instantly from smartphones\n& tablets on the same Wi-Fi',
+  'qr.banner.desc': 'Access instantly from smartphones,\ntablets & PCs',
+  'qr.demo.note': '※ In Demo mode, data is stored separately per device. In production, data is shared company-wide in the cloud.',
   'qr.cloud.status': '✅ Accessible from anywhere — phone, tablet, or PC',
   'qr.cloud.desc': 'Any device with an internet connection can access — no Wi-Fi required.',
   'qr.local.status': '⚠️ Cannot connect from smartphone',

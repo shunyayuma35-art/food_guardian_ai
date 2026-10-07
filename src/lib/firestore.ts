@@ -314,3 +314,30 @@ export async function deleteReport(id: string): Promise<void> {
   if (DEMO_MODE) { localSet(REPORT_KEY, localGet<Report>(REPORT_KEY).filter((i) => i.id !== id)); return }
   await fbDelete('reports', id)
 }
+
+// ── デモデータ初期化・リセット ─────────────────────────────────────
+
+/** fe_incidents / fe_inspections / fe_reports がすべて空のときだけサンプルデータを投入 */
+export async function initDemoData(): Promise<void> {
+  if (!DEMO_MODE) return
+  if (typeof window === 'undefined') return
+  const hasAny =
+    localGet<Incident>(INC_KEY).length > 0 ||
+    localGet<InspectionRecord>(INSP_KEY).length > 0 ||
+    localGet<Report>(REPORT_KEY).length > 0
+  if (hasAny) return
+  const { buildDemoIncidents, buildDemoInspections, buildDemoReports } = await import('./demo-seed')
+  localSet(INC_KEY, buildDemoIncidents())
+  localSet(INSP_KEY, buildDemoInspections())
+  localSet(REPORT_KEY, buildDemoReports())
+}
+
+/** サンプルデータに強制リセット（ユーザーが追加したデータも消える） */
+export async function resetDemoData(): Promise<void> {
+  if (!DEMO_MODE) return
+  const { buildDemoIncidents, buildDemoInspections, buildDemoReports } = await import('./demo-seed')
+  localSet(INC_KEY, buildDemoIncidents())
+  localSet(INSP_KEY, buildDemoInspections())
+  localSet(REPORT_KEY, buildDemoReports())
+  localSet(SENSORY_KEY, [])
+}
