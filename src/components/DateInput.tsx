@@ -1,7 +1,7 @@
 'use client'
 
+import { useState } from 'react'
 import { useLang } from '@/context/LanguageContext'
-import { formatLocalDate } from '@/lib/utils'
 
 interface DateInputProps {
   value: string
@@ -13,13 +13,11 @@ interface DateInputProps {
   warnIfBeforeDate?: string
 }
 
-/** YYYY-MM-DD → datetime-local 形式 (YYYY-MM-DDTHH:mm) に変換 */
 function toDatetimeLocal(iso: string): string {
   if (!iso) return ''
   return iso.length === 10 ? `${iso}T00:00` : iso
 }
 
-/** 日付文字列の自動整形（全角数字・区切り文字を正規化して YYYY-MM-DD に変換） */
 function normalizeDate(raw: string): string {
   const half = raw.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
   const normalized = half.replace(/[./・]/g, '-').replace(/\s/g, '')
@@ -42,9 +40,11 @@ export default function DateInput({
 }: DateInputProps) {
   const { lang } = useLang()
   const isJa = lang !== 'en'
+  const [focused, setFocused] = useState(false)
 
   const inputValue = type === 'datetime-local' ? toDatetimeLocal(value) : (value ?? '')
   const isEmpty = !value
+  const showOverlay = isEmpty && !focused
 
   function handleChange(raw: string) {
     onChange(type === 'datetime-local' ? raw : normalizeDate(raw))
@@ -54,25 +54,25 @@ export default function DateInput({
   const showWarn = !!warnIfBeforeDate && !!dateValue && dateValue < warnIfBeforeDate
 
   const overlayText = type === 'datetime-local'
-    ? (isJa ? 'YYYY / MM / DD HH:MM' : 'YYYY / MM / DD HH:MM')
+    ? (isJa ? '年 / 月 / 日  時 : 分' : 'YYYY / MM / DD  HH : MM')
     : (isJa ? '年 / 月 / 日' : 'YYYY / MM / DD')
 
   return (
     <div className="space-y-1">
-      {/* relative ラッパーでオーバーレイを重ねる */}
       <div className="relative">
         <input
           type={type}
           value={inputValue}
           onChange={e => handleChange(e.target.value)}
-          className={`${className} w-full text-base`}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className={`${className} w-full text-base${showOverlay ? ' date-empty' : ''}`}
           style={{ minHeight: '48px', fontSize: '16px' }}
         />
-        {/* Android で placeholder が効かないためオーバーレイで代替 */}
-        {isEmpty && (
+        {showOverlay && (
           <span
-            className="absolute inset-0 flex items-center px-3 text-gray-400 pointer-events-none select-none"
-            style={{ fontSize: '16px' }}
+            className="absolute inset-y-0 left-0 flex items-center px-4 text-gray-400 pointer-events-none select-none"
+            style={{ fontSize: '16px', right: '2.5rem' }}
             aria-hidden="true"
           >
             {overlayText}

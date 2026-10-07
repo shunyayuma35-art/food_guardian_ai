@@ -77,6 +77,12 @@
   }
 }
 
+/* ── 日付入力 空欄時のブラウザ標準テキストを透明化（オーバーレイで代替） ── */
+/* フォーカス時は .date-empty が外れるので入力文字は通常通り見える */
+.date-empty::-webkit-datetime-edit { color: transparent; }
+.date-empty::-webkit-datetime-edit-fields-wrapper { color: transparent; }
+.date-empty { color: transparent; }
+
 /* ── ベトナム語フォント補正 ── */
 /* 日本語フォント（Yu Gothic 等）はベトナム語の多重声調記号のグリフメトリクスが不正確なため */
 /* vi 選択時のみ system-ui（Windows: Segoe UI / macOS: San Francisco）を優先する */
