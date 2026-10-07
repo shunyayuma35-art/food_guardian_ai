@@ -8,13 +8,25 @@ const VALID_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
 // ── 月次使用制限 ──────────────────────────────────────────────────────
 const USAGE_COOKIE = 'foodeye_usage'
-const MAX_MONTHLY = 10
+const MAX_MONTHLY = parseInt(process.env.FREE_ANALYSIS_LIMIT ?? '10')
+const HACKATHON_MODE = process.env.HACKATHON_MODE === 'true'
 
 function parseUsage(val: string | undefined): { month: string; count: number } {
   const m = new Date().toISOString().slice(0, 7)
   if (!val) return { month: m, count: 0 }
   const [month, c] = val.split(':')
   return month === m ? { month: m, count: parseInt(c) || 0 } : { month: m, count: 0 }
+}
+
+// ── 1分あたりレートリミット（費用暴走防止）───────────────────────────
+const _rateMap = new Map<string, number[]>()
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const prev = (_rateMap.get(ip) ?? []).filter(t => now - t < 60_000)
+  if (prev.length >= 10) return false
+  prev.push(now)
+  _rateMap.set(ip, prev)
+  return true
 }
 
 function buildLangInstruction(lang?: string): string {
@@ -25,10 +37,21 @@ function buildLangInstruction(lang?: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const usage = parseUsage(req.cookies.get(USAGE_COOKIE)?.value)
-  if (usage.count >= MAX_MONTHLY) {
+  // レートリミット（1分10回）
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? req.headers.get('x-real-ip')
+    ?? 'unknown'
+  if (!checkRateLimit(ip)) {
     return NextResponse.json(
-      { error: 'USAGE_LIMIT', message: '今月の無料解析上限（10回）に達しました。' },
+      { error: 'RATE_LIMIT', message: '1分間のリクエスト上限を超えました。少し待ってから再試行してください。' },
+      { status: 429 }
+    )
+  }
+
+  const usage = parseUsage(req.cookies.get(USAGE_COOKIE)?.value)
+  if (!HACKATHON_MODE && usage.count >= MAX_MONTHLY) {
+    return NextResponse.json(
+      { error: 'USAGE_LIMIT', message: `今月の無料解析上限（${MAX_MONTHLY}回）に達しました。`, limit: MAX_MONTHLY },
       { status: 429 }
     )
   }
@@ -193,7 +216,7 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
       return NextResponse.json({ error: '画像を解析できませんでした。より明確な画像をお試しください。' }, { status: 422 });
     }
 
-    const remaining = MAX_MONTHLY - (usage.count + 1)
+    const remaining = HACKATHON_MODE ? null : MAX_MONTHLY - (usage.count + 1)
 
     // [BBOX]{...}[/BBOX] をパースして表示テキストから除去
     type BBox = { x: number; y: number; w: number; h: number }
@@ -231,14 +254,17 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
 
     const finalRes = NextResponse.json({
       result: rawText,
-      remaining,
+      ...(remaining !== null ? { remaining } : {}),
+      limit: MAX_MONTHLY,
       ...(quickResult ? { quickResult } : {}),
       ...(bbox ? { bbox } : {}),
       ...(sizeEstimate ? { sizeEstimate } : {}),
     })
-    finalRes.cookies.set(USAGE_COOKIE, `${usage.month}:${usage.count + 1}`, {
-      httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 40,
-    })
+    if (!HACKATHON_MODE) {
+      finalRes.cookies.set(USAGE_COOKIE, `${usage.month}:${usage.count + 1}`, {
+        httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 40,
+      })
+    }
     return finalRes;
   } catch (error) {
     console.error('Image Analysis Error:', error);

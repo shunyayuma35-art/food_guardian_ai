@@ -15,6 +15,7 @@ import type {
   TasteScore, ScentEval, TextureScore, SoundEval,
 } from '@/lib/types'
 import Navigation from '@/components/Navigation'
+import DateInput from '@/components/DateInput'
 import toast from 'react-hot-toast'
 
 const STEPS = ['製品情報', '五感評価', '判定']
@@ -294,7 +295,7 @@ export default function SensoryNewPage() {
               </div>
               <div>
                 <label className="label">検査日時 <span className="text-red-400">*</span></label>
-                <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} className="input-field" />
+                <DateInput value={date} onChange={setDate} type="datetime-local" />
               </div>
               <div>
                 <label className="label">検査担当者名 <span className="text-red-400">*</span></label>

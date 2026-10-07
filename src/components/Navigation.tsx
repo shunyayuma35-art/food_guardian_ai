@@ -3,10 +3,22 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useLang } from '@/context/LanguageContext'
+import { useState, useEffect } from 'react'
 
 export default function Navigation() {
   const pathname = usePathname()
   const { t } = useLang()
+  const [keyboardOpen, setKeyboardOpen] = useState(false)
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const handler = () => setKeyboardOpen(vv.height < window.innerHeight * 0.75)
+    vv.addEventListener('resize', handler)
+    return () => vv.removeEventListener('resize', handler)
+  }, [])
+
+  if (keyboardOpen) return null
 
   const NAV_ITEMS = [
     { href: '/',           icon: '🏠', label: t('nav.home') },

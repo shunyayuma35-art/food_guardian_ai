@@ -9,6 +9,7 @@ import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
 import { createInspectionRecord } from '@/lib/firestore'
 import toast from 'react-hot-toast'
+import DateInput from '@/components/DateInput'
 import {
   DEVICE_TYPE_LABELS,
   INSPECTION_RESULT_LABELS,
@@ -287,8 +288,7 @@ export default function InspectionNewPage() {
             </div>
             <div>
               <label className="label">{t('insp.date')}</label>
-              <input type="date" value={inspectionDate}
-                onChange={(e) => setInspectionDate(e.target.value)} className="input-field" />
+              <DateInput value={inspectionDate} onChange={setInspectionDate} />
             </div>
           </div>
           <div>

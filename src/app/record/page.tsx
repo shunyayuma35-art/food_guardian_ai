@@ -22,6 +22,7 @@ import QRScanner from '@/components/QRScanner'
 import PhotoUpload from '@/components/PhotoUpload'
 import FeatureChecklistComponent from '@/components/FeatureChecklist'
 import UsageGuide from '@/components/UsageGuide'
+import DateInput from '@/components/DateInput'
 import ForensicEnhancer from '@/components/ForensicEnhancer'
 import toast from 'react-hot-toast'
 
@@ -373,8 +374,7 @@ export default function RecordPage() {
                 </div>
                 <div>
                   <label className="label">{t('record.claimDate')} <span className="text-red-400">*</span></label>
-                  <input type="date" value={claimDate} onChange={(e) => setClaimDate(e.target.value)}
-                    className="input-field" />
+                  <DateInput value={claimDate} onChange={setClaimDate} />
                 </div>
                 <div>
                   <label className="label">{t('record.claimContent')}</label>
@@ -410,13 +410,17 @@ export default function RecordPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label">{t('record.mfgDate')}</label>
-                <input type="date" value={manufacturingDate}
-                  onChange={(e) => setManufacturingDate(e.target.value)} className="input-field" />
+                <DateInput value={manufacturingDate} onChange={setManufacturingDate} />
               </div>
               <div>
                 <label className="label">{t('record.expiryDate')}</label>
-                <input type="date" value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)} className="input-field" />
+                <DateInput
+                  value={expiryDate}
+                  onChange={setExpiryDate}
+                  showDaysOffset={[3, 7, 14, 30, 90, 180, 365]}
+                  baseDate={manufacturingDate || undefined}
+                  warnIfBeforeDate={manufacturingDate || undefined}
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -616,8 +620,7 @@ export default function RecordPage() {
             </div>
             <div>
               <label className="label">{t('record.discoveryDate')}</label>
-              <input type="datetime-local" value={discoveryDate}
-                onChange={(e) => setDiscoveryDate(e.target.value)} className="input-field" />
+              <DateInput value={discoveryDate} onChange={setDiscoveryDate} type="datetime-local" />
             </div>
             <div>
               <label className="label">{t('record.comment')}</label>

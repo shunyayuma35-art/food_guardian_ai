@@ -303,6 +303,7 @@ export default function AiChatPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
   const [usageRemaining, setUsageRemaining] = useState<number | null>(null)
+  const [analysisLimit, setAnalysisLimit] = useState(10)
   const [userHint, setUserHint] = useState('')
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [showPanel, setShowPanel] = useState(false)
@@ -488,6 +489,7 @@ export default function AiChatPage() {
       const data = await res.json();
 
       if (res.status === 429) {
+        if (data.limit) setAnalysisLimit(data.limit)
         setShowLimitModal(true)
         setLoading(false)
         return
@@ -499,6 +501,7 @@ export default function AiChatPage() {
         return;
       }
 
+      if (data.limit) setAnalysisLimit(data.limit)
       if (data.remaining !== undefined) setUsageRemaining(data.remaining)
 
       const analysisMsg: Message = {
@@ -621,6 +624,7 @@ export default function AiChatPage() {
       const data = await res.json()
 
       if (res.status === 429) {
+        if (data.limit) setAnalysisLimit(data.limit)
         setShowLimitModal(true)
         setLoading(false)
         return
@@ -631,6 +635,8 @@ export default function AiChatPage() {
         setLoading(false)
         return
       }
+
+      if (data.limit) setAnalysisLimit(data.limit)
 
       if (data.remaining !== undefined) setUsageRemaining(data.remaining)
 
@@ -1089,7 +1095,7 @@ export default function AiChatPage() {
             <div className="text-5xl text-center">🔒</div>
             <h2 className="text-base font-bold text-center text-gray-800">{t('aichat.limitTitle')}</h2>
             <p className="text-sm text-gray-600 text-center leading-relaxed">
-              {t('aichat.limitDesc1')}<br />
+              {t('aichat.limitDesc1').replace('{n}', String(analysisLimit))}<br />
               {t('aichat.limitDesc2')}<br />
               <span className="font-bold text-orange-600">@hapifoodlab</span> {t('aichat.limitDesc3')}
             </p>

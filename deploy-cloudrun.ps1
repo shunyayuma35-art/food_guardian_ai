@@ -48,7 +48,8 @@ $aiVars = @(
     "AI_PROVIDER=gemini",
     "GOOGLE_CLOUD_PROJECT=project-66aee540-552a-4a95-b80",
     "GOOGLE_CLOUD_LOCATION=global",
-    "GEMINI_MODEL=gemini-3.8-flash"
+    "GEMINI_MODEL=gemini-3.8-flash",
+    "HACKATHON_MODE=true"
 )
 foreach ($v in $aiVars) {
     $runtimeVars.Add($v)

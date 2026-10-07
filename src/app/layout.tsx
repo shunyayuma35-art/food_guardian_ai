@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import FloatingLanguageButton from '@/components/FloatingLanguageButton'
 import LockScreen from '@/components/LockScreen'
+import KeyboardSafe from '@/components/KeyboardSafe'
 
 export const metadata: Metadata = {
   title: 'FoodEye | 食品異物事故管理・特定支援システム',
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <LanguageProvider>
           <AuthProvider>
+            <KeyboardSafe />
             <LockScreen />
             <ErrorBoundary>
               {children}
