@@ -6,22 +6,24 @@ export function buildDemoIncidents(): Incident[] {
   const today = formatLocalDate()
   const features = createEmptyFeatures()
 
-  // アルミニウム片の特徴
+  // アルミニウム片の特徴（3mm×2mm フレーク状）
   features.texture.hard = true
-  features.texture.sharp = true
-  features.texture.smooth = true
-  features.texture.coldFeel = true
+  features.texture.sharp = true     // 破断面に鋭い縁がある
+  features.texture.smooth = true    // 表面はなめらか
+  features.texture.coldFeel = true  // 金属は熱伝導が高く冷たく感じる
+  features.texture.brittle = true   // スクレーパーから剥離した脆い欠片
   features.appearance.metallic = true
   features.appearance.flatPlate = true
   features.appearance.flakeChip = true
   features.appearance.mirrorGloss = true
+  features.appearance.bent = true   // 剥離時に変形している場合がある
   features.color.silver = true
   features.color.metalColor = true
   features.smell.noSmell = true
-  features.waterTest.sinks = true
-  features.size.medium = true
-  features.magnetTest.noStick = true
-  features.weight.heavy = true
+  features.waterTest.sinks = true   // アルミ密度 2.7 g/cm³ > 水
+  features.size.medium = true       // 3-5mm 範囲
+  features.magnetTest.noStick = true // アルミは非磁性
+  features.weight.veryLight = true  // 3mm×2mm 程度の極薄フレークは非常に軽い
 
   const now = new Date().toISOString()
   const discoveryDay = addLocalDays(today, -1)
@@ -35,9 +37,9 @@ export function buildDemoIncidents(): Incident[] {
     lineNumber: '1ライン',
     factory: 'サンプル食品 第1工場',
     operator: '山田 花子',
-    discoveryDate: `${discoveryDay}T09:30:00.000Z`,
+    discoveryDate: `${discoveryDay}T09:30:00+09:00`,
     discoveryProcess: 'after_packaging',
-    photos: [],
+    photos: ['/demo/aluminum-sample.jpg'],
     microscopePhotos: [],
     comment: '包装後の目視検査でアルミニウム片を発見。約3mm×2mmのフレーク状。光沢があり金属特有の冷たさがある。',
     features,
