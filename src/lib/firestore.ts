@@ -14,9 +14,60 @@ function localSet<T>(key: string, items: T[]) {
     localStorage.setItem(key, JSON.stringify(items))
   } catch (e) {
     if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-      throw new Error('ストレージ容量が不足しています。古い記録を削除してください。')
+      throw new Error('STORAGE_FULL')
     }
     throw e
+  }
+}
+
+// ── IndexedDB 写真参照の解決（DEMO_MODE） ────────────────────────
+
+async function resolveRefs(refs: string[] | undefined): Promise<string[]> {
+  if (!refs || refs.length === 0) return []
+  const { resolvePhotoRef } = await import('./photo-store')
+  return Promise.all(refs.map(resolvePhotoRef))
+}
+
+async function resolveIncidentPhotos(inc: Incident): Promise<Incident> {
+  if (typeof window === 'undefined') return inc
+  const [photos, microscopePhotos, claimPhotos] = await Promise.all([
+    resolveRefs(inc.photos),
+    resolveRefs(inc.microscopePhotos),
+    inc.claimPhotos ? resolveRefs(inc.claimPhotos) : Promise.resolve(undefined),
+  ])
+  return { ...inc, photos, microscopePhotos, ...(claimPhotos !== undefined ? { claimPhotos } : {}) }
+}
+
+/** localStorage 内の旧形式 base64 写真を IndexedDB へ移行 */
+async function migratePhotos(): Promise<void> {
+  if (typeof window === 'undefined') return
+  const { storePhotoUrl, IDB_PREFIX } = await import('./photo-store')
+  const list = localGet<Incident>(INC_KEY)
+  if (list.length === 0) return
+
+  let changed = false
+  const migrateRefs = async (refs: string[] | undefined): Promise<string[] | undefined> => {
+    if (!refs) return refs
+    const out = await Promise.all(refs.map(async (ref) => {
+      if (ref.startsWith('data:')) {
+        try { const id = await storePhotoUrl(ref); changed = true; return id }
+        catch { return ref }
+      }
+      if (!ref.startsWith(IDB_PREFIX)) return ref
+      return ref
+    }))
+    return out
+  }
+
+  const migrated = await Promise.all(list.map(async (inc) => ({
+    ...inc,
+    photos: (await migrateRefs(inc.photos)) ?? [],
+    microscopePhotos: (await migrateRefs(inc.microscopePhotos)) ?? [],
+    ...(inc.claimPhotos !== undefined ? { claimPhotos: await migrateRefs(inc.claimPhotos) } : {}),
+  })))
+
+  if (changed) {
+    try { localSet(INC_KEY, migrated) } catch { /* ignore storage errors during migration */ }
   }
 }
 
@@ -100,7 +151,11 @@ export async function createIncident(
 }
 
 export async function getIncident(id: string): Promise<Incident | null> {
-  if (DEMO_MODE) return localGet<Incident>(INC_KEY).find((i) => i.id === id) ?? null
+  if (DEMO_MODE) {
+    const inc = localGet<Incident>(INC_KEY).find((i) => i.id === id) ?? null
+    if (!inc) return null
+    return resolveIncidentPhotos(inc)
+  }
   return fbGet('incidents', id) as Promise<Incident | null>
 }
 
@@ -117,8 +172,9 @@ export async function updateIncident(id: string, data: Partial<Incident>): Promi
 
 export async function listIncidents(userId?: string): Promise<Incident[]> {
   if (DEMO_MODE) {
-    const list = localGet<Incident>(INC_KEY)
-    return userId ? list.filter((i) => i.createdBy === userId) : list
+    let list = localGet<Incident>(INC_KEY)
+    if (userId) list = list.filter((i) => i.createdBy === userId)
+    return Promise.all(list.map(resolveIncidentPhotos))
   }
   return fbList('incidents', userId) as Promise<Incident[]>
 }
@@ -321,6 +377,8 @@ export async function deleteReport(id: string): Promise<void> {
 export async function initDemoData(): Promise<void> {
   if (!DEMO_MODE) return
   if (typeof window === 'undefined') return
+  // 既存 base64 写真を IndexedDB へ非同期移行（エラーは無視）
+  migratePhotos().catch(() => {})
   const hasAny =
     localGet<Incident>(INC_KEY).length > 0 ||
     localGet<InspectionRecord>(INSP_KEY).length > 0 ||

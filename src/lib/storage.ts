@@ -1,18 +1,22 @@
 import { DEMO_MODE, app } from './firebase'
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
 export async function uploadPhoto(userId: string, file: File): Promise<string> {
-  // DEMOモード（Vercelデモ含む）: ブラウザ内Base64
+  // DEMOモード: 圧縮後 IndexedDB に保存して参照ID を返す
   if (DEMO_MODE) {
-    return fileToBase64(file)
+    try {
+      const { compressImage } = await import('./compressImage')
+      const { storePhotoUrl } = await import('./photo-store')
+      const compressed = await compressImage(file)
+      return storePhotoUrl(`data:${compressed.mimeType};base64,${compressed.base64}`)
+    } catch {
+      // IndexedDB 失敗時は base64 のまま返す（フォールバック）
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+    }
   }
 
   // Firebase Storageモード（本番）

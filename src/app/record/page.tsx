@@ -175,6 +175,77 @@ export default function RecordPage() {
   const [correctiveAction, setCorrectiveAction] = useState('')
   const [preventiveMeasure, setPreventiveMeasure] = useState('')
 
+  interface DraftResult { corrective: string; preventive: string; hint: string }
+  const [aiDrafting, setAiDrafting] = useState(false)
+  const [pendingDraft, setPendingDraft] = useState<DraftResult | null>(null)
+  const [aiDraftApplied, setAiDraftApplied] = useState(false)
+
+  function applyDraft(draft: DraftResult, mode: 'replace' | 'append') {
+    if (mode === 'replace') {
+      setCorrectiveAction(draft.corrective)
+      setPreventiveMeasure(draft.preventive)
+    } else {
+      setCorrectiveAction(prev => prev ? prev + '\n\n' + draft.corrective : draft.corrective)
+      setPreventiveMeasure(prev => prev ? prev + '\n\n' + draft.preventive : draft.preventive)
+    }
+    setPendingDraft(null)
+    setAiDraftApplied(true)
+  }
+
+  async function handleAiDraft() {
+    setAiDrafting(true)
+    try {
+      const checked: string[] = []
+      const addKeys = (obj: unknown, g: string) => {
+        Object.entries(obj as Record<string, boolean>).forEach(([k, v]) => { if (v) checked.push(`${g}.${k}`) })
+      }
+      addKeys(features.texture, 'texture')
+      addKeys(features.appearance, 'appearance')
+      addKeys(features.color, 'color')
+      addKeys(features.smell, 'smell')
+      addKeys(features.waterTest, 'waterTest')
+      addKeys(features.size, 'size')
+      addKeys(features.magnetTest, 'magnetTest')
+      addKeys(features.weight, 'weight')
+
+      const res = await fetch('/api/ai-draft', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          comment,
+          discoveryProcess,
+          aiResult: aiQuickResult ? {
+            name: aiQuickResult.name,
+            category: aiQuickResult.category,
+            urgency: aiQuickResult.urgency,
+            route: aiQuickResult.route,
+            action: aiQuickResult.action,
+          } : null,
+          featuresSummary: checked.join(', '),
+          lang: getStoredLang(),
+        }),
+      })
+      if (!res.ok) throw new Error('draft failed')
+      const data = await res.json() as { corrective?: string[]; preventive?: string[]; hint?: string }
+
+      const draft: DraftResult = {
+        corrective: (data.corrective ?? []).map((s, i) => `${i + 1}. ${s}`).join('\n'),
+        preventive: (data.preventive ?? []).map((s, i) => `${i + 1}. ${s}`).join('\n'),
+        hint: data.hint ?? '',
+      }
+
+      if (correctiveAction.trim() || preventiveMeasure.trim()) {
+        setPendingDraft(draft)
+      } else {
+        applyDraft(draft, 'replace')
+      }
+    } catch {
+      toast.error(t('toast.aiFailed'))
+    } finally {
+      setAiDrafting(false)
+    }
+  }
+
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
   }, [user, loading, router])
@@ -253,7 +324,8 @@ export default function RecordPage() {
       router.push(`/record/${id}`)
     } catch (err) {
       console.error(err)
-      toast.error(t('toast.failed'))
+      const isStorageFull = err instanceof Error && err.message === 'STORAGE_FULL'
+      toast.error(isStorageFull ? t('toast.storageFull') : t('toast.failed'))
     } finally {
       setSubmitting(false)
     }
@@ -626,16 +698,54 @@ export default function RecordPage() {
                 rows={3} className="input-field resize-none"
                 placeholder="異物の発見状況、大きさ、特記事項など" />
             </div>
+            {/* AI draft */}
+            <div>
+              <button
+                type="button"
+                onClick={handleAiDraft}
+                disabled={aiDrafting}
+                className="w-full py-3 rounded-2xl text-sm font-bold border-2 border-orange-300 text-orange-600 bg-orange-50 hover:bg-orange-100 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {aiDrafting
+                  ? <><span className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />{t('record.aiDraft.drafting')}</>
+                  : <>🤖 {t('record.aiDraft.btn')}</>
+                }
+              </button>
+              {pendingDraft && (
+                <div className="mt-2 p-3 bg-amber-50 border border-amber-300 rounded-2xl text-sm">
+                  <p className="font-semibold text-amber-800 mb-2">{t('record.aiDraft.overwriteMsg')}</p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => applyDraft(pendingDraft, 'replace')}
+                      className="flex-1 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold">
+                      {t('record.aiDraft.replace')}
+                    </button>
+                    <button type="button" onClick={() => applyDraft(pendingDraft, 'append')}
+                      className="flex-1 py-2 rounded-xl bg-white border border-orange-300 text-orange-600 text-sm font-bold">
+                      {t('record.aiDraft.append')}
+                    </button>
+                    <button type="button" onClick={() => setPendingDraft(null)}
+                      className="px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-500 text-sm">
+                      {t('common.cancel')}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {aiDraftApplied && !pendingDraft && (
+                <p className="mt-2 text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2">
+                  {t('record.aiDraft.notice')}
+                </p>
+              )}
+            </div>
             <div>
               <label className="label">{t('record.corrective')}</label>
               <textarea value={correctiveAction} onChange={(e) => setCorrectiveAction(e.target.value)}
-                rows={2} className="input-field resize-none"
+                rows={3} className="input-field resize-none"
                 placeholder="実施した即時対応（例: 当該ライン停止・全数点検）" />
             </div>
             <div>
               <label className="label">{t('record.preventive')}</label>
               <textarea value={preventiveMeasure} onChange={(e) => setPreventiveMeasure(e.target.value)}
-                rows={2} className="input-field resize-none" placeholder="計画する再発防止措置" />
+                rows={3} className="input-field resize-none" placeholder="計画する再発防止措置" />
             </div>
           </div>
         )}

@@ -1,7 +1,7 @@
 /** 最長辺の上限（px） */
-const MAX_SIDE = 1600
+const MAX_SIDE = 1280
 /** JPEG 品質 (0〜1) */
-const QUALITY = 0.82
+const QUALITY = 0.7
 
 export interface CompressedImage {
   base64: string

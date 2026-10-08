@@ -81,7 +81,7 @@ export type TranslationKey =
   | 'guide.open' | 'guide.close' | 'guide.point' | 'guide.title' | 'guide.jaOnly'
   | 'guide.list' | 'guide.record' | 'guide.insp' | 'guide.inspList' | 'guide.report'
   // toast messages
-  | 'toast.qrRead' | 'toast.fillNameOrLot' | 'toast.saved' | 'toast.failed'
+  | 'toast.qrRead' | 'toast.fillNameOrLot' | 'toast.saved' | 'toast.failed' | 'toast.storageFull'
   | 'toast.photoSaved' | 'toast.photoFailed' | 'toast.inspSaved'
   | 'toast.enterDeviceName' | 'toast.enterInspector'
   | 'toast.networkError' | 'toast.timeout'
@@ -134,6 +134,9 @@ export type TranslationKey =
   | 'home.demoBanner' | 'home.resetDemo' | 'home.resetDemoConfirm'
   | 'home.alert.backupOk' | 'home.alert.backupFail'
   | 'home.alert.restoreOk' | 'home.alert.restoreFail' | 'home.confirm.restore'
+  // AI draft (record step 4)
+  | 'record.aiDraft.btn' | 'record.aiDraft.drafting' | 'record.aiDraft.notice'
+  | 'record.aiDraft.replace' | 'record.aiDraft.append' | 'record.aiDraft.overwriteMsg'
   // list page
   | 'list.supabaseSaved' | 'list.photoAlt'
   // qr page
@@ -263,6 +266,7 @@ const ja: Dict = {
   'guide.open': '▼ 開く', 'guide.close': '▲ 閉じる', 'guide.point': '💡 ポイント', 'guide.title': '📖 使い方・操作手順', 'guide.jaOnly': '📖 使い方ガイド（日本語）',
   'guide.list': '📖 事故一覧・検索の使い方', 'guide.record': '📖 異物登録の手順', 'guide.insp': '📖 検査記録の入力手順', 'guide.inspList': '📖 検査記録一覧の使い方', 'guide.report': '📖 月次・年次レポートの使い方',
   'toast.qrRead': 'QRコードを読み込みました', 'toast.fillNameOrLot': '商品名またはロット番号を入力してください', 'toast.saved': '登録完了しました', 'toast.failed': '登録に失敗しました',
+  'toast.storageFull': '保存容量がいっぱいです。古い記録を削除するか、デモデータをリセットしてください。',
   'toast.photoSaved': '写真を保存しました', 'toast.photoFailed': '写真のアップロードに失敗しました', 'toast.inspSaved': '検査記録を登録しました',
   'toast.enterDeviceName': '機器名を入力してください', 'toast.enterInspector': '検査担当者を入力してください',
   'toast.networkError': '通信エラーが発生しました', 'toast.timeout': 'タイムアウトしました。接続を確認して再度お試しください。',
@@ -433,6 +437,13 @@ const ja: Dict = {
   'list.guide.step3.title': 'カードをタップして詳細を確認',
   'list.guide.step3.desc': '各カードをタップすると詳細画面が開きます。',
   'list.guide.tip1': '同じロット番号の事故をまとめて確認したい場合は、ロット番号で検索してください',
+  // AI draft
+  'record.aiDraft.btn': 'AIで下書きを作成',
+  'record.aiDraft.drafting': '下書きを生成中...',
+  'record.aiDraft.notice': '🤖 AIの下書きです。現場の状況に合わせて編集してください。',
+  'record.aiDraft.replace': '置き換える',
+  'record.aiDraft.append': '追記する',
+  'record.aiDraft.overwriteMsg': '入力済みの内容があります。どうしますか？',
 }
 
 const en: Dict = {
@@ -695,6 +706,14 @@ const en: Dict = {
   'list.guide.step3.title': 'Tap Card for Details',
   'list.guide.step3.desc': 'Tap any card to open the detail screen.',
   'list.guide.tip1': 'To review all incidents with the same lot number, search by lot number.',
+  // AI draft
+  'toast.storageFull': 'Storage is full. Please delete old records or reset the demo data.',
+  'record.aiDraft.btn': 'Create AI Draft',
+  'record.aiDraft.drafting': 'Generating draft...',
+  'record.aiDraft.notice': '🤖 AI draft — please edit to match the actual situation.',
+  'record.aiDraft.replace': 'Replace',
+  'record.aiDraft.append': 'Append',
+  'record.aiDraft.overwriteMsg': 'Fields already have content. What would you like to do?',
 }
 
 const zh: Dict = {
