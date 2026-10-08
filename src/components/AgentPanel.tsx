@@ -1,7 +1,44 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { AgentStep, PartialResult, AgentSessionData } from '@/lib/agent/types'
+
+/** Markdown を整形表示するコンポーネント。表は横スクロール対応。 */
+function MarkdownProse({ text, className = '' }: { text: string; className?: string }) {
+  return (
+    <div className={`markdown-prose text-xs text-gray-700 leading-relaxed ${className}`}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h1: ({ children }) => <h1 className="text-sm font-bold text-gray-800 mt-3 mb-1">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-xs font-bold text-gray-800 mt-2.5 mb-1">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-xs font-semibold text-gray-700 mt-2 mb-0.5">{children}</h3>,
+          strong: ({ children }) => <strong className="font-bold text-gray-800">{children}</strong>,
+          ul: ({ children }) => <ul className="list-disc list-inside space-y-0.5 my-1">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-inside space-y-0.5 my-1">{children}</ol>,
+          li: ({ children }) => <li className="text-xs text-gray-700">{children}</li>,
+          p: ({ children }) => <p className="my-1">{children}</p>,
+          table: ({ children }) => (
+            <div className="overflow-x-auto my-2 rounded-xl border border-gray-200">
+              <table className="min-w-full text-xs border-collapse">{children}</table>
+            </div>
+          ),
+          thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+          th: ({ children }) => <th className="px-3 py-1.5 text-left font-semibold text-gray-600 border-b border-gray-200 whitespace-nowrap">{children}</th>,
+          td: ({ children }) => <td className="px-3 py-1.5 text-gray-700 border-b border-gray-100">{children}</td>,
+          tr: ({ children }) => <tr className="even:bg-gray-50/50">{children}</tr>,
+          blockquote: ({ children }) => <blockquote className="border-l-2 border-orange-300 pl-3 my-1 text-gray-600 italic">{children}</blockquote>,
+          hr: () => <hr className="my-2 border-gray-200" />,
+          code: ({ children }) => <code className="bg-gray-100 rounded px-1 text-[11px] font-mono">{children}</code>,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
+  )
+}
 
 interface AnalysisInput {
   urgency: 'high' | 'medium' | 'low'
@@ -382,9 +419,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                   <p className="text-xs font-bold text-orange-700 mb-2">
                     📊 {isEn ? 'Trend Alert' : '傾向アラート'}
                   </p>
-                  <p className="text-xs text-orange-800 leading-relaxed whitespace-pre-line">
-                    {result.trendAlert}
-                  </p>
+                  <MarkdownProse text={result.trendAlert} className="text-orange-800" />
                 </div>
               )}
 
@@ -468,7 +503,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
               {/* Summary */}
               {result.summary && (
                 <div className="bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
-                  <p className="text-xs text-gray-600 leading-relaxed">{result.summary}</p>
+                  <MarkdownProse text={result.summary} className="text-gray-600" />
                 </div>
               )}
             </div>
@@ -518,10 +553,10 @@ function RecallAssessmentBox({ text, isEn }: { text: string; isEn: boolean }) {
             : '⚠️ これは判断材料です。最終判断ではありません。必ず責任者および保健所に相談してください。'}
         </p>
       </div>
-      <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
-        {expanded ? text : preview}
-        {hasMore && !expanded && '…'}
-      </div>
+      {expanded
+        ? <MarkdownProse text={text} />
+        : <MarkdownProse text={preview + (hasMore ? '…' : '')} />
+      }
       {hasMore && (
         <button
           onClick={() => setExpanded(v => !v)}

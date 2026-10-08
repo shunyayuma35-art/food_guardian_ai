@@ -229,30 +229,36 @@ async function assessRecallRisk(
     : shipmentStatus
 
   const system = isEn
-    ? `You are a food safety compliance advisor. Provide recall risk assessment as decision-SUPPORT material only. Always state: "This is NOT a final determination. Consult your supervisor and the local health authority before taking any action." Do not make final recall decisions. Respond in English only.`
-    : `あなたは食品安全コンプライアンスのアドバイザーです。自主回収の判断材料を提示しますが、最終判断は行いません。必ず「これは最終判断ではありません。必ず責任者および保健所に相談してください」と記載してください。日本語で回答してください。`
+    ? `You are a food safety compliance advisor. Provide recall risk assessment as decision-SUPPORT material only. Always state: "This is NOT a final determination. Consult your supervisor and the local health authority before taking any action." Do not make final recall decisions. Do NOT determine a specific recall class (Class I/II/III) — state that the classification must be determined in consultation with the health authority. Respond in English only. Use Markdown formatting (headers, bold, bullet lists, tables) for readability.`
+    : `あなたは食品安全コンプライアンスのアドバイザーです。自主回収の判断材料を提示しますが、最終判断は行いません。必ず「これは最終判断ではありません。必ず責任者および保健所に相談してください」と記載してください。回収クラス（CLASS I/II/III）の断定はしないこと（「クラス分類は保健所との相談の上で決定」と記載する）。Markdown形式（見出し・太字・箇条書き・表）で見やすく出力してください。日本語で回答してください。`
 
   const userText = isEn
     ? `Foreign matter: ${matterType}
 Urgency: ${urgency}
 Shipment status: ${statusText}
 
+**Note**: "Urgency" reflects how quickly field response is needed. "Recall risk level" is a separate indicator assessing the risk of voluntary product recall. These are independent.
+
 Please provide:
-1. Recall risk level (High/Medium/Low) with rationale
-2. Whether Food Sanitation Act voluntary recall reporting should be considered
+1. **Recall risk level** (High/Medium/Low) with rationale (legal basis: Food Sanitation Act Article 6, Item 4 where applicable)
+2. Whether voluntary recall reporting under the Food Sanitation Act should be considered
 3. Required actions by shipment status
-4. List of consultation contacts (supervisor, local health authority, etc.)
+4. Recall class reference: Do NOT state a class — note that "class must be determined through consultation with the health authority"
+5. Table of consultation contacts (role | contact / scope)
 
 ⚠️ IMPORTANT: State clearly that this is decision-support material, NOT a final determination.`
     : `異物種別: ${matterType}
 緊急度: ${urgency}
 出荷状況: ${statusText}
 
-以下を提示してください:
-1. 自主回収リスクレベル（高/中/低）と根拠
+**注意**: 「緊急度」は現場対応の急ぎ度を示す指標です。「回収リスクレベル」は製品の自主回収リスクを評価する別の指標です。両者は独立した指標です。
+
+以下を Markdown 形式で提示してください:
+1. **自主回収リスクレベル**（高/中/低）と根拠（根拠条文: 該当する場合は食品衛生法第6条第4号）
 2. 食品衛生法に基づく自主回収届出の検討が必要かどうか
 3. 出荷状況別の必要な対応
-4. 相談先一覧（責任者・保健所・取引先等）
+4. 回収クラスについて: CLASS I/II/III の断定はしない。「クラス分類は保健所との相談の上で決定」と記載すること
+5. **相談先一覧**（区分 | 連絡先・対象 の表形式で記載）
 
 ⚠️ 必ず「これは判断材料であり最終判断ではありません。必ず責任者および保健所に相談してください」と明記すること。`
 
