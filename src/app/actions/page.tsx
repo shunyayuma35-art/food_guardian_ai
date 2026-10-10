@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import { listIncidents } from '@/lib/firestore'
-import { PDCA_STATUS_LABELS, PDCA_STATUS_COLORS, type PdcaStatus } from '@/lib/types'
+import { PDCA_STATUS_COLORS, PDCA_STATUS_LABELS, type PdcaStatus } from '@/lib/types'
 import Navigation from '@/components/Navigation'
 import type { Incident } from '@/lib/types'
 
@@ -51,6 +52,8 @@ function toCSV(rows: Incident[]): string {
 
 export default function ActionsPage() {
   const { user, loading } = useAuth()
+  const { t, lang } = useLang()
+  const isEn = lang === 'en'
   const router = useRouter()
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [fetching, setFetching] = useState(true)
@@ -58,17 +61,10 @@ export default function ActionsPage() {
   const [filterCategory, setFilterCategory] = useState('')
   const [filterDateFrom, setFilterDateFrom] = useState('')
   const [filterDateTo, setFilterDateTo] = useState('')
-  const [lang, setLang] = useState('ja')
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
   }, [user, loading, router])
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setLang(localStorage.getItem('foodeye_lang') ?? 'ja')
-    }
-  }, [])
 
   useEffect(() => {
     if (!user) return
@@ -77,8 +73,6 @@ export default function ActionsPage() {
       .catch(() => {})
       .finally(() => setFetching(false))
   }, [user])
-
-  const isEn = lang === 'en'
 
   // 異物カテゴリの選択肢
   const categories = useMemo(() => {
@@ -139,9 +133,9 @@ export default function ActionsPage() {
           <button onClick={() => router.push('/list')} className="back-btn" aria-label="戻る">←</button>
           <div>
             <h1 className="text-base font-extrabold text-gray-800">
-              {isEn ? '🔄 Corrective Action Review' : '🔄 是正・再発防止 振り返り'}
+              {t('actions.title')}
             </h1>
-            <p className="text-[11px] text-gray-400 text-center">{filtered.length} / {incidents.length} 件</p>
+            <p className="text-[11px] text-gray-400 text-center">{filtered.length} / {incidents.length}</p>
           </div>
           <button
             onClick={handleCSV}
@@ -155,7 +149,7 @@ export default function ActionsPage() {
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {/* フィルタ */}
         <div className="card p-4 space-y-3">
-          <p className="text-xs font-bold text-gray-500">{isEn ? 'Filter' : '絞り込み'}</p>
+          <p className="text-xs font-bold text-gray-500">{t('actions.filter')}</p>
 
           {/* PDCAステータス */}
           <div className="flex flex-wrap gap-1.5">
@@ -165,14 +159,14 @@ export default function ActionsPage() {
                 filterPdca === 'all' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-500 border-gray-200'
               }`}
             >
-              {isEn ? 'All' : 'すべて'}
+              {t('actions.allStatus')}
             </button>
             {PDCA_ALL.map(s => (
               <button key={s} onClick={() => setFilterPdca(s === filterPdca ? 'all' : s)}
                 className={`text-[11px] px-3 py-1 rounded-full font-bold border transition-all ${
                   filterPdca === s ? PDCA_STATUS_COLORS[s] : 'bg-white text-gray-500 border-gray-200'
                 }`}>
-                {PDCA_STATUS_LABELS[s]}
+                {t(`pdca.${s}` as Parameters<typeof t>[0])}
               </button>
             ))}
           </div>
@@ -185,7 +179,7 @@ export default function ActionsPage() {
               className="input-field text-xs"
               style={{ fontSize: '16px' }}
             >
-              <option value="">{isEn ? 'All categories' : 'すべての異物種別'}</option>
+              <option value="">{t('actions.allCategories')}</option>
               {categories.map(c => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -206,7 +200,7 @@ export default function ActionsPage() {
         {filtered.length === 0 ? (
           <div className="card p-8 text-center">
             <p className="text-4xl mb-3">📋</p>
-            <p className="text-gray-500 text-sm">{isEn ? 'No records found' : '該当する記録がありません'}</p>
+            <p className="text-gray-500 text-sm">{t('actions.noRecords')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -234,12 +228,12 @@ export default function ActionsPage() {
                     <div className="flex flex-col items-end gap-1">
                       {inc.pdcaStatus && (
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PDCA_STATUS_COLORS[inc.pdcaStatus]}`}>
-                          {PDCA_STATUS_LABELS[inc.pdcaStatus]}
+                          {t(`pdca.${inc.pdcaStatus}` as Parameters<typeof t>[0])}
                         </span>
                       )}
                       {category && count > 1 && (
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-                          ⚠️ 同種 {count}件
+                          {t('actions.sameType').replace('{n}', String(count))}
                         </span>
                       )}
                     </div>
@@ -256,19 +250,19 @@ export default function ActionsPage() {
                   <div className="space-y-1">
                     {corrective ? (
                       <p className="text-xs text-gray-700">
-                        <span className="font-semibold text-gray-500">是正: </span>
+                        <span className="font-semibold text-gray-500">{t('actions.corrective')}</span>
                         {summarize(corrective)}
                       </p>
                     ) : (
-                      <p className="text-xs text-gray-400">{isEn ? 'No corrective action' : '是正処置: 未入力'}</p>
+                      <p className="text-xs text-gray-400">{t('actions.noCorrectiveInput')}</p>
                     )}
                     {preventive ? (
                       <p className="text-xs text-gray-700">
-                        <span className="font-semibold text-gray-500">再発防止: </span>
+                        <span className="font-semibold text-gray-500">{t('actions.preventive')}</span>
                         {summarize(preventive)}
                       </p>
                     ) : (
-                      <p className="text-xs text-gray-400">{isEn ? 'No preventive measure' : '再発防止策: 未入力'}</p>
+                      <p className="text-xs text-gray-400">{t('actions.noPreventiveInput')}</p>
                     )}
                   </div>
 

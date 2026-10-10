@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
 import { createIncident } from '@/lib/firestore'
+import AutoResizeTextarea from '@/components/AutoResizeTextarea'
 import { uploadPhotos } from '@/lib/storage'
 import { estimateForeignMaterial } from '@/lib/estimation'
 import { compressImage } from '@/lib/compressImage'
@@ -37,7 +38,7 @@ function getStoredLang(): string {
 
 export default function RecordPage() {
   const { user, loading } = useAuth()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const router = useRouter()
 
   const STEPS = [t('record.step.product'), t('record.step.photo'), t('record.step.features'), t('record.step.detail')]
@@ -68,6 +69,7 @@ export default function RecordPage() {
 
   interface AiQuickResult {
     name: string
+    nameEn?: string
     category: string
     confidence: string
     urgency: 'high' | 'medium' | 'low'
@@ -76,7 +78,9 @@ export default function RecordPage() {
     shape?: string[]
     magnet?: string
     route?: string[]
+    routeEn?: string[]
     action?: string
+    actionEn?: string
     colorKeys?: string[]
     textureKeys?: string[]
     appearanceKeys?: string[]
@@ -290,6 +294,12 @@ export default function RecordPage() {
         basis: ['AI画像解析（Gemini Vision）'],
         urgency: aiQuickResult.urgency,
         source: 'ai_vision',
+        name: aiQuickResult.name,
+        nameEn: aiQuickResult.nameEn,
+        route: aiQuickResult.route,
+        routeEn: aiQuickResult.routeEn,
+        action: aiQuickResult.action,
+        actionEn: aiQuickResult.actionEn,
       } : null
       const estimations: EstimationResult[] = [
         ...(aiVisionEst ? [aiVisionEst] : []),
@@ -468,8 +478,8 @@ export default function RecordPage() {
                 </div>
                 <div>
                   <label className="label">{t('record.claimContent')}</label>
-                  <textarea value={claimContent} onChange={(e) => setClaimContent(e.target.value)}
-                    rows={3} className="input-field resize-none"
+                  <AutoResizeTextarea value={claimContent} onChange={(e) => setClaimContent(e.target.value)}
+                    className="input-field"
                     placeholder="消費者・取引先からの申告内容など" />
                 </div>
               </div>
@@ -579,7 +589,7 @@ export default function RecordPage() {
                   {/* 異物名 */}
                   <div>
                     <p className={`text-lg font-extrabold ${u.text} leading-tight`}>
-                      {aiQuickResult.name}
+                      {lang === 'en' ? (aiQuickResult.nameEn ?? aiQuickResult.name) : aiQuickResult.name}
                     </p>
                     <p className="text-sm text-gray-600 mt-0.5">
                       <span className="font-semibold">{aiQuickResult.category}</span>
@@ -600,18 +610,23 @@ export default function RecordPage() {
                   </div>
 
                   {/* 混入経路 */}
-                  {aiQuickResult.route && aiQuickResult.route.length > 0 && (
-                    <div>
-                      <p className="text-[10px] text-gray-400 font-semibold mb-1">{t('record.ai.routeLabel')}</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {aiQuickResult.route.map((r, i) => (
-                          <span key={i} className="text-xs bg-white border border-gray-200 text-gray-700 rounded-full px-2.5 py-0.5 font-medium">
-                            {r}
-                          </span>
-                        ))}
+                  {(() => {
+                    const routes = lang === 'en'
+                      ? (aiQuickResult.routeEn ?? aiQuickResult.route)
+                      : aiQuickResult.route
+                    return routes && routes.length > 0 ? (
+                      <div>
+                        <p className="text-[10px] text-gray-400 font-semibold mb-1">{t('record.ai.routeLabel')}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {routes.map((r, i) => (
+                            <span key={i} className="text-xs bg-white border border-gray-200 text-gray-700 rounded-full px-2.5 py-0.5 font-medium">
+                              {r}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ) : null
+                  })()}
 
                   {/* 磁石反応 */}
                   {aiQuickResult.magnet && aiQuickResult.magnet !== '不明' && (
@@ -619,10 +634,12 @@ export default function RecordPage() {
                   )}
 
                   {/* 推奨対応 */}
-                  {aiQuickResult.action && (
+                  {(lang === 'en' ? (aiQuickResult.actionEn ?? aiQuickResult.action) : aiQuickResult.action) && (
                     <div className="bg-white/70 rounded-xl px-3 py-2">
                       <p className="text-[10px] text-gray-400 font-semibold mb-0.5">{t('record.ai.actionLabel')}</p>
-                      <p className="text-xs text-gray-700 font-medium">{aiQuickResult.action}</p>
+                      <p className="text-xs text-gray-700 font-medium">
+                        {lang === 'en' ? (aiQuickResult.actionEn ?? aiQuickResult.action) : aiQuickResult.action}
+                      </p>
                     </div>
                   )}
 
@@ -712,8 +729,8 @@ export default function RecordPage() {
             </div>
             <div>
               <label className="label">{t('record.comment')}</label>
-              <textarea value={comment} onChange={(e) => setComment(e.target.value)}
-                rows={3} className="input-field resize-none"
+              <AutoResizeTextarea value={comment} onChange={(e) => setComment(e.target.value)}
+                className="input-field"
                 placeholder="異物の発見状況、大きさ、特記事項など" />
             </div>
             {/* AI draft */}
@@ -756,14 +773,14 @@ export default function RecordPage() {
             </div>
             <div>
               <label className="label">{t('record.corrective')}</label>
-              <textarea value={correctiveAction} onChange={(e) => setCorrectiveAction(e.target.value)}
-                rows={3} className="input-field resize-none"
+              <AutoResizeTextarea value={correctiveAction} onChange={(e) => setCorrectiveAction(e.target.value)}
+                className="input-field"
                 placeholder="実施した即時対応（例: 当該ライン停止・全数点検）" />
             </div>
             <div>
               <label className="label">{t('record.preventive')}</label>
-              <textarea value={preventiveMeasure} onChange={(e) => setPreventiveMeasure(e.target.value)}
-                rows={3} className="input-field resize-none" placeholder="計画する再発防止措置" />
+              <AutoResizeTextarea value={preventiveMeasure} onChange={(e) => setPreventiveMeasure(e.target.value)}
+                className="input-field" placeholder="計画する再発防止措置" />
             </div>
           </div>
         )}

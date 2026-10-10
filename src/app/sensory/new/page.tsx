@@ -16,6 +16,7 @@ import type {
 } from '@/lib/types'
 import Navigation from '@/components/Navigation'
 import DateInput from '@/components/DateInput'
+import AutoResizeTextarea from '@/components/AutoResizeTextarea'
 import toast from 'react-hot-toast'
 
 const STEPS = ['製品情報', '五感評価', '判定']
@@ -463,8 +464,8 @@ export default function SensoryNewPage() {
             {/* コメント */}
             <div className="card p-5">
               <p className="text-xs font-bold text-gray-500 mb-2">📝 総合コメント・特記事項</p>
-              <textarea value={comment} onChange={(e) => setComment(e.target.value)}
-                rows={3} className="input-field resize-none"
+              <AutoResizeTextarea value={comment} onChange={(e) => setComment(e.target.value)}
+                className="input-field"
                 placeholder="気になった点、基準との差異、追加観察事項などを記入..." />
             </div>
 

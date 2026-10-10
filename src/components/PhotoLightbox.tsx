@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useLang } from '@/context/LanguageContext'
 
 interface Props {
   src: string
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function PhotoLightbox({ src, alt, onClose }: Props) {
+  const { t } = useLang()
   const [scale, setScale] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
@@ -136,14 +138,14 @@ export default function PhotoLightbox({ src, alt, onClose }: Props) {
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full text-white text-xs"
           style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}
         >
-          元に戻す
+          {t('lightbox.resetZoom')}
         </button>
       )}
 
       {scale <= 1 && (
         <span className="absolute bottom-8 left-0 right-0 text-center text-[11px] pointer-events-none"
           style={{ color: 'rgba(255,255,255,0.35)' }}>
-          ピンチで拡大　ダブルタップで3倍
+          {t('lightbox.hint')}
         </span>
       )}
 

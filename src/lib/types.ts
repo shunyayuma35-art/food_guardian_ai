@@ -155,6 +155,13 @@ export interface EstimationResult {
   basis: string[]
   urgency: 'high' | 'medium' | 'low'
   source?: string
+  // AI Vision bilingual fields (optional — present only for ai_vision source)
+  name?: string
+  nameEn?: string
+  route?: string[]
+  routeEn?: string[]
+  action?: string
+  actionEn?: string
 }
 
 export type IncidentStatus = 'open' | 'investigating' | 'closed'

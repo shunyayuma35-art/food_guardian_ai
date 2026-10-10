@@ -173,6 +173,42 @@ export type TranslationKey =
   | 'list.guide.step2.title' | 'list.guide.step2.desc'
   | 'list.guide.step3.title' | 'list.guide.step3.desc'
   | 'list.guide.tip1'
+  // detail page (record/[id])
+  | 'detail.corrective' | 'detail.preventive'
+  | 'detail.actionsCard' | 'detail.aiDraftReplace' | 'detail.aiDraftAppend' | 'detail.aiCreating'
+  | 'detail.correctiveLabel' | 'detail.preventiveLabel'
+  | 'detail.editorName' | 'detail.lastUpdated' | 'detail.saveActions'
+  | 'detail.pdcaCard' | 'detail.pdcaDeadline' | 'detail.pdcaNotes' | 'detail.savePdca'
+  | 'detail.causeCard' | 'detail.verified' | 'detail.analyzing'
+  | 'detail.generateCause' | 'detail.causeDisclaimer'
+  | 'detail.causeLabel' | 'detail.correctiveLabel2' | 'detail.preventiveLabel2' | 'detail.verifyLabel'
+  | 'detail.aiRevert' | 'detail.verifierName' | 'detail.regenerate' | 'detail.saveVerified'
+  | 'detail.reportCard' | 'detail.generateReport' | 'detail.generatingReport'
+  | 'detail.reportSaved' | 'detail.reportFailed' | 'detail.wordSaved' | 'detail.wordFailed' | 'detail.csvSaved'
+  | 'detail.createdAt' | 'detail.updatedAt' | 'detail.deleteBtn'
+  // actions page
+  | 'actions.title' | 'actions.filter' | 'actions.allStatus' | 'actions.allCategories'
+  | 'actions.noRecords' | 'actions.sameType' | 'actions.corrective' | 'actions.preventive'
+  | 'actions.noCorrectiveInput' | 'actions.noPreventiveInput'
+  // lightbox
+  | 'lightbox.resetZoom' | 'lightbox.hint'
+  // forensic enhancer
+  | 'forensic.open' | 'forensic.header' | 'forensic.processing' | 'forensic.scanning'
+  | 'forensic.remaining' | 'forensic.confidence' | 'forensic.urgency'
+  | 'forensic.routes' | 'forensic.action' | 'forensic.disclaimer'
+  | 'forensic.hintPlaceholder' | 'forensic.nextLayer' | 'forensic.analyzing' | 'forensic.reanalyze'
+  // pdca status labels
+  | 'pdca.planned' | 'pdca.doing' | 'pdca.checking' | 'pdca.done'
+  // urgency labels
+  | 'urgency.high' | 'urgency.medium' | 'urgency.low'
+  // forensic layer names/descs
+  | 'forensic.layer1' | 'forensic.layer2' | 'forensic.layer3' | 'forensic.layer4' | 'forensic.layer5'
+  | 'forensic.layer1.desc' | 'forensic.layer2.desc' | 'forensic.layer3.desc' | 'forensic.layer4.desc' | 'forensic.layer5.desc'
+  // detail page – AI estimation card (bilingual)
+  | 'detail.aiEstTitle' | 'detail.aiEstDisclaimer'
+  | 'detail.aiNameLabel' | 'detail.aiRouteLabel' | 'detail.aiActionLabel'
+  | 'detail.regenEn' | 'detail.regenEnLoading'
+  | 'toast.regenEnDone' | 'toast.regenEnFailed'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -444,6 +480,105 @@ const ja: Dict = {
   'record.aiDraft.replace': '置き換える',
   'record.aiDraft.append': '追記する',
   'record.aiDraft.overwriteMsg': '入力済みの内容があります。どうしますか？',
+  // detail page
+  'detail.corrective': '是正処置',
+  'detail.preventive': '再発防止策',
+  'detail.actionsCard': '🔧 是正処置・再発防止策',
+  'detail.aiDraftReplace': '🤖 AIで下書き（置き換え）',
+  'detail.aiDraftAppend': '🤖 AI下書き（追記）',
+  'detail.aiCreating': '作成中...',
+  'detail.correctiveLabel': '🔧 是正処置（今回の対処）',
+  'detail.preventiveLabel': '🛡️ 再発防止策',
+  'detail.editorName': '編集者名',
+  'detail.lastUpdated': '最終更新:',
+  'detail.saveActions': '💾 是正・再発防止を保存',
+  'detail.pdcaCard': '🔄 是正処置 PDCA 進捗',
+  'detail.pdcaDeadline': '期限日',
+  'detail.pdcaNotes': 'PDCA メモ（進捗・担当者・次のアクション）',
+  'detail.savePdca': '💾 PDCA状況を保存',
+  'detail.causeCard': '🧠 AI根本原因・是正処置',
+  'detail.verified': '確認済',
+  'detail.analyzing': 'AI分析中...',
+  'detail.generateCause': '🧠 AIで原因・是正を作成',
+  'detail.causeDisclaimer': '⚠️ AIによる仮説です。現場確認のうえ編集してください。',
+  'detail.causeLabel': '📋 推定原因（4M分析）',
+  'detail.correctiveLabel2': '🔧 是正処置（今回の対処）',
+  'detail.preventiveLabel2': '🛡️ 予防処置（再発防止）',
+  'detail.verifyLabel': '🔍 確認すべき事項',
+  'detail.aiRevert': '↩ AI原文に戻す',
+  'detail.verifierName': '確認者名',
+  'detail.regenerate': '🔄 再生成',
+  'detail.saveVerified': '✅ 確認済みとして保存',
+  'detail.reportCard': '📄 AI報告書・データエクスポート',
+  'detail.generateReport': 'AI クレーム報告書を自動生成・保存',
+  'detail.generatingReport': 'AI報告書を生成中...',
+  'detail.reportSaved': 'AI報告書を生成しました 📄',
+  'detail.reportFailed': '生成に失敗しました',
+  'detail.wordSaved': 'Word文書をダウンロードしました 📘',
+  'detail.wordFailed': 'Word生成に失敗しました',
+  'detail.csvSaved': 'Excelデータをダウンロードしました 📗',
+  'detail.createdAt': '登録:',
+  'detail.updatedAt': '更新:',
+  'detail.deleteBtn': '🗑️ この記録を削除',
+  // actions page
+  'actions.title': '🔄 是正・再発防止 振り返り',
+  'actions.filter': '絞り込み',
+  'actions.allStatus': 'すべて',
+  'actions.allCategories': 'すべての異物種別',
+  'actions.noRecords': '該当する記録がありません',
+  'actions.sameType': '⚠️ 同種 {n}件',
+  'actions.corrective': '是正: ',
+  'actions.preventive': '再発防止: ',
+  'actions.noCorrectiveInput': '是正処置: 未入力',
+  'actions.noPreventiveInput': '再発防止策: 未入力',
+  // lightbox
+  'lightbox.resetZoom': '元に戻す',
+  'lightbox.hint': 'ピンチで拡大　ダブルタップで3倍',
+  // forensic enhancer
+  'forensic.open': '🔬 鑑識レイヤー解析を開く（AI精度向上）',
+  'forensic.header': '鑑識レイヤー解析',
+  'forensic.processing': '処理中...',
+  'forensic.scanning': '🔬 AI解析中...',
+  'forensic.remaining': '残り{n}回',
+  'forensic.confidence': '信頼度：',
+  'forensic.urgency': '緊急度',
+  'forensic.routes': '推定混入経路',
+  'forensic.action': '推奨対応',
+  'forensic.disclaimer': '⚠️ 確定診断には外部専門機関の鑑定が必要です',
+  'forensic.hintPlaceholder': '💡 異物の心当たり（任意）例：赤いパレット片',
+  'forensic.nextLayer': '次のレイヤー ▶',
+  'forensic.analyzing': '🔬 解析中...',
+  'forensic.reanalyze': '🤖 AI再解析',
+  // pdca status labels
+  'pdca.planned': '📋 計画中',
+  'pdca.doing': '🔧 実施中',
+  'pdca.checking': '🔍 確認中',
+  'pdca.done': '✅ 完了',
+  // urgency labels
+  'urgency.high': '🔴 高',
+  'urgency.medium': '🟡 中',
+  'urgency.low': '🟢 低',
+  // forensic layer names/descs
+  'forensic.layer1': '元画像',
+  'forensic.layer2': 'ノイズ除去',
+  'forensic.layer3': 'コントラスト強調',
+  'forensic.layer4': 'エッジ検出',
+  'forensic.layer5': '異物ハイライト',
+  'forensic.layer1.desc': 'オリジナル',
+  'forensic.layer2.desc': 'ガウシアンフィルタ',
+  'forensic.layer3.desc': 'ヒストグラム平坦化',
+  'forensic.layer4.desc': 'Sobelフィルタ（サイアン）',
+  'forensic.layer5.desc': '赤色オーバーレイ',
+  // detail – AI estimation bilingual
+  'detail.aiEstTitle': '🤖 AI 異物推定（一次判定）',
+  'detail.aiEstDisclaimer': '⚠️ ルールベース推定支援。確定には外部分析機関の鑑定が必要です。',
+  'detail.aiNameLabel': '異物名',
+  'detail.aiRouteLabel': '混入経路',
+  'detail.aiActionLabel': '推奨対応',
+  'detail.regenEn': '🔄 英語で再生成',
+  'detail.regenEnLoading': '🔄 生成中...',
+  'toast.regenEnDone': '英語の解析結果を保存しました',
+  'toast.regenEnFailed': '英語の再生成に失敗しました',
 }
 
 const en: Dict = {
@@ -714,6 +849,105 @@ const en: Dict = {
   'record.aiDraft.replace': 'Replace',
   'record.aiDraft.append': 'Append',
   'record.aiDraft.overwriteMsg': 'Fields already have content. What would you like to do?',
+  // detail page
+  'detail.corrective': 'Corrective Action',
+  'detail.preventive': 'Preventive Measure',
+  'detail.actionsCard': '🔧 Corrective & Preventive Actions',
+  'detail.aiDraftReplace': '🤖 AI Draft (Replace)',
+  'detail.aiDraftAppend': '🤖 AI Draft (Append)',
+  'detail.aiCreating': 'Creating...',
+  'detail.correctiveLabel': '🔧 Corrective Action',
+  'detail.preventiveLabel': '🛡️ Preventive Measure',
+  'detail.editorName': 'Updated by',
+  'detail.lastUpdated': 'Last updated:',
+  'detail.saveActions': '💾 Save Corrective Actions',
+  'detail.pdcaCard': '🔄 Corrective Action PDCA',
+  'detail.pdcaDeadline': 'Due Date',
+  'detail.pdcaNotes': 'PDCA Notes (progress / owner / next action)',
+  'detail.savePdca': '💾 Save PDCA Status',
+  'detail.causeCard': '🧠 AI Root Cause Analysis',
+  'detail.verified': 'Verified',
+  'detail.analyzing': 'Analyzing...',
+  'detail.generateCause': '🧠 Generate AI Root Cause',
+  'detail.causeDisclaimer': '⚠️ AI hypothesis — please verify on-site before applying.',
+  'detail.causeLabel': '📋 Estimated Cause (4M Analysis)',
+  'detail.correctiveLabel2': '🔧 Corrective Action',
+  'detail.preventiveLabel2': '🛡️ Preventive Measure',
+  'detail.verifyLabel': '🔍 Items to Verify',
+  'detail.aiRevert': '↩ Revert to AI original',
+  'detail.verifierName': 'Verified by',
+  'detail.regenerate': '🔄 Regenerate',
+  'detail.saveVerified': '✅ Save as Verified',
+  'detail.reportCard': '📄 AI Report & Export',
+  'detail.generateReport': 'Auto-Generate Incident Report',
+  'detail.generatingReport': 'Generating AI report...',
+  'detail.reportSaved': 'AI report generated 📄',
+  'detail.reportFailed': 'Failed to generate report',
+  'detail.wordSaved': 'Word document downloaded 📘',
+  'detail.wordFailed': 'Failed to generate Word document',
+  'detail.csvSaved': 'Excel data downloaded 📗',
+  'detail.createdAt': 'Created:',
+  'detail.updatedAt': 'Updated:',
+  'detail.deleteBtn': '🗑️ Delete this record',
+  // actions page
+  'actions.title': '🔄 Corrective Action Review',
+  'actions.filter': 'Filter',
+  'actions.allStatus': 'All',
+  'actions.allCategories': 'All categories',
+  'actions.noRecords': 'No records found',
+  'actions.sameType': '⚠️ Same type: {n}',
+  'actions.corrective': 'Corr: ',
+  'actions.preventive': 'Prev: ',
+  'actions.noCorrectiveInput': 'No corrective action',
+  'actions.noPreventiveInput': 'No preventive measure',
+  // lightbox
+  'lightbox.resetZoom': 'Reset zoom',
+  'lightbox.hint': 'Pinch to zoom • Double-tap for 3×',
+  // forensic enhancer
+  'forensic.open': '🔬 Open Forensic Layer Analysis (AI Enhanced)',
+  'forensic.header': 'Forensic Layer Analysis',
+  'forensic.processing': 'Processing...',
+  'forensic.scanning': '🔬 AI Analyzing...',
+  'forensic.remaining': '{n} uses left',
+  'forensic.confidence': 'Confidence: ',
+  'forensic.urgency': 'Urgency',
+  'forensic.routes': 'Estimated Entry Route',
+  'forensic.action': 'Recommended Action',
+  'forensic.disclaimer': '⚠️ Final diagnosis requires external laboratory examination.',
+  'forensic.hintPlaceholder': '💡 Suspected cause (optional) e.g. Red pallet fragment',
+  'forensic.nextLayer': 'Next Layer ▶',
+  'forensic.analyzing': '🔬 Analyzing...',
+  'forensic.reanalyze': '🤖 Re-analyze',
+  // pdca status labels
+  'pdca.planned': '📋 Planned',
+  'pdca.doing': '🔧 In Progress',
+  'pdca.checking': '🔍 Reviewing',
+  'pdca.done': '✅ Done',
+  // urgency labels
+  'urgency.high': '🔴 High',
+  'urgency.medium': '🟡 Medium',
+  'urgency.low': '🟢 Low',
+  // forensic layer names/descs
+  'forensic.layer1': 'Original',
+  'forensic.layer2': 'Denoised',
+  'forensic.layer3': 'Contrast Enhanced',
+  'forensic.layer4': 'Edge Detection',
+  'forensic.layer5': 'Matter Highlighted',
+  'forensic.layer1.desc': 'Original image',
+  'forensic.layer2.desc': 'Gaussian filter',
+  'forensic.layer3.desc': 'Histogram equalization',
+  'forensic.layer4.desc': 'Sobel filter (cyan)',
+  'forensic.layer5.desc': 'Red overlay',
+  // detail – AI estimation bilingual
+  'detail.aiEstTitle': '🤖 AI Foreign Matter Estimation',
+  'detail.aiEstDisclaimer': '⚠️ Rule-based estimation support. External specialist assessment required for definitive identification.',
+  'detail.aiNameLabel': 'Foreign Matter',
+  'detail.aiRouteLabel': 'Entry Route',
+  'detail.aiActionLabel': 'Recommended Action',
+  'detail.regenEn': '🔄 Regenerate in English',
+  'detail.regenEnLoading': '🔄 Generating...',
+  'toast.regenEnDone': 'English analysis saved',
+  'toast.regenEnFailed': 'Failed to regenerate English',
 }
 
 const zh: Dict = {

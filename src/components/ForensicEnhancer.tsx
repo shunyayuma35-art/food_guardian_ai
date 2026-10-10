@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { compressDataUrl } from '@/lib/compressImage'
 import PhotoLightbox from './PhotoLightbox'
+import { useLang } from '@/context/LanguageContext'
 
 interface Props {
   file?: File | null
@@ -146,13 +147,8 @@ function overlayEdges(orig: Uint8ClampedArray, mag: Float32Array, w: number, h: 
 
 // ── Layer definitions ─────────────────────────────────────────────────────────
 
-const LAYERS = [
-  { title: 'LAYER 1', label: '元画像',          icon: '📷', color: '#9ca3af', desc: 'オリジナル' },
-  { title: 'LAYER 2', label: 'ノイズ除去',       icon: '🌊', color: '#60a5fa', desc: 'ガウシアンフィルタ' },
-  { title: 'LAYER 3', label: 'コントラスト強調', icon: '☀️', color: '#fbbf24', desc: 'ヒストグラム平坦化' },
-  { title: 'LAYER 4', label: 'エッジ検出',       icon: '🔍', color: '#34d399', desc: 'Sobelフィルタ（サイアン）' },
-  { title: 'LAYER 5', label: '異物ハイライト',   icon: '🔴', color: '#f87171', desc: '赤色オーバーレイ' },
-]
+const LAYER_ICONS = ['📷', '🌊', '☀️', '🔍', '🔴']
+const LAYER_COLORS = ['#9ca3af', '#60a5fa', '#fbbf24', '#34d399', '#f87171']
 
 function playBeep() {
   try {
@@ -172,6 +168,16 @@ function playBeep() {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ForensicEnhancer({ file, dataUrl }: Props) {
+  const { t } = useLang()
+
+  const LAYERS = [
+    { title: 'LAYER 1', label: t('forensic.layer1'), icon: LAYER_ICONS[0], color: LAYER_COLORS[0], desc: t('forensic.layer1.desc') },
+    { title: 'LAYER 2', label: t('forensic.layer2'), icon: LAYER_ICONS[1], color: LAYER_COLORS[1], desc: t('forensic.layer2.desc') },
+    { title: 'LAYER 3', label: t('forensic.layer3'), icon: LAYER_ICONS[2], color: LAYER_COLORS[2], desc: t('forensic.layer3.desc') },
+    { title: 'LAYER 4', label: t('forensic.layer4'), icon: LAYER_ICONS[3], color: LAYER_COLORS[3], desc: t('forensic.layer4.desc') },
+    { title: 'LAYER 5', label: t('forensic.layer5'), icon: LAYER_ICONS[4], color: LAYER_COLORS[4], desc: t('forensic.layer5.desc') },
+  ]
+
   const [srcUrl, setSrcUrl]       = useState<string | null>(null)
   const [layerUrls, setLayerUrls] = useState<string[]>([])
   const [aiReadyUrl, setAiReadyUrl] = useState<string | null>(null)
@@ -331,7 +337,7 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
     return (
       <button type="button" onClick={() => setOpen(true)}
         className="w-full py-2 text-xs font-semibold text-purple-700 border border-purple-200 bg-purple-50 rounded-xl hover:bg-purple-100 active:scale-95 transition-all">
-        🔬 鑑識レイヤー解析を開く（ハッカソン版 AI精度向上）
+        {t('forensic.open')}
       </button>
     )
   }
@@ -341,9 +347,9 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
   const imgSrc = layerUrls[layerIdx] ?? srcUrl
 
   const urgencyStyle = {
-    high:   { glow: '#ef4444', badge: 'bg-red-600',   label: '🔴 高' },
-    medium: { glow: '#f59e0b', badge: 'bg-amber-600', label: '🟡 中' },
-    low:    { glow: '#22c55e', badge: 'bg-green-600', label: '🟢 低' },
+    high:   { glow: '#ef4444', badge: 'bg-red-600',   label: t('urgency.high') },
+    medium: { glow: '#f59e0b', badge: 'bg-amber-600', label: t('urgency.medium') },
+    low:    { glow: '#22c55e', badge: 'bg-green-600', label: t('urgency.low') },
   }
   const ust = aiResult ? (urgencyStyle[aiResult.urgency] ?? urgencyStyle.low) : null
 
@@ -372,7 +378,7 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
         className="flex items-center justify-between px-4 py-2.5">
         <div className="flex items-center gap-2">
           <span className="text-purple-400 text-sm">🔬</span>
-          <span className="text-xs font-bold text-gray-200">鑑識レイヤー解析</span>
+          <span className="text-xs font-bold text-gray-200">{t('forensic.header')}</span>
           <span className="text-[9px] px-1.5 py-0.5 rounded font-mono"
             style={{ background: '#1e1b4b', color: '#a78bfa' }}>FORENSIC MODE</span>
         </div>
@@ -392,13 +398,13 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
       {computing && (
         <div style={{ background: '#0d0d12', borderBottom: '1px solid #1e1e28' }}
           className="flex items-center gap-2 px-3 py-1.5">
-          <span className="text-[9px] font-mono animate-pulse" style={{ color: '#6b7280' }}>処理中...</span>
+          <span className="text-[9px] font-mono animate-pulse" style={{ color: '#6b7280' }}>{t('forensic.processing')}</span>
         </div>
       )}
       {analyzing && (
         <div style={{ background: '#120808', borderBottom: '1px solid #3f1010' }}
           className="flex items-center gap-2 px-3 py-1.5">
-          <span className="text-[9px] font-mono animate-pulse" style={{ color: '#ef4444' }}>🔬 AI解析中...</span>
+          <span className="text-[9px] font-mono animate-pulse" style={{ color: '#ef4444' }}>{t('forensic.scanning')}</span>
         </div>
       )}
 
@@ -473,7 +479,7 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
             </span>
             <div className="flex items-center gap-2">
               {remaining != null && (
-                <span className="text-[9px]" style={{ color: '#6b7280' }}>残り{remaining}回</span>
+                <span className="text-[9px]" style={{ color: '#6b7280' }}>{t('forensic.remaining').replace('{n}', String(remaining))}</span>
               )}
               <button type="button" onClick={() => setShowResult(false)}
                 className="text-[10px]" style={{ color: '#4b5563' }}>✕</button>
@@ -493,11 +499,11 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
               )}
               {aiResult.confidence && (
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${ust.badge}`}>
-                  信頼度：{aiResult.confidence}
+                  {t('forensic.confidence')}{aiResult.confidence}
                 </span>
               )}
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${ust.badge}`}>
-                緊急度 {ust.label}
+                {t('forensic.urgency')} {ust.label}
               </span>
             </div>
           </div>
@@ -523,7 +529,7 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
           {/* Routes */}
           {aiResult.route && aiResult.route.length > 0 && (
             <div>
-              <p className="text-[9px] font-mono mb-1.5" style={{ color: '#6b7280' }}>推定混入経路</p>
+              <p className="text-[9px] font-mono mb-1.5" style={{ color: '#6b7280' }}>{t('forensic.routes')}</p>
               <div className="flex flex-wrap gap-1">
                 {aiResult.route.map((r, i) => (
                   <span key={i} className="text-[10px] rounded px-2 py-0.5"
@@ -538,13 +544,13 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
           {/* Action */}
           {aiResult.action && (
             <div className="rounded-xl px-3 py-2.5" style={{ background: '#1a1a2e', border: `1px solid ${ust.glow}30` }}>
-              <p className="text-[9px] font-mono mb-1" style={{ color: '#6b7280' }}>推奨対応</p>
+              <p className="text-[9px] font-mono mb-1" style={{ color: '#6b7280' }}>{t('forensic.action')}</p>
               <p className="text-xs font-medium" style={{ color: '#e2e8f0' }}>{aiResult.action}</p>
             </div>
           )}
 
           <p className="text-[9px] text-center" style={{ color: '#4b5563' }}>
-            ⚠️ 確定診断には外部専門機関の鑑定が必要です
+            {t('forensic.disclaimer')}
           </p>
         </div>
       )}
@@ -557,7 +563,7 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
             type="text"
             value={userHint}
             onChange={e => setUserHint(e.target.value)}
-            placeholder="💡 異物の心当たり（任意）例：赤いパレット片"
+            placeholder={t('forensic.hintPlaceholder')}
             className="w-full px-3 py-2 rounded-xl focus:outline-none"
             style={{ background: '#1c1c24', border: '1px solid #2d2d35', color: '#d1d5db', fontSize: '16px' }}
           />
@@ -575,7 +581,7 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
               <button type="button" onClick={advance} disabled={fading || computing}
                 className="flex-1 py-2.5 text-xs font-bold rounded-xl transition-all active:scale-95"
                 style={{ background: '#4c1d95', color: '#fff' }}>
-                次のレイヤー ▶　{LAYERS[layerIdx + 1]?.icon} {LAYERS[layerIdx + 1]?.label}
+                {t('forensic.nextLayer')}　{LAYERS[layerIdx + 1]?.icon} {LAYERS[layerIdx + 1]?.label}
               </button>
             ) : (
               <button type="button" onClick={runAI} disabled={analyzing}
@@ -585,7 +591,7 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
                   color: '#fff',
                   animation: !analyzing ? 'fe-pulse-ring 2s infinite' : 'none',
                 }}>
-                {analyzing ? '🔬 解析中...' : '🤖 AI再解析'}
+                {analyzing ? t('forensic.analyzing') : t('forensic.reanalyze')}
               </button>
             )}
           </div>

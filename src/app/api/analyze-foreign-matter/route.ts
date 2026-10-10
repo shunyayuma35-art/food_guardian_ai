@@ -87,55 +87,33 @@ export async function POST(req: NextRequest) {
     const langInst = buildLangInstruction(lang as string | undefined)
 
     const systemPrompt = structured
-      ? isEn
-        ? `You are a food safety specialist. Analyze the image and return ONLY the following JSON (no explanation or preamble).
+      ? `食品工場の異物特定専門家として画像を分析し、以下のJSONのみを返してください（説明文・前置き一切不要）。
 
 ${FOREIGN_MATTER_DB}
 
-Using the database above, respond ONLY in this JSON format:
+上記データベースを参照し、以下のJSON形式のみで回答してください。日本語と英語の両方を必ず返すこと：
 
 {
-  "name": "Foreign matter name (e.g.: housefly, stainless steel fragment, blue plastic piece)",
-  "category": "insects|metal|plastic|plant-derived|fiber|other",
-  "confidence": "High|Medium|Low",
-  "urgency": "high|medium|low",
-  "size_estimate": "Estimated size (e.g.: approx. 5mm, about 1cm)",
-  "color": ["color feature 1", "color feature 2"],
-  "shape": ["shape feature 1"],
-  "surface": ["surface feature"],
-  "touch": ["texture/feel"],
-  "magnet": "Likely magnetic (visual estimate — requires actual measurement)|Likely non-magnetic (visual estimate — requires actual measurement)|Unknown",
-  "route": ["estimated contamination route 1", "route 2"],
-  "action": "Recommended action (concise, one sentence)",
-  "colorKeys": ["black|brown|white|gray|red|blue|green|yellow|orange|silver|metalColor|transparent as applicable"],
-  "textureKeys": ["hard|soft|elastic|sharp|smooth|rough|brittle|sticky as applicable"],
-  "appearanceKeys": ["glossy|matte|fibrous|metallic|rubbery|granular|flatPlate|wireShape as applicable"],
-  "sizeKey": "tiny|medium|large|finePowder|longFiber|thinFilm|thickPiece (most fitting one)"
-}${langInst}`
-        : `食品工場の異物特定専門家として画像を分析し、以下のJSONのみを返してください（説明文・前置き一切不要）。
-
-${FOREIGN_MATTER_DB}
-
-上記データベースを参照し、以下のJSON形式のみで回答してください：
-
-{
-  "name": "異物名（例：イエバエ、ステンレス片、青いプラスチック）",
+  "name": "異物名（日本語）（例：イエバエ、ステンレス片、青いプラスチック）",
+  "nameEn": "Foreign matter name in English (e.g.: housefly, stainless steel fragment, blue plastic piece)",
   "category": "虫類|金属類|プラスチック類|植物由来|繊維類|その他",
   "confidence": "高|中|低",
   "urgency": "high|medium|low",
   "size_estimate": "推定サイズ（例：約5mm、1cm程度）",
-  "color": ["色特徴1", "色特徴2"],
-  "shape": ["形状特徴1"],
-  "surface": ["表面特徴"],
-  "touch": ["触感"],
+  "color": ["色特徴1（日本語）"],
+  "shape": ["形状特徴1（日本語）"],
+  "surface": ["表面特徴（日本語）"],
+  "touch": ["触感（日本語）"],
   "magnet": "磁石につく可能性が高い（目視推測・要実測確認）|磁石につかない可能性が高い（目視推測・要実測確認）|不明",
-  "route": ["推定経路1", "推定経路2"],
-  "action": "推奨対応（1文で簡潔に）",
+  "route": ["推定経路1（日本語）", "推定経路2（日本語）"],
+  "routeEn": ["Estimated contamination route 1 (English)", "route 2 (English)"],
+  "action": "推奨対応（日本語、1文で簡潔に）",
+  "actionEn": "Recommended action in English (concise, one sentence)",
   "colorKeys": ["black|brown|white|gray|red|blue|green|yellow|orange|silver|metalColor|transparent のうち該当するもの"],
   "textureKeys": ["hard|soft|elastic|sharp|smooth|rough|brittle|sticky のうち該当するもの"],
   "appearanceKeys": ["glossy|matte|fibrous|metallic|rubbery|granular|flatPlate|wireShape のうち該当するもの"],
   "sizeKey": "tiny|medium|large|finePowder|longFiber|thinFilm|thickPiece のうち最も適切な1つ"
-}${langInst}`
+}`
       : isEn
         ? `You are a food safety specialist. Analyze the image.
 
@@ -193,9 +171,7 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
 [SIZE]...[/SIZE]${langInst}`
 
     const userText = structured
-      ? isEn
-        ? `Analyze this foreign matter and respond in JSON format only.${userHint ? ` User info: ${userHint}` : ''}`
-        : `この異物を分析してJSON形式で回答してください。${userHint ? `ユーザー提供情報：${userHint}` : ''}`
+      ? `この異物を分析してJSON形式で回答してください。nameとnameEn・routeとrouteEn・actionとactionEnを必ず両方含めること。${userHint ? `ユーザー提供情報：${userHint}` : ''}`
       : isEn
         ? `Identify the foreign matter. Must include type, material, contamination route, and urgency.${userHint ? `\n\nUser info: ${userHint}` : ''}`
         : `異物を特定してください。種類・材質・経路・緊急度を必ず含めてください。${userHint ? `\n\nユーザー提供情報：${userHint}` : ''}`

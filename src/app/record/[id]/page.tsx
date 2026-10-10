@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import { getIncident, updateIncident, deleteIncident, createReport } from '@/lib/firestore'
 import {
   DISCOVERY_PROCESS_LABELS, INCIDENT_STATUS_LABELS, CLAIM_ROUTE_LABELS, OCCURRENCE_TYPE_LABELS,
@@ -13,15 +14,17 @@ import { generateIncidentCode, formatDate, formatDateTime } from '@/lib/utils'
 import { generateIncidentReport, incidentToCSV } from '@/lib/report-generator'
 import { generateIncidentDocx } from '@/lib/docx-generator'
 import Navigation from '@/components/Navigation'
+import AutoResizeTextarea from '@/components/AutoResizeTextarea'
 import toast from 'react-hot-toast'
 import type { Incident } from '@/lib/types'
 
-const URGENCY_LABEL = { high: '緊急', medium: '注意', low: '軽微' }
 const URGENCY_CLASS = { high: 'badge-high', medium: 'badge-medium', low: 'badge-low' }
 const URGENCY_BAR = { high: 'bg-red-400', medium: 'bg-orange-400', low: 'bg-yellow-400' }
 
 export default function IncidentDetailPage() {
   const { user, loading } = useAuth()
+  const { t, lang } = useLang()
+  const isEn = lang === 'en'
   const router = useRouter()
   const params = useParams<{ id: string }>()
   const id = params.id
@@ -56,6 +59,7 @@ export default function IncidentDetailPage() {
   const [savingActions, setSavingActions] = useState(false)
   const [actionsUpdatedAt, setActionsUpdatedAt] = useState('')
   const [draftLoading, setDraftLoading] = useState(false)
+  const [regenEnLoading, setRegenEnLoading] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
@@ -140,6 +144,51 @@ export default function IncidentDetailPage() {
       toast.error(msg)
     } finally {
       setDraftLoading(false)
+    }
+  }
+
+  async function handleRegenEn() {
+    if (!incident) return
+    const photoUrl = incident.photos?.[0]
+    if (!photoUrl) return
+    setRegenEnLoading(true)
+    try {
+      const imgRes = await fetch(photoUrl)
+      const blob = await imgRes.blob()
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve((reader.result as string).split(',')[1] ?? '')
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
+      const res = await fetch('/api/analyze-foreign-matter', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType: blob.type || 'image/jpeg', structured: true }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'regen failed')
+      const qr = data.quickResult
+      if (!qr) throw new Error('no result')
+      const updatedEsts = [...(incident.estimations ?? [])]
+      if (updatedEsts[0] && updatedEsts[0].source === 'ai_vision') {
+        updatedEsts[0] = {
+          ...updatedEsts[0],
+          name: qr.name ?? updatedEsts[0].name,
+          nameEn: qr.nameEn,
+          route: qr.route ?? updatedEsts[0].route,
+          routeEn: qr.routeEn,
+          action: qr.action ?? updatedEsts[0].action,
+          actionEn: qr.actionEn,
+        }
+      }
+      await updateIncident(incident.id, { estimations: updatedEsts })
+      setIncident(prev => prev ? { ...prev, estimations: updatedEsts } : prev)
+      toast.success(t('toast.regenEnDone'))
+    } catch {
+      toast.error(t('toast.regenEnFailed'))
+    } finally {
+      setRegenEnLoading(false)
     }
   }
 
@@ -385,7 +434,7 @@ export default function IncidentDetailPage() {
           </div>
           {topEst && (
             <div className={`px-4 py-2.5 rounded-xl text-sm font-bold badge-${topEst.urgency}`}>
-              ⚡ {URGENCY_LABEL[topEst.urgency]}度: {topEst.category}
+              ⚡ {t(`urgency.${topEst.urgency}` as Parameters<typeof t>[0])}: {topEst.category}
             </div>
           )}
         </div>
@@ -393,46 +442,78 @@ export default function IncidentDetailPage() {
         {/* AI推定結果 */}
         {incident.estimations && incident.estimations.length > 0 && (
           <div className="card p-4">
-            <p className="section-title">🤖 AI 異物推定（一次判定）</p>
+            <p className="section-title">{t('detail.aiEstTitle')}</p>
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 mb-4">
               <p className="text-yellow-700 text-xs font-medium">
-                ⚠️ ルールベース推定支援。確定には外部分析機関の鑑定が必要です。
+                {t('detail.aiEstDisclaimer')}
               </p>
             </div>
             <div className="space-y-4">
-              {incident.estimations.map((est, i) => (
-                <div key={i}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${URGENCY_CLASS[est.urgency]}`}>
-                        {URGENCY_LABEL[est.urgency]}
-                      </span>
-                      <span className={`font-bold ${i === 0 ? 'text-gray-800 text-base' : 'text-gray-600 text-sm'}`}>
-                        {est.category}
-                      </span>
-                    </div>
-                    <span className={`font-extrabold text-lg ${i === 0 ? 'text-orange-500' : 'text-gray-400'}`}>
-                      {est.probability}%
-                    </span>
-                  </div>
-                  <div className="bg-orange-50 rounded-full h-2.5 overflow-hidden mb-2">
-                    <div
-                      className={`h-full rounded-full transition-all ${URGENCY_BAR[est.urgency] ?? 'bg-orange-400'}`}
-                      style={{ width: `${est.probability}%` }}
-                    />
-                  </div>
-                  {est.basis.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {est.basis.map((b, j) => (
-                        <span key={j}
-                          className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full border border-orange-200 font-medium">
-                          {b}
+              {incident.estimations.map((est, i) => {
+                const displayName = isEn ? (est.nameEn ?? est.name ?? est.category) : (est.name ?? est.category)
+                const displayRoutes = isEn ? (est.routeEn ?? est.route) : est.route
+                const displayAction = isEn ? (est.actionEn ?? est.action) : est.action
+                const needsEnRegen = isEn && est.source === 'ai_vision' && !est.nameEn && incident.photos?.length
+                return (
+                  <div key={i}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${URGENCY_CLASS[est.urgency]}`}>
+                          {t(`urgency.${est.urgency}` as Parameters<typeof t>[0])}
                         </span>
-                      ))}
+                        <span className={`font-bold ${i === 0 ? 'text-gray-800 text-base' : 'text-gray-600 text-sm'}`}>
+                          {displayName}
+                        </span>
+                      </div>
+                      <span className={`font-extrabold text-lg ${i === 0 ? 'text-orange-500' : 'text-gray-400'}`}>
+                        {est.probability}%
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))}
+                    <div className="bg-orange-50 rounded-full h-2.5 overflow-hidden mb-2">
+                      <div
+                        className={`h-full rounded-full transition-all ${URGENCY_BAR[est.urgency] ?? 'bg-orange-400'}`}
+                        style={{ width: `${est.probability}%` }}
+                      />
+                    </div>
+                    {est.basis.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {est.basis.map((b, j) => (
+                          <span key={j}
+                            className="text-xs bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full border border-orange-200 font-medium">
+                            {b}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {displayRoutes && displayRoutes.length > 0 && (
+                      <div className="mt-1 mb-1">
+                        <p className="text-[11px] text-gray-500 font-semibold mb-0.5">{t('detail.aiRouteLabel')}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {displayRoutes.map((r, j) => (
+                            <span key={j} className="text-[11px] bg-gray-50 text-gray-600 px-2 py-0.5 rounded border border-gray-200">{r}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {displayAction && (
+                      <div className="mt-1">
+                        <p className="text-[11px] text-gray-500 font-semibold mb-0.5">{t('detail.aiActionLabel')}</p>
+                        <p className="text-xs text-gray-700">{displayAction}</p>
+                      </div>
+                    )}
+                    {needsEnRegen && i === 0 && (
+                      <button
+                        type="button"
+                        onClick={handleRegenEn}
+                        disabled={regenEnLoading}
+                        className="mt-2 text-xs font-bold px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all active:scale-95 disabled:opacity-50"
+                      >
+                        {regenEnLoading ? t('detail.regenEnLoading') : t('detail.regenEn')}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
@@ -577,13 +658,13 @@ export default function IncidentDetailPage() {
               )}
               {incident.correctiveAction && (
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-1">是正処置</p>
+                  <p className="text-xs text-gray-400 font-semibold mb-1">{t('detail.corrective')}</p>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{incident.correctiveAction}</p>
                 </div>
               )}
               {incident.preventiveMeasure && (
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-1">再発防止策</p>
+                  <p className="text-xs text-gray-400 font-semibold mb-1">{t('detail.preventive')}</p>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{incident.preventiveMeasure}</p>
                 </div>
               )}
@@ -594,7 +675,7 @@ export default function IncidentDetailPage() {
         {/* 是正処置・再発防止 直接編集 */}
         <div className="card p-4 no-print">
           <div className="flex items-center justify-between mb-3">
-            <p className="section-title mb-0">🔧 是正処置・再発防止策</p>
+            <p className="section-title mb-0">{t('detail.actionsCard')}</p>
             {actionsUpdatedAt && (
               <span className="text-[10px] text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 font-semibold">
                 ✅ {new Date(actionsUpdatedAt).toLocaleDateString('ja-JP')}
@@ -612,8 +693,8 @@ export default function IncidentDetailPage() {
               style={{ background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe' }}
             >
               {draftLoading
-                ? <><span className="w-3 h-3 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />作成中...</>
-                : <>🤖 AIで下書き（置き換え）</>}
+                ? <><span className="w-3 h-3 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />{t('detail.aiCreating')}</>
+                : <>{t('detail.aiDraftReplace')}</>}
             </button>
             <button
               type="button"
@@ -622,33 +703,31 @@ export default function IncidentDetailPage() {
               className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50"
               style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
             >
-              {draftLoading ? '...' : <>🤖 AI下書き（追記）</>}
+              {draftLoading ? '...' : <>{t('detail.aiDraftAppend')}</>}
             </button>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-bold text-gray-600 mb-1 block">🔧 是正処置（今回の対処）</label>
-              <textarea
+              <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.correctiveLabel')}</label>
+              <AutoResizeTextarea
                 value={editCorrective}
                 onChange={e => setEditCorrective(e.target.value)}
-                rows={4}
-                className="input-field resize-y text-sm"
+                className="input-field text-sm"
                 placeholder="例: 当該ロットを隔離・出荷保留、現物を保管し品質管理部に報告..."
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-600 mb-1 block">🛡️ 再発防止策</label>
-              <textarea
+              <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.preventiveLabel')}</label>
+              <AutoResizeTextarea
                 value={editPreventive}
                 onChange={e => setEditPreventive(e.target.value)}
-                rows={4}
-                className="input-field resize-y text-sm"
+                className="input-field text-sm"
                 placeholder="例: 洗浄手順の見直し・教育実施・定期点検の強化..."
               />
             </div>
             <div>
-              <label className="label">編集者名 <span className="text-red-400">*</span></label>
+              <label className="label">{t('detail.editorName')} <span className="text-red-400">*</span></label>
               <input
                 value={actionsEditor}
                 onChange={e => setActionsEditor(e.target.value)}
@@ -661,8 +740,8 @@ export default function IncidentDetailPage() {
 
           {incident.actionsUpdatedBy && (
             <p className="text-[10px] text-gray-400 mt-2">
-              最終更新: {incident.actionsUpdatedBy}
-              {incident.actionsUpdatedAt && ` （${new Date(incident.actionsUpdatedAt).toLocaleString('ja-JP')}）`}
+              {t('detail.lastUpdated')} {incident.actionsUpdatedBy}
+              {incident.actionsUpdatedAt && ` （${new Date(incident.actionsUpdatedAt).toLocaleString()}）`}
             </p>
           )}
 
@@ -671,49 +750,49 @@ export default function IncidentDetailPage() {
             disabled={savingActions || !actionsEditor.trim()}
             className="w-full mt-3 py-3 bg-orange-500 text-white font-bold text-sm rounded-2xl shadow-md shadow-orange-200 disabled:opacity-50 hover:bg-orange-600 transition-all active:scale-[0.98]"
           >
-            {savingActions ? '保存中...' : '💾 是正・再発防止を保存'}
+            {savingActions ? t('common.saving') : t('detail.saveActions')}
           </button>
         </div>
 
         {/* 是正処置 PDCA */}
         <div className="card p-4 no-print">
-          <p className="section-title">🔄 是正処置 PDCA 進捗</p>
+          <p className="section-title">{t('detail.pdcaCard')}</p>
           <div className="grid grid-cols-2 gap-2 mb-3">
             {(['planned', 'doing', 'checking', 'done'] as PdcaStatus[]).map((s) => (
               <button key={s} type="button" onClick={() => setPdcaStatus(s)}
                 className={`py-2.5 rounded-xl border text-xs font-bold transition-all ${
                   pdcaStatus === s ? PDCA_STATUS_COLORS[s] : 'bg-white border-gray-200 text-gray-500 hover:border-gray-400'
                 }`}>
-                {PDCA_STATUS_LABELS[s]}
+                {t(`pdca.${s}` as Parameters<typeof t>[0])}
               </button>
             ))}
           </div>
           <div className="space-y-2 mb-3">
             <div>
-              <label className="label">期限日</label>
+              <label className="label">{t('detail.pdcaDeadline')}</label>
               <input type="date" value={pdcaDeadline} onChange={(e) => setPdcaDeadline(e.target.value)}
                 className="input-field" />
             </div>
             <div>
-              <label className="label">PDCA メモ（進捗・担当者・次のアクション）</label>
-              <textarea value={pdcaNotes} onChange={(e) => setPdcaNotes(e.target.value)}
-                rows={3} className="input-field resize-none"
+              <label className="label">{t('detail.pdcaNotes')}</label>
+              <AutoResizeTextarea value={pdcaNotes} onChange={(e) => setPdcaNotes(e.target.value)}
+                className="input-field"
                 placeholder="例: 2026-06-01 山田が原因調査実施。2026-06-10 全ライン点検予定。" />
             </div>
           </div>
           <button onClick={handleSavePdca} disabled={savingPdca}
             className="w-full py-3 bg-indigo-500 text-white font-bold text-sm rounded-2xl shadow-md shadow-indigo-200 disabled:opacity-50 hover:bg-indigo-600 transition-all">
-            {savingPdca ? '保存中...' : '💾 PDCA状況を保存'}
+            {savingPdca ? t('common.saving') : t('detail.savePdca')}
           </button>
         </div>
 
         {/* AI 根本原因分析（4M） */}
         <div className="card p-4 no-print">
           <div className="flex items-center justify-between mb-3">
-            <p className="section-title mb-0">🧠 AI根本原因・是正処置</p>
+            <p className="section-title mb-0">{t('detail.causeCard')}</p>
             {causeVerifiedAt && (
               <span className="text-[10px] text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 font-semibold">
-                ✅ {new Date(causeVerifiedAt).toLocaleDateString('ja-JP')} 確認済
+                ✅ {new Date(causeVerifiedAt).toLocaleDateString()} {t('detail.verified')}
               </span>
             )}
           </div>
@@ -727,33 +806,32 @@ export default function IncidentDetailPage() {
               {causeLoading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  AI分析中...
+                  {t('detail.analyzing')}
                 </>
               ) : (
-                <>🧠 AIで原因・是正を作成</>
+                <>{t('detail.generateCause')}</>
               )}
             </button>
           ) : (
             <div className="space-y-3">
               <div className="bg-yellow-50 border border-yellow-300 rounded-xl px-3 py-2">
                 <p className="text-yellow-700 text-xs font-semibold">
-                  ⚠️ AIによる仮説です。現場確認のうえ編集してください。
+                  {t('detail.causeDisclaimer')}
                 </p>
               </div>
 
               {[
-                { label: '📋 推定原因（4M分析）', value: causeText, setter: setCauseText, raw: aiCauseRaw, rows: 6 },
-                { label: '🔧 是正処置（今回の対処）', value: correctiveText, setter: setCorrectiveText, raw: aiCorrectiveRaw, rows: 4 },
-                { label: '🛡️ 予防処置（再発防止）', value: preventiveText, setter: setPreventiveText, raw: aiPreventiveRaw, rows: 4 },
-                { label: '🔍 確認すべき事項', value: verifyText, setter: setVerifyText, raw: aiVerifyRaw, rows: 3 },
+                { label: t('detail.causeLabel'), value: causeText, setter: setCauseText, raw: aiCauseRaw, rows: 6 },
+                { label: t('detail.correctiveLabel2'), value: correctiveText, setter: setCorrectiveText, raw: aiCorrectiveRaw, rows: 4 },
+                { label: t('detail.preventiveLabel2'), value: preventiveText, setter: setPreventiveText, raw: aiPreventiveRaw, rows: 4 },
+                { label: t('detail.verifyLabel'), value: verifyText, setter: setVerifyText, raw: aiVerifyRaw, rows: 3 },
               ].map(({ label, value, setter, raw, rows }) => (
                 <div key={label}>
                   <label className="text-xs font-bold text-gray-600 mb-1 block">{label}</label>
-                  <textarea
+                  <AutoResizeTextarea
                     value={value}
                     onChange={(e) => setter(e.target.value)}
-                    rows={rows}
-                    className="input-field resize-y text-sm"
+                    className="input-field text-sm"
                   />
                   {raw && raw !== value && (
                     <button
@@ -761,14 +839,14 @@ export default function IncidentDetailPage() {
                       onClick={() => setter(raw)}
                       className="text-[10px] text-purple-500 hover:text-purple-700 mt-1"
                     >
-                      ↩ AI原文に戻す
+                      {t('detail.aiRevert')}
                     </button>
                   )}
                 </div>
               ))}
 
               <div>
-                <label className="label">確認者名 <span className="text-red-400">*</span></label>
+                <label className="label">{t('detail.verifierName')} <span className="text-red-400">*</span></label>
                 <input
                   value={verifierName}
                   onChange={(e) => setVerifierName(e.target.value)}
@@ -783,14 +861,14 @@ export default function IncidentDetailPage() {
                   disabled={causeLoading}
                   className="flex-1 py-2.5 bg-purple-100 text-purple-700 font-bold text-xs rounded-xl hover:bg-purple-200 disabled:opacity-50 transition-all"
                 >
-                  {causeLoading ? 'AI分析中...' : '🔄 再生成'}
+                  {causeLoading ? t('detail.analyzing') : t('detail.regenerate')}
                 </button>
                 <button
                   onClick={handleSaveCause}
                   disabled={savingCause || !verifierName.trim()}
                   className="flex-2 flex-1 py-2.5 bg-green-500 text-white font-bold text-sm rounded-xl shadow-md shadow-green-200 disabled:opacity-50 hover:bg-green-600 transition-all"
                 >
-                  {savingCause ? '保存中...' : '✅ 確認済みとして保存'}
+                  {savingCause ? t('common.saving') : t('detail.saveVerified')}
                 </button>
               </div>
             </div>
@@ -799,7 +877,7 @@ export default function IncidentDetailPage() {
 
         {/* AI 報告書・エクスポート */}
         <div className="card p-4 no-print">
-          <p className="section-title">📄 AI報告書・データエクスポート</p>
+          <p className="section-title">{t('detail.reportCard')}</p>
           <div className="space-y-2">
             <button
               onClick={async () => {
@@ -813,16 +891,16 @@ export default function IncidentDetailPage() {
                     productName: incident.productName, lotNumber: incident.lotNumber,
                     createdBy: user.uid,
                   })
-                  toast.success('AI報告書を生成しました 📄')
+                  toast.success(t('detail.reportSaved'))
                   router.push(`/report/${reportId}`)
-                } catch { toast.error('生成に失敗しました') }
+                } catch { toast.error(t('detail.reportFailed')) }
                 finally { setGeneratingReport(false) }
               }}
               disabled={generatingReport}
               className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold text-sm shadow-md shadow-orange-200 transition-all active:scale-[0.98] disabled:opacity-50"
             >
               <span className="text-xl">📝</span>
-              {generatingReport ? 'AI報告書を生成中...' : 'AI クレーム報告書を自動生成・保存'}
+              {generatingReport ? t('detail.generatingReport') : t('detail.generateReport')}
             </button>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -833,9 +911,9 @@ export default function IncidentDetailPage() {
                     const a = document.createElement('a')
                     a.href = url; a.download = `クレーム報告書_${incident.productName}_${incident.lotNumber}.docx`; a.click()
                     URL.revokeObjectURL(url)
-                    toast.success('Word文書をダウンロードしました 📘')
+                    toast.success(t('detail.wordSaved'))
                   } catch {
-                    toast.error('Word生成に失敗しました')
+                    toast.error(t('detail.wordFailed'))
                   }
                 }}
                 className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-blue-100 text-blue-700 font-bold text-xs transition-all active:scale-[0.98] hover:bg-blue-200"
@@ -850,7 +928,7 @@ export default function IncidentDetailPage() {
                   const a = document.createElement('a')
                   a.href = url; a.download = `異物事故_${incident.productName}_${incident.lotNumber}.csv`; a.click()
                   URL.revokeObjectURL(url)
-                  toast.success('Excelデータをダウンロードしました 📗')
+                  toast.success(t('detail.csvSaved'))
                 }}
                 className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-green-100 text-green-700 font-bold text-xs transition-all active:scale-[0.98] hover:bg-green-200"
               >
@@ -861,12 +939,12 @@ export default function IncidentDetailPage() {
         </div>
 
         <p className="text-xs text-gray-400 text-center">
-          登録: {formatDateTime(incident.createdAt)} / 更新: {formatDateTime(incident.updatedAt)}
+          {t('detail.createdAt')} {formatDateTime(incident.createdAt)} / {t('detail.updatedAt')} {formatDateTime(incident.updatedAt)}
         </p>
 
         <button onClick={() => setShowDeleteConfirm(true)}
           className="w-full py-3.5 text-red-500 hover:text-red-600 text-sm border border-red-200 hover:border-red-400 rounded-2xl transition-all bg-red-50/50 hover:bg-red-50 font-semibold no-print">
-          🗑️ この記録を削除
+          {t('detail.deleteBtn')}
         </button>
       </div>
 

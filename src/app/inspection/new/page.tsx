@@ -10,6 +10,7 @@ import UsageGuide from '@/components/UsageGuide'
 import { createInspectionRecord } from '@/lib/firestore'
 import toast from 'react-hot-toast'
 import DateInput from '@/components/DateInput'
+import AutoResizeTextarea from '@/components/AutoResizeTextarea'
 import { formatLocalDate } from '@/lib/utils'
 import {
   DEVICE_TYPE_LABELS,
@@ -392,8 +393,8 @@ export default function InspectionNewPage() {
           {rejectCount > 0 && (
             <div>
               <label className="label">{t('insp.rejectDetails')}</label>
-              <textarea value={rejectDetails} onChange={(e) => setRejectDetails(e.target.value)}
-                rows={2} className="input-field resize-none"
+              <AutoResizeTextarea value={rejectDetails} onChange={(e) => setRejectDetails(e.target.value)}
+                className="input-field"
                 placeholder="例: ロット〇〇の製品5個を隔離・廃棄" />
             </div>
           )}
@@ -423,15 +424,15 @@ export default function InspectionNewPage() {
           {(result === 'fail' || result === 'adjusted') && (
             <div>
               <label className="label">{t('record.corrective')}</label>
-              <textarea value={correctionAction} onChange={(e) => setCorrectionAction(e.target.value)}
-                rows={3} className="input-field resize-none"
+              <AutoResizeTextarea value={correctionAction} onChange={(e) => setCorrectionAction(e.target.value)}
+                className="input-field"
                 placeholder="例: 感度再調整・再テストピース確認後、製造再開" />
             </div>
           )}
           <div>
             <label className="label">{t('common.comment')}</label>
-            <textarea value={comment} onChange={(e) => setComment(e.target.value)}
-              rows={2} className="input-field resize-none" placeholder={t('common.specialNote')} />
+            <AutoResizeTextarea value={comment} onChange={(e) => setComment(e.target.value)}
+              className="input-field" placeholder={t('common.specialNote')} />
           </div>
         </div>
         <div style={{ height: 'calc(168px + env(safe-area-inset-bottom, 0px))' }} aria-hidden="true" />
