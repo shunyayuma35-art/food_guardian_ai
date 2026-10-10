@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { compressDataUrl } from '@/lib/compressImage'
+import PhotoLightbox from './PhotoLightbox'
 
 interface Props {
   file?: File | null
@@ -183,6 +184,7 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
   const [showResult, setShowResult] = useState(false)
   const [userHint, setUserHint]   = useState('')
   const [remaining, setRemaining] = useState<number | null>(null)
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
 
   // File → data URL
   useEffect(() => {
@@ -346,6 +348,7 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
   const ust = aiResult ? (urgencyStyle[aiResult.urgency] ?? urgencyStyle.low) : null
 
   return (
+    <>
     <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#0d0d0f', border: '1px solid #2d2d35' }}>
       <style>{`
         @keyframes fe-scan {
@@ -377,6 +380,28 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
           className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">✕</button>
       </div>
 
+      {/* Layer label bar - 写真の上の帯 */}
+      {!computing && !analyzing && !showResult && (
+        <div style={{ background: '#0d0d12', borderBottom: '1px solid #1e1e28' }}
+          className="flex items-center gap-2 px-3 py-1.5">
+          <span className="text-[9px] font-mono" style={{ color: '#6b7280' }}>{layer.title} / {LAYERS.length}</span>
+          <span className="text-[11px] font-bold" style={{ color: layer.color }}>{layer.icon} {layer.label}</span>
+          <span className="text-[9px] font-mono ml-auto" style={{ color: '#4b5563' }}>{layer.desc}</span>
+        </div>
+      )}
+      {computing && (
+        <div style={{ background: '#0d0d12', borderBottom: '1px solid #1e1e28' }}
+          className="flex items-center gap-2 px-3 py-1.5">
+          <span className="text-[9px] font-mono animate-pulse" style={{ color: '#6b7280' }}>処理中...</span>
+        </div>
+      )}
+      {analyzing && (
+        <div style={{ background: '#120808', borderBottom: '1px solid #3f1010' }}
+          className="flex items-center gap-2 px-3 py-1.5">
+          <span className="text-[9px] font-mono animate-pulse" style={{ color: '#ef4444' }}>🔬 AI解析中...</span>
+        </div>
+      )}
+
       {/* ── Image viewer ── */}
       <div className="relative" style={{ aspectRatio: '4/3', background: '#000', overflow: 'hidden' }}>
         {computing ? (
@@ -387,13 +412,14 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
           </div>
         ) : (
           <>
-            {/* Main image */}
+            {/* Main image - タップで全画面表示 */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imgSrc}
               alt={layer.label}
-              className="absolute inset-0 w-full h-full object-contain"
+              className="absolute inset-0 w-full h-full object-contain cursor-zoom-in"
               style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.22s ease', filter: layerIdx === 3 ? 'brightness(1.3)' : 'none' }}
+              onClick={() => setLightboxSrc(imgSrc)}
             />
 
             {/* Scanning animation */}
@@ -416,33 +442,26 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
                 </div>
               </div>
             )}
-
-            {/* Layer label */}
-            {!analyzing && !showResult && (
-              <div className="absolute top-2 left-2"
-                style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', borderRadius: '8px', padding: '6px 10px' }}>
-                <p className="text-[9px] font-mono mb-0.5" style={{ color: '#6b7280' }}>{layer.title}</p>
-                <p className="text-xs font-bold" style={{ color: layer.color }}>{layer.icon} {layer.label}</p>
-                <p className="text-[9px] font-mono mt-0.5" style={{ color: '#4b5563' }}>{layer.desc}</p>
-              </div>
-            )}
-
-            {/* Layer progress dots */}
-            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
-              {LAYERS.map((l, i) => (
-                <button key={i} type="button" onClick={() => goToLayer(i)}
-                  className="transition-all rounded-full"
-                  style={{
-                    width: i === layerIdx ? '20px' : '6px',
-                    height: '6px',
-                    background: i < layerIdx ? l.color : i === layerIdx ? l.color : '#374151',
-                    opacity: i < layerIdx ? 0.6 : 1,
-                  }} />
-              ))}
-            </div>
           </>
         )}
       </div>
+
+      {/* Progress dots - 写真の下の帯 */}
+      {!computing && layerUrls.length > 0 && (
+        <div style={{ background: '#0a0a0e', borderBottom: '1px solid #1e1e28' }}
+          className="flex justify-center gap-2 py-2">
+          {LAYERS.map((l, i) => (
+            <button key={i} type="button" onClick={() => goToLayer(i)}
+              className="transition-all rounded-full"
+              style={{
+                width: i === layerIdx ? '20px' : '6px',
+                height: '6px',
+                background: i < layerIdx ? l.color : i === layerIdx ? l.color : '#374151',
+                opacity: i < layerIdx ? 0.6 : 1,
+              }} />
+          ))}
+        </div>
+      )}
 
       {/* ── AI Result popup ── */}
       {showResult && aiResult && ust && (
@@ -539,8 +558,8 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
             value={userHint}
             onChange={e => setUserHint(e.target.value)}
             placeholder="💡 異物の心当たり（任意）例：赤いパレット片"
-            className="w-full text-xs px-3 py-2 rounded-xl focus:outline-none"
-            style={{ background: '#1c1c24', border: '1px solid #2d2d35', color: '#d1d5db' }}
+            className="w-full px-3 py-2 rounded-xl focus:outline-none"
+            style={{ background: '#1c1c24', border: '1px solid #2d2d35', color: '#d1d5db', fontSize: '16px' }}
           />
 
           {/* Layer nav buttons */}
@@ -573,5 +592,9 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
         </div>
       )}
     </div>
+      {lightboxSrc && (
+        <PhotoLightbox src={lightboxSrc} alt={layer.label} onClose={() => setLightboxSrc(null)} />
+      )}
+    </>
   )
 }
