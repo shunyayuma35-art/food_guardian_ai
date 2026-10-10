@@ -405,12 +405,20 @@ export default function ListPage() {
               <h1 className="font-extrabold text-gray-800 text-lg leading-tight">{t('list.pageTitle')}</h1>
               <p className="text-xs text-gray-500 font-medium">{t('list.totalCount').replace('{n}', String(totalCount))}</p>
             </div>
-            <button
-              onClick={() => router.push('/record')}
-              className="text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 px-3 py-2 rounded-xl transition-all shadow-md shadow-orange-200"
-            >
-              ＋ {t('common.new')}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => router.push('/actions')}
+                className="text-xs font-bold text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-2 rounded-xl transition-all border border-violet-200"
+              >
+                🔄 {isEn ? 'Actions' : '是正'}
+              </button>
+              <button
+                onClick={() => router.push('/record')}
+                className="text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 px-3 py-2 rounded-xl transition-all shadow-md shadow-orange-200"
+              >
+                ＋ {t('common.new')}
+              </button>
+            </div>
           </div>
 
           <input

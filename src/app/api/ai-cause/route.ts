@@ -160,25 +160,44 @@ export async function POST(req: NextRequest) {
     const lang = (body.lang as string) ?? 'ja'
 
     const prompt = buildPrompt(incident, lang)
-    const result = await callAI({
-      system: lang === 'en'
-        ? 'You are a food safety expert. Respond only in the specified format. Always align hypotheses with the identified foreign matter type.'
-        : 'あなたは食品安全の専門家です。指定された形式のみで回答してください。異物種別に整合した仮説を立てること。',
-      userText: prompt,
-      maxTokens: 1200,
-    })
+    const systemPrompt = lang === 'en'
+      ? 'You are a food safety expert. Respond only in the specified format. Always align hypotheses with the identified foreign matter type.'
+      : 'あなたは食品安全の専門家です。指定された形式のみで回答してください。異物種別に整合した仮説を立てること。'
 
-    const text = result.text
-    const cause      = extractSection(text, 'CAUSE_4M')
-    const corrective = extractSection(text, 'CORRECTIVE')
-    const preventive = extractSection(text, 'PREVENTIVE')
-    const verify     = extractSection(text, 'VERIFY')
-
-    if (!cause && !corrective) {
-      return NextResponse.json({ error: 'AI response parse failed', raw: text }, { status: 500 })
+    // 最大2回試行（失敗したら自動リトライ）
+    let parsed: { cause: string; corrective: string; preventive: string; verify: string } | null = null
+    let lastRaw = ''
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const result = await callAI({
+          system: systemPrompt,
+          userText: prompt,
+          maxTokens: 3000,
+        })
+        lastRaw = result.text
+        const cause      = extractSection(result.text, 'CAUSE_4M')
+        const corrective = extractSection(result.text, 'CORRECTIVE')
+        const preventive = extractSection(result.text, 'PREVENTIVE')
+        const verify     = extractSection(result.text, 'VERIFY')
+        if (cause || corrective) {
+          parsed = { cause, corrective, preventive, verify }
+          break
+        }
+      } catch (e) {
+        console.error(`[ai-cause] attempt ${attempt + 1} failed:`, e)
+        if (attempt === 1) throw e
+      }
     }
 
-    return NextResponse.json({ cause, corrective, preventive, verify })
+    if (!parsed) {
+      const msg = lang === 'en'
+        ? 'Could not parse AI response. Please try again.'
+        : 'AIの応答を読み取れませんでした。もう一度お試しください。'
+      console.error('[ai-cause] parse failed, raw:', lastRaw.slice(0, 200))
+      return NextResponse.json({ error: msg }, { status: 500 })
+    }
+
+    return NextResponse.json(parsed)
   } catch (err) {
     console.error('[POST /api/ai-cause]', err)
     return NextResponse.json({ error: 'AI analysis failed' }, { status: 500 })

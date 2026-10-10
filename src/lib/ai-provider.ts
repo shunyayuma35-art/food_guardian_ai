@@ -58,6 +58,8 @@ export interface AiCallOptions {
   userText: string
   images?: { base64: string; mediaType: MediaType }[]
   maxTokens?: number
+  /** Gemini 向け: JSON のみ返させる (responseMimeType: "application/json") */
+  jsonMode?: boolean
   /** 多ターン会話の過去履歴（最新メッセージは userText に渡す） */
   history?: { role: 'user' | 'assistant'; text: string }[]
 }
@@ -210,6 +212,7 @@ async function callGemini(opts: AiCallOptions): Promise<AiCallResult> {
     config: {
       systemInstruction: opts.system,
       maxOutputTokens: opts.maxTokens ?? 1024,
+      ...(opts.jsonMode ? { responseMimeType: 'application/json' } : {}),
     },
   })
 

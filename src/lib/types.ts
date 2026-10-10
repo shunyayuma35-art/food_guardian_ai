@@ -209,6 +209,9 @@ export interface Incident {
   editedVerify?: string
   causeVerifiedBy?: string
   causeVerifiedAt?: string
+  // 是正処置・再発防止の直接編集
+  actionsUpdatedBy?: string
+  actionsUpdatedAt?: string
 }
 
 export type PdcaStatus = 'planned' | 'doing' | 'checking' | 'done'

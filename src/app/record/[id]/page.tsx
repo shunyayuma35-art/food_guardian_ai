@@ -49,6 +49,13 @@ export default function IncidentDetailPage() {
   const [verifierName, setVerifierName] = useState('')
   const [savingCause, setSavingCause] = useState(false)
   const [causeVerifiedAt, setCauseVerifiedAt] = useState('')
+  // 是正処置・再発防止 直接編集
+  const [editCorrective, setEditCorrective] = useState('')
+  const [editPreventive, setEditPreventive] = useState('')
+  const [actionsEditor, setActionsEditor] = useState('')
+  const [savingActions, setSavingActions] = useState(false)
+  const [actionsUpdatedAt, setActionsUpdatedAt] = useState('')
+  const [draftLoading, setDraftLoading] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
@@ -81,11 +88,95 @@ export default function IncidentDetailPage() {
             setCauseVerifiedAt(data.causeVerifiedAt ?? '')
             if (data.aiCauseRaw) setShowCausePanel(true)
           }
+          // 是正処置・再発防止の直接編集フィールドを初期化
+          setEditCorrective(
+            data.editedCorrective ?? data.aiCorrectiveRaw ?? data.correctiveAction ?? ''
+          )
+          setEditPreventive(
+            data.editedPreventive ?? data.aiPreventiveRaw ?? data.preventiveMeasure ?? ''
+          )
+          setActionsUpdatedAt(data.actionsUpdatedAt ?? data.causeVerifiedAt ?? '')
         }
       })
       .catch(() => toast.error('データの取得に失敗しました'))
       .finally(() => setFetching(false))
   }, [id, user, router])
+
+  async function handleAiDraftDetail(mode: 'replace' | 'append') {
+    if (!incident) return
+    setDraftLoading(true)
+    try {
+      const lang = typeof window !== 'undefined' ? (localStorage.getItem('foodeye_lang') ?? 'ja') : 'ja'
+      const topEst = incident.estimations?.[0] ?? null
+      const res = await fetch('/api/ai-draft', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          productName: incident.productName,
+          comment: incident.comment,
+          discoveryProcess: incident.discoveryProcess,
+          aiResult: topEst ? {
+            name: topEst.category,
+            category: topEst.category,
+            urgency: topEst.urgency,
+          } : null,
+          lang,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'AI error')
+      const corrDraft = Array.isArray(data.corrective) ? data.corrective.join('\n') : (data.corrective ?? '')
+      const prevDraft = Array.isArray(data.preventive) ? data.preventive.join('\n') : (data.preventive ?? '')
+      if (mode === 'replace') {
+        setEditCorrective(corrDraft)
+        setEditPreventive(prevDraft)
+      } else {
+        setEditCorrective(prev => prev ? `${prev}\n\n${corrDraft}` : corrDraft)
+        setEditPreventive(prev => prev ? `${prev}\n\n${prevDraft}` : prevDraft)
+      }
+      toast.success(lang === 'en' ? 'AI draft created ✅' : 'AI下書きを作成しました ✅')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'AI draft failed'
+      toast.error(msg)
+    } finally {
+      setDraftLoading(false)
+    }
+  }
+
+  async function handleSaveActions() {
+    if (!incident) return
+    if (!actionsEditor.trim()) {
+      toast.error(typeof window !== 'undefined' && localStorage.getItem('foodeye_lang') === 'en'
+        ? 'Please enter the editor name'
+        : '編集者名を入力してください')
+      return
+    }
+    setSavingActions(true)
+    try {
+      const now = new Date().toISOString()
+      await updateIncident(incident.id, {
+        editedCorrective: editCorrective,
+        editedPreventive: editPreventive,
+        actionsUpdatedBy: actionsEditor,
+        actionsUpdatedAt: now,
+      })
+      setActionsUpdatedAt(now)
+      setIncident(prev => prev ? {
+        ...prev,
+        editedCorrective: editCorrective,
+        editedPreventive: editPreventive,
+        actionsUpdatedBy: actionsEditor,
+        actionsUpdatedAt: now,
+      } : prev)
+      toast.success(typeof window !== 'undefined' && localStorage.getItem('foodeye_lang') === 'en'
+        ? 'Saved ✅'
+        : '保存しました ✅')
+    } catch {
+      toast.error('保存に失敗しました')
+    } finally {
+      setSavingActions(false)
+    }
+  }
 
   async function handleGenerateCause() {
     if (!incident) return
@@ -499,6 +590,90 @@ export default function IncidentDetailPage() {
             </div>
           </div>
         )}
+
+        {/* 是正処置・再発防止 直接編集 */}
+        <div className="card p-4 no-print">
+          <div className="flex items-center justify-between mb-3">
+            <p className="section-title mb-0">🔧 是正処置・再発防止策</p>
+            {actionsUpdatedAt && (
+              <span className="text-[10px] text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 font-semibold">
+                ✅ {new Date(actionsUpdatedAt).toLocaleDateString('ja-JP')}
+              </span>
+            )}
+          </div>
+
+          {/* AI下書きボタン */}
+          <div className="flex gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => handleAiDraftDetail('replace')}
+              disabled={draftLoading}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50"
+              style={{ background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe' }}
+            >
+              {draftLoading
+                ? <><span className="w-3 h-3 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />作成中...</>
+                : <>🤖 AIで下書き（置き換え）</>}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAiDraftDetail('append')}
+              disabled={draftLoading}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50"
+              style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
+            >
+              {draftLoading ? '...' : <>🤖 AI下書き（追記）</>}
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1 block">🔧 是正処置（今回の対処）</label>
+              <textarea
+                value={editCorrective}
+                onChange={e => setEditCorrective(e.target.value)}
+                rows={4}
+                className="input-field resize-y text-sm"
+                placeholder="例: 当該ロットを隔離・出荷保留、現物を保管し品質管理部に報告..."
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1 block">🛡️ 再発防止策</label>
+              <textarea
+                value={editPreventive}
+                onChange={e => setEditPreventive(e.target.value)}
+                rows={4}
+                className="input-field resize-y text-sm"
+                placeholder="例: 洗浄手順の見直し・教育実施・定期点検の強化..."
+              />
+            </div>
+            <div>
+              <label className="label">編集者名 <span className="text-red-400">*</span></label>
+              <input
+                value={actionsEditor}
+                onChange={e => setActionsEditor(e.target.value)}
+                className="input-field"
+                placeholder="例: 品質管理部 鈴木"
+                style={{ fontSize: '16px' }}
+              />
+            </div>
+          </div>
+
+          {incident.actionsUpdatedBy && (
+            <p className="text-[10px] text-gray-400 mt-2">
+              最終更新: {incident.actionsUpdatedBy}
+              {incident.actionsUpdatedAt && ` （${new Date(incident.actionsUpdatedAt).toLocaleString('ja-JP')}）`}
+            </p>
+          )}
+
+          <button
+            onClick={handleSaveActions}
+            disabled={savingActions || !actionsEditor.trim()}
+            className="w-full mt-3 py-3 bg-orange-500 text-white font-bold text-sm rounded-2xl shadow-md shadow-orange-200 disabled:opacity-50 hover:bg-orange-600 transition-all active:scale-[0.98]"
+          >
+            {savingActions ? '保存中...' : '💾 是正・再発防止を保存'}
+          </button>
+        </div>
 
         {/* 是正処置 PDCA */}
         <div className="card p-4 no-print">
