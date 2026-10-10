@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useLang } from '@/context/LanguageContext'
 
 interface QRScannerProps {
   onScan: (text: string) => void
@@ -11,6 +12,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
   const scannerRef = useRef<{ clear: () => Promise<void> } | null>(null)
   const [error, setError] = useState('')
   const [ready, setReady] = useState(false)
+  const { t } = useLang()
 
   useEffect(() => {
     let mounted = true
@@ -42,7 +44,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
         scannerRef.current = scanner
         if (mounted) setReady(true)
       } catch {
-        if (mounted) setError('カメラへのアクセスに失敗しました。ブラウザの設定を確認してください。')
+        if (mounted) setError(t('qr.scanner.cameraFail'))
       }
     })()
 
@@ -50,14 +52,14 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
       mounted = false
       scannerRef.current?.clear().catch(() => {})
     }
-  }, [onScan])
+  }, [onScan, t])
 
   return (
     <div className="fixed inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center p-4 no-print">
       <div className="w-full max-w-sm">
         <div className="text-center mb-5">
-          <h2 className="text-xl font-bold text-white">QR / バーコードをスキャン</h2>
-          <p className="text-gray-400 text-sm mt-1">カメラをコードに向けてください</p>
+          <h2 className="text-xl font-bold text-white">{t('record.scanQR')}</h2>
+          <p className="text-gray-400 text-sm mt-1">{t('qr.scanner.hint')}</p>
         </div>
 
         {error ? (
@@ -73,7 +75,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
 
         {!ready && !error && (
           <p className="text-gray-500 text-sm text-center mt-3 animate-pulse">
-            カメラを起動中...
+            {t('qr.scanner.loading')}
           </p>
         )}
 
@@ -81,11 +83,11 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
           onClick={onClose}
           className="mt-4 w-full py-4 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl border border-gray-700 transition-colors text-lg"
         >
-          キャンセル
+          {t('common.cancel')}
         </button>
 
         <p className="text-xs text-gray-600 text-center mt-3">
-          ※ GS1-128 / QRコード / JANコード対応
+          {t('qr.scanner.supported')}
         </p>
       </div>
     </div>

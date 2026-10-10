@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { enhanceImage, DEFAULT_PARAMS } from '@/lib/enhanceImage'
 import CollationView from '@/components/CollationView'
+import { useLang } from '@/context/LanguageContext'
 
 interface Props {
   originalDataUrl: string
@@ -18,6 +19,7 @@ export default function ComparisonPanel({ originalDataUrl, enhancedDataUrl }: Pr
   const [processingRef, setProcessingRef] = useState(false)
   const [showCollation, setShowCollation] = useState(false)
   const refInputRef = useRef<HTMLInputElement>(null)
+  const { t } = useLang()
 
   // Use provided enhancedDataUrl or compute from original
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function ComparisonPanel({ originalDataUrl, enhancedDataUrl }: Pr
         onClick={() => setOpen(true)}
         className="w-full py-1.5 text-xs font-semibold text-teal-600 border border-teal-200 bg-teal-50 rounded-xl hover:bg-teal-100 active:scale-95 transition-all"
       >
-        🔍 異物照合パネル（4枚比較）
+        {t('comp.openBtn')}
       </button>
     )
   }
@@ -71,35 +73,35 @@ export default function ComparisonPanel({ originalDataUrl, enhancedDataUrl }: Pr
     <div className="rounded-2xl border border-teal-200 bg-teal-50/20 p-3 space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-xs font-bold text-teal-700">🔍 異物照合パネル</p>
+        <p className="text-xs font-bold text-teal-700">{t('comp.header')}</p>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
         >
-          閉じる
+          {t('common.close')}
         </button>
       </div>
 
       {/* 2×2 grid:  top row = originals, bottom row = enhanced */}
       <div className="grid grid-cols-2 gap-2">
         {/* ① 元画像（証跡） */}
-        <Cell label="① 元画像（証跡）" labelCls="text-gray-500">
+        <Cell label={t('comp.cell1')} labelCls="text-gray-500">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={originalDataUrl}
-            alt="元画像"
+            alt="original"
             className="w-full max-h-36 object-contain rounded-lg bg-gray-50"
           />
         </Cell>
 
         {/* ③ 参考画像 */}
-        <Cell label="③ 参考画像（似た異物）" labelCls="text-teal-600">
+        <Cell label={t('comp.cell3')} labelCls="text-teal-600">
           {refDataUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={refDataUrl}
-              alt="参考画像"
+              alt="reference"
               className="w-full max-h-36 object-contain rounded-lg bg-gray-50"
             />
           ) : (
@@ -109,36 +111,36 @@ export default function ComparisonPanel({ originalDataUrl, enhancedDataUrl }: Pr
               className="w-full h-28 flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-teal-200 bg-teal-50/50 hover:bg-teal-50 transition-colors"
             >
               <span className="text-2xl">📷</span>
-              <span className="text-[10px] text-teal-600 font-semibold">参考画像を追加</span>
+              <span className="text-[10px] text-teal-600 font-semibold">{t('comp.addRef')}</span>
             </button>
           )}
         </Cell>
 
         {/* ② 元画像・鮮明化後 */}
-        <Cell label="② 元画像・鮮明化後" labelCls="text-orange-500">
+        <Cell label={t('comp.cell2')} labelCls="text-orange-500">
           {processingOrig || !origEnhanced ? (
             <Placeholder />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={origEnhanced}
-              alt="元画像鮮明化後"
+              alt="original enhanced"
               className="w-full max-h-36 object-contain rounded-lg bg-gray-50"
             />
           )}
         </Cell>
 
         {/* ④ 参考画像・鮮明化後 */}
-        <Cell label="④ 参考画像・鮮明化後" labelCls="text-teal-500">
+        <Cell label={t('comp.cell4')} labelCls="text-teal-500">
           {!refDataUrl ? (
-            <Placeholder text="参考画像待ち" />
+            <Placeholder text={t('comp.refWaiting')} />
           ) : processingRef || !refEnhanced ? (
             <Placeholder />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={refEnhanced}
-              alt="参考画像鮮明化後"
+              alt="reference enhanced"
               className="w-full max-h-36 object-contain rounded-lg bg-gray-50"
             />
           )}
@@ -152,13 +154,13 @@ export default function ComparisonPanel({ originalDataUrl, enhancedDataUrl }: Pr
           onClick={() => refInputRef.current?.click()}
           className="w-full py-1 text-[10px] font-medium text-teal-600 border border-teal-200 bg-white rounded-lg hover:bg-teal-50 active:scale-95 transition-all"
         >
-          📷 参考画像を変更
+          {t('comp.changeRef')}
         </button>
       )}
 
       {!refDataUrl && (
         <p className="text-[10px] text-teal-600 text-center">
-          参考画像をアップロードすると4枚並べて比較できます
+          {t('comp.emptyHint')}
         </p>
       )}
 
@@ -173,7 +175,7 @@ export default function ComparisonPanel({ originalDataUrl, enhancedDataUrl }: Pr
               : 'text-teal-700 border-teal-300 bg-teal-50 hover:bg-teal-100'
           }`}
         >
-          {showCollation ? '⬡ 鑑識照合ビューを閉じる' : '⬡ 鑑識照合ビューを開く'}
+          {showCollation ? t('comp.closeView') : t('comp.openView')}
         </button>
       )}
 
@@ -183,7 +185,7 @@ export default function ComparisonPanel({ originalDataUrl, enhancedDataUrl }: Pr
       )}
 
       <p className="text-[9px] text-gray-400 text-center leading-relaxed">
-        ⚠️ 過去事例や類似異物の写真を参考画像としてアップロードして比較にお使いください
+        {t('comp.caution')}
       </p>
 
       <input

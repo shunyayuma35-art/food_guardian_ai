@@ -382,6 +382,30 @@ export type TranslationKey =
   | 'demoLogin.error' | 'demoLogin.submitBtn' | 'demoLogin.checkingBtn' | 'demoLogin.footer'
   // home
   | 'home.demoUser'
+  // forensic enhancer error texts
+  | 'forensic.errorRateLimit' | 'forensic.errorRateLimitMsg'
+  | 'forensic.errorNet' | 'forensic.errorNetMsg'
+  // comparison panel
+  | 'comp.openBtn' | 'comp.header'
+  | 'comp.cell1' | 'comp.cell2' | 'comp.cell3' | 'comp.cell4'
+  | 'comp.addRef' | 'comp.changeRef' | 'comp.emptyHint'
+  | 'comp.closeView' | 'comp.openView' | 'comp.caution' | 'comp.refWaiting'
+  // image enhancer
+  | 'enh.sharp' | 'enh.contrast' | 'enh.brightness' | 'enh.zoom'
+  | 'enh.original' | 'enh.enhanced' | 'enh.saveBtn' | 'enh.caution'
+  // foreign matter visualizer
+  | 'fmv.mgmtNo' | 'fmv.processLot' | 'fmv.detectedDate'
+  | 'fmv.analysisTarget' | 'fmv.selectMarker'
+  | 'fmv.display' | 'fmv.contour' | 'fmv.gray' | 'fmv.grid'
+  | 'fmv.marker' | 'fmv.addMarker' | 'fmv.deleteSelected'
+  | 'fmv.footer' | 'fmv.saveBtn' | 'fmv.luminance'
+  // qr share panel
+  | 'qr.sharePanel.title' | 'qr.sharePanel.subtitle' | 'qr.sharePanel.scanHint' | 'qr.sharePanel.urlLabel'
+  | 'qr.sharePanel.copyFail' | 'qr.sharePanel.localHint' | 'qr.sharePanel.localDesc'
+  | 'qr.sharePanel.networkOk' | 'qr.sharePanel.networkDesc'
+  | 'qr.sharePanel.step1' | 'qr.sharePanel.step2' | 'qr.sharePanel.step3' | 'qr.sharePanel.step4'
+  // qr scanner
+  | 'qr.scanner.hint' | 'qr.scanner.cameraFail' | 'qr.scanner.loading' | 'qr.scanner.supported'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -1121,6 +1145,69 @@ const ja: Dict = {
   'demoLogin.footer': 'このシステムはデモ・試用版です',
   // home
   'home.demoUser': 'デモユーザー',
+  // forensic enhancer error texts
+  'forensic.errorRateLimit': '上限超過',
+  'forensic.errorRateLimitMsg': '今月の無料解析上限（3回）に達しました。@hapifoodlab までご連絡ください。',
+  'forensic.errorNet': 'エラー',
+  'forensic.errorNetMsg': 'ネットワークエラーが発生しました。',
+  // comparison panel
+  'comp.openBtn': '🔍 異物照合パネル（4枚比較）',
+  'comp.header': '🔍 異物照合パネル',
+  'comp.cell1': '① 元画像（証跡）',
+  'comp.cell2': '② 元画像・鮮明化後',
+  'comp.cell3': '③ 参考画像（似た異物）',
+  'comp.cell4': '④ 参考画像・鮮明化後',
+  'comp.addRef': '参考画像を追加',
+  'comp.changeRef': '📷 参考画像を変更',
+  'comp.emptyHint': '参考画像をアップロードすると4枚並べて比較できます',
+  'comp.closeView': '⬡ 鑑識照合ビューを閉じる',
+  'comp.openView': '⬡ 鑑識照合ビューを開く',
+  'comp.caution': '⚠️ 過去事例や類似異物の写真を参考画像としてアップロードして比較にお使いください',
+  'comp.refWaiting': '参考画像待ち',
+  // image enhancer
+  'enh.sharp': 'シャープネス',
+  'enh.contrast': 'コントラスト',
+  'enh.brightness': '明るさ',
+  'enh.zoom': 'ズーム',
+  'enh.original': '元画像（証跡）',
+  'enh.enhanced': '鮮明化後',
+  'enh.saveBtn': '📥 鮮明化画像を保存（PNG）',
+  'enh.caution': '⚠️ 検査・同定の根拠にする場合はシャープネスを弱めに。元画像も必ず保存してください。',
+  // foreign matter visualizer
+  'fmv.mgmtNo': '異物管理番号',
+  'fmv.processLot': '発見工程・ロット',
+  'fmv.detectedDate': '検出日',
+  'fmv.analysisTarget': '解析対象',
+  'fmv.selectMarker': 'マーカーを選択してください',
+  'fmv.display': '表示',
+  'fmv.contour': '輪郭',
+  'fmv.gray': 'グレー',
+  'fmv.grid': 'グリッド',
+  'fmv.marker': 'マーカー',
+  'fmv.addMarker': '＋ 追加',
+  'fmv.deleteSelected': '選択を削除',
+  'fmv.footer': 'FoodEye Forensic • マーカーはドラッグで移動',
+  'fmv.saveBtn': '📄 報告書用PNG',
+  'fmv.luminance': '輝度',
+  // qr share panel
+  'qr.sharePanel.title': 'アプリを共有',
+  'qr.sharePanel.subtitle': 'QRコードをスキャンしてすぐに使い始められます',
+  'qr.sharePanel.scanHint': 'カメラを向けてスキャン',
+  'qr.sharePanel.urlLabel': 'アクセスURL',
+  'qr.sharePanel.copyFail': 'コピーに失敗しました',
+  'qr.sharePanel.localHint': '💡 スマホ・タブレットで使う場合',
+  'qr.sharePanel.localDesc': '現在 localhost で起動中です。同じWi-Fiのスマホからアクセスするには、サーバー起動時に表示された Network URL（例: http://192.168.x.x:3000）をご使用ください。',
+  'qr.sharePanel.networkOk': '✅ ネットワークURL使用中',
+  'qr.sharePanel.networkDesc': '同じWi-Fiに接続したスマホ・タブレットからQRコードをスキャンしてアクセスできます。',
+  'qr.sharePanel.step1': 'スマホ・タブレットのカメラを開く',
+  'qr.sharePanel.step2': 'QRコードに向けてスキャン',
+  'qr.sharePanel.step3': 'リンクをタップしてアプリを開く',
+  'qr.sharePanel.step4': 'ログインしてすぐに使い始める',
+  // qr scanner
+  'qr.scanner.hint': 'カメラをコードに向けてください',
+  'qr.scanner.cameraFail': 'カメラへのアクセスに失敗しました。ブラウザの設定を確認してください。',
+  'qr.scanner.loading': 'カメラを起動中...',
+  'qr.scanner.supported': '※ GS1-128 / QRコード / JANコード対応',
 }
 
 const en: Dict = {
@@ -1859,6 +1946,69 @@ const en: Dict = {
   'demoLogin.footer': 'This is a demo / trial version',
   // home
   'home.demoUser': 'Demo User',
+  // forensic enhancer error texts
+  'forensic.errorRateLimit': 'Rate Limit Reached',
+  'forensic.errorRateLimitMsg': 'Monthly free analysis limit (3×) reached. Please contact @hapifoodlab.',
+  'forensic.errorNet': 'Error',
+  'forensic.errorNetMsg': 'A network error occurred.',
+  // comparison panel
+  'comp.openBtn': '🔍 Comparison Panel (4-view)',
+  'comp.header': '🔍 Comparison Panel',
+  'comp.cell1': '① Original (Evidence)',
+  'comp.cell2': '② Original · Enhanced',
+  'comp.cell3': '③ Reference (Similar)',
+  'comp.cell4': '④ Reference · Enhanced',
+  'comp.addRef': 'Add Reference Image',
+  'comp.changeRef': '📷 Change Reference',
+  'comp.emptyHint': 'Upload a reference image to compare 4 photos side by side',
+  'comp.closeView': '⬡ Close Forensic View',
+  'comp.openView': '⬡ Open Forensic View',
+  'comp.caution': '⚠️ Upload photos of past cases or similar matter as reference images for comparison',
+  'comp.refWaiting': 'Awaiting Reference',
+  // image enhancer
+  'enh.sharp': 'Sharpness',
+  'enh.contrast': 'Contrast',
+  'enh.brightness': 'Brightness',
+  'enh.zoom': 'Zoom',
+  'enh.original': 'Original (Evidence)',
+  'enh.enhanced': 'Enhanced',
+  'enh.saveBtn': '📥 Save Enhanced Image (PNG)',
+  'enh.caution': '⚠️ Keep sharpness low for forensic use. Always save the original image too.',
+  // foreign matter visualizer
+  'fmv.mgmtNo': 'FMI Number',
+  'fmv.processLot': 'Process / Lot',
+  'fmv.detectedDate': 'Detection Date',
+  'fmv.analysisTarget': 'Analysis Target',
+  'fmv.selectMarker': 'Select a marker',
+  'fmv.display': 'Display',
+  'fmv.contour': 'Contour',
+  'fmv.gray': 'Grayscale',
+  'fmv.grid': 'Grid',
+  'fmv.marker': 'Markers',
+  'fmv.addMarker': '＋ Add',
+  'fmv.deleteSelected': 'Delete Selected',
+  'fmv.footer': 'FoodEye Forensic • Drag to move markers',
+  'fmv.saveBtn': '📄 PNG for Report',
+  'fmv.luminance': 'Luminance',
+  // qr share panel
+  'qr.sharePanel.title': 'Share App',
+  'qr.sharePanel.subtitle': 'Scan QR code to start immediately',
+  'qr.sharePanel.scanHint': 'Point camera to scan',
+  'qr.sharePanel.urlLabel': 'Access URL',
+  'qr.sharePanel.copyFail': 'Copy failed',
+  'qr.sharePanel.localHint': '💡 Using on phone/tablet',
+  'qr.sharePanel.localDesc': 'Currently running on localhost. To access from a phone on the same Wi-Fi, use the Network URL shown at server startup (e.g. http://192.168.x.x:3000).',
+  'qr.sharePanel.networkOk': '✅ Using Network URL',
+  'qr.sharePanel.networkDesc': 'Smartphones and tablets on the same Wi-Fi can scan the QR code to access.',
+  'qr.sharePanel.step1': 'Open camera on your phone/tablet',
+  'qr.sharePanel.step2': 'Scan the QR code',
+  'qr.sharePanel.step3': 'Tap the link to open the app',
+  'qr.sharePanel.step4': 'Log in and start using',
+  // qr scanner
+  'qr.scanner.hint': 'Point camera at the code',
+  'qr.scanner.cameraFail': 'Camera access failed. Please check your browser settings.',
+  'qr.scanner.loading': 'Starting camera...',
+  'qr.scanner.supported': '※ GS1-128 / QR Code / JAN Code supported',
 }
 
 const zh: Dict = {

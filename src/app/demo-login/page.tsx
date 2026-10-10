@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/context/LanguageContext'
 
 export default function DemoLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { t } = useLang()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -43,7 +45,7 @@ export default function DemoLoginPage() {
         <div className="text-center space-y-1">
           <p className="text-4xl font-extrabold text-orange-500 tracking-tight">FoodEye</p>
           <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider">Demo</p>
-          <p className="text-sm text-gray-500 pt-1">アクセスコードを入力してください</p>
+          <p className="text-sm text-gray-500 pt-1">{t('demoLogin.subtitle')}</p>
         </div>
 
         {/* Input */}
@@ -52,7 +54,7 @@ export default function DemoLoginPage() {
             type="password"
             value={password}
             onChange={(e) => { setPassword(e.target.value); setError(false) }}
-            placeholder="アクセスコード"
+            placeholder={t('demoLogin.placeholder')}
             className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors ${
               error ? 'border-red-400 bg-red-50 text-red-700' : 'border-gray-200 text-gray-800'
             }`}
@@ -61,7 +63,7 @@ export default function DemoLoginPage() {
             disabled={loading}
           />
           {error && (
-            <p className="text-xs text-red-500 pl-1">コードが違います。もう一度お試しください。</p>
+            <p className="text-xs text-red-500 pl-1">{t('demoLogin.error')}</p>
           )}
         </div>
 
@@ -71,11 +73,11 @@ export default function DemoLoginPage() {
           disabled={loading || !password}
           className="w-full py-3 rounded-xl bg-orange-500 text-white font-bold text-sm hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? '確認中…' : '入室する →'}
+          {loading ? t('demoLogin.checkingBtn') : t('demoLogin.submitBtn')}
         </button>
 
         <p className="text-center text-[10px] text-gray-400">
-          このシステムはデモ・試用版です
+          {t('demoLogin.footer')}
         </p>
       </form>
     </div>

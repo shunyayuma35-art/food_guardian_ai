@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { formatLocalDate } from '@/lib/utils'
+import { useLang } from '@/context/LanguageContext'
 
 interface Marker { id: number; x: number; y: number }
 interface PixelInfo { r: number; g: number; b: number; luminance: number; hex: string }
@@ -52,6 +53,8 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
   const [markers, setMarkers] = useState<Marker[]>([])
   const [selId,   setSelId]   = useState<number | null>(null)
   const [info,    setInfo]    = useState<PixelInfo | null>(null)
+
+  const { t } = useLang()
 
   // ── Image load + auto-detect markers ──────────────────────────────────────
   useEffect(() => {
@@ -230,16 +233,21 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
 
   // ── Display option helpers ────────────────────────────────────────────────
   const displayOpts = [
-    { label: '輪郭', on: showEdge, toggle: () => setShowEdge(v => !v) },
-    { label: 'グレー', on: showGray, toggle: () => setShowGray(v => !v) },
-    { label: 'グリッド', on: showGrid, toggle: () => setShowGrid(v => !v) },
+    { label: t('fmv.contour'), on: showEdge, toggle: () => setShowEdge(v => !v) },
+    { label: t('fmv.gray'),    on: showGray, toggle: () => setShowGray(v => !v) },
+    { label: t('fmv.grid'),    on: showGrid, toggle: () => setShowGrid(v => !v) },
   ]
   const pixelRows = info ? [
-    { k: 'R',  v: info.r,         cls: 'text-red-400'   },
-    { k: 'G',  v: info.g,         cls: 'text-green-400' },
-    { k: 'B',  v: info.b,         cls: 'text-blue-400'  },
-    { k: '輝度', v: info.luminance, cls: 'text-gray-200'  },
+    { k: 'R',              v: info.r,         cls: 'text-red-400'   },
+    { k: 'G',              v: info.g,         cls: 'text-green-400' },
+    { k: 'B',              v: info.b,         cls: 'text-blue-400'  },
+    { k: t('fmv.luminance'), v: info.luminance, cls: 'text-gray-200'  },
   ] : []
+
+  const infoBarFields = [
+    { label: t('fmv.mgmtNo'),     val: managementId, set: setManagementId, placeholder: 'E-001', accent: true },
+    { label: t('fmv.processLot'), val: proc,          set: setProc,          placeholder: '充填工程 / L240728', accent: false },
+  ]
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -247,10 +255,7 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
 
       {/* Info bar */}
       <div className="bg-gray-950 border-b border-gray-700 px-3 py-2 grid grid-cols-3 gap-2">
-        {[
-          { label: '異物管理番号', val: managementId, set: setManagementId, placeholder: 'E-001', accent: true },
-          { label: '発見工程・ロット', val: proc, set: setProc, placeholder: '充填工程 / L240728', accent: false },
-        ].map(({ label, val, set, placeholder, accent }) => (
+        {infoBarFields.map(({ label, val, set, placeholder, accent }) => (
           <div key={label}>
             <div className="text-gray-500 text-[8px] uppercase tracking-wider mb-0.5">{label}</div>
             <input value={val} onChange={e => set(e.target.value)} placeholder={placeholder}
@@ -258,7 +263,7 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
           </div>
         ))}
         <div>
-          <div className="text-gray-500 text-[8px] uppercase tracking-wider mb-0.5">検出日</div>
+          <div className="text-gray-500 text-[8px] uppercase tracking-wider mb-0.5">{t('fmv.detectedDate')}</div>
           <input type="date" value={detectedAt} onChange={e => setDetectedAt(e.target.value)}
             className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-gray-200 w-full text-xs focus:outline-none focus:border-gray-500" />
         </div>
@@ -301,7 +306,7 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
           {/* Pixel info */}
           <div>
             <div className="text-[#6dd39b] text-[8px] uppercase tracking-widest mb-1.5 font-bold">
-              解析対象{selId !== null ? ` #${selId}` : ''}
+              {t('fmv.analysisTarget')}{selId !== null ? ` #${selId}` : ''}
             </div>
             {info ? (
               <>
@@ -324,7 +329,7 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
               </>
             ) : (
               <p className="text-gray-600 text-[9px] leading-relaxed">
-                マーカーを<br />選択してください
+                {t('fmv.selectMarker')}
               </p>
             )}
           </div>
@@ -333,7 +338,7 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
 
           {/* Display toggles */}
           <div className="space-y-1">
-            <div className="text-gray-600 text-[8px] uppercase tracking-widest">表示</div>
+            <div className="text-gray-600 text-[8px] uppercase tracking-widest">{t('fmv.display')}</div>
             {displayOpts.map(({ label, on, toggle }) => (
               <button key={label} onClick={toggle}
                 className={`w-full py-0.5 text-[9px] rounded border transition-all
@@ -349,14 +354,14 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
 
           {/* Marker controls */}
           <div className="space-y-1">
-            <div className="text-gray-600 text-[8px] uppercase tracking-widest">マーカー</div>
+            <div className="text-gray-600 text-[8px] uppercase tracking-widest">{t('fmv.marker')}</div>
             <button onClick={addMarker}
               className="w-full py-0.5 text-[9px] rounded border bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500 transition-all">
-              ＋ 追加
+              {t('fmv.addMarker')}
             </button>
             <button onClick={delSelected} disabled={selId === null}
               className="w-full py-0.5 text-[9px] rounded border bg-gray-800 border-gray-700 text-red-400 hover:border-red-700 transition-all disabled:opacity-30">
-              選択を削除
+              {t('fmv.deleteSelected')}
             </button>
           </div>
         </div>
@@ -364,10 +369,10 @@ export default function ForeignMatterVisualizer({ imageDataUrl }: Props) {
 
       {/* Footer */}
       <div className="bg-gray-950 border-t border-gray-700 px-3 py-2 flex items-center justify-between">
-        <span className="text-[8px] text-gray-600">FoodEye Forensic • マーカーはドラッグで移動</span>
+        <span className="text-[8px] text-gray-600">{t('fmv.footer')}</span>
         <button onClick={exportPng}
           className="px-3 py-1.5 bg-[#6dd39b] text-gray-900 text-[10px] font-bold rounded hover:bg-[#4dcb85] active:scale-95 transition-all">
-          📄 報告書用PNG
+          {t('fmv.saveBtn')}
         </button>
       </div>
     </div>

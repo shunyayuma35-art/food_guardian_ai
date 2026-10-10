@@ -403,7 +403,7 @@ export default function DashboardPage() {
             <div>
               <h1 className="text-base font-extrabold text-gray-800 leading-tight">FoodEye</h1>
               <p className="text-xs text-gray-500">
-                {user.displayName || user.email}
+                {(user.displayName === 'デモユーザー' ? t('home.demoUser') : user.displayName) || user.email}
                 {DEMO_MODE && <span className="ml-1 text-orange-500 font-semibold">{t('home.demo')}</span>}
               </p>
             </div>

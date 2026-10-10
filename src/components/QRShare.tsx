@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import toast from 'react-hot-toast'
+import { useLang } from '@/context/LanguageContext'
 
 interface QRShareProps {
   onClose: () => void
@@ -11,6 +12,7 @@ interface QRShareProps {
 export default function QRShare({ onClose }: QRShareProps) {
   const [url, setUrl] = useState('')
   const [copied, setCopied] = useState(false)
+  const { t } = useLang()
 
   useEffect(() => {
     setUrl(window.location.origin)
@@ -20,14 +22,21 @@ export default function QRShare({ onClose }: QRShareProps) {
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
-      toast.success('URLをコピーしました 📋')
+      toast.success(t('qr.toast.copied'))
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('コピーに失敗しました')
+      toast.error(t('qr.sharePanel.copyFail'))
     }
   }
 
   const isLocalhost = url.includes('localhost') || url.includes('127.0.0.1')
+
+  const steps = [
+    t('qr.sharePanel.step1'),
+    t('qr.sharePanel.step2'),
+    t('qr.sharePanel.step3'),
+    t('qr.sharePanel.step4'),
+  ]
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 no-print"
@@ -43,10 +52,8 @@ export default function QRShare({ onClose }: QRShareProps) {
             ✕
           </button>
           <div className="text-5xl mb-2">📱</div>
-          <h2 className="text-white text-xl font-extrabold">アプリを共有</h2>
-          <p className="text-white/80 text-sm mt-1">
-            QRコードをスキャンして<br />すぐに使い始められます
-          </p>
+          <h2 className="text-white text-xl font-extrabold">{t('qr.sharePanel.title')}</h2>
+          <p className="text-white/80 text-sm mt-1">{t('qr.sharePanel.subtitle')}</p>
         </div>
 
         {/* QRコードエリア */}
@@ -75,13 +82,13 @@ export default function QRShare({ onClose }: QRShareProps) {
           )}
 
           <p className="text-xs text-gray-500 mt-3 text-center font-medium">
-            カメラを向けてスキャン
+            {t('qr.sharePanel.scanHint')}
           </p>
         </div>
 
         {/* URL表示 */}
         <div className="px-6 mt-4">
-          <p className="text-xs text-gray-500 font-semibold mb-1.5">アクセスURL</p>
+          <p className="text-xs text-gray-500 font-semibold mb-1.5">{t('qr.sharePanel.urlLabel')}</p>
           <div className="flex items-center gap-2">
             <div className="flex-1 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 overflow-hidden">
               <p className="text-xs text-orange-700 font-mono truncate font-bold">{url}</p>
@@ -94,7 +101,7 @@ export default function QRShare({ onClose }: QRShareProps) {
                   : 'bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-200'
               }`}
             >
-              {copied ? '✓ コピー済' : 'コピー'}
+              {copied ? t('qr.copy.done') : t('qr.copy.btn')}
             </button>
           </div>
         </div>
@@ -102,19 +109,16 @@ export default function QRShare({ onClose }: QRShareProps) {
         {/* 注意事項 */}
         {isLocalhost ? (
           <div className="mx-6 mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-3">
-            <p className="text-amber-700 text-xs font-bold">💡 スマホ・タブレットで使う場合</p>
+            <p className="text-amber-700 text-xs font-bold">{t('qr.sharePanel.localHint')}</p>
             <p className="text-gray-600 text-xs mt-1 leading-relaxed">
-              現在 <span className="font-mono font-bold">localhost</span> で起動中です。
-              同じWi-Fiのスマホからアクセスするには、サーバー起動時に表示された
-              <span className="font-bold text-amber-700"> Network URL</span>
-              （例: http://192.168.x.x:3000）をご使用ください。
+              {t('qr.sharePanel.localDesc')}
             </p>
           </div>
         ) : (
           <div className="mx-6 mt-4 bg-green-50 border border-green-200 rounded-2xl p-3">
-            <p className="text-green-700 text-xs font-bold">✅ ネットワークURL使用中</p>
+            <p className="text-green-700 text-xs font-bold">{t('qr.sharePanel.networkOk')}</p>
             <p className="text-gray-600 text-xs mt-1 leading-relaxed">
-              同じWi-Fiに接続したスマホ・タブレットからQRコードをスキャンしてアクセスできます。
+              {t('qr.sharePanel.networkDesc')}
             </p>
           </div>
         )}
@@ -122,15 +126,10 @@ export default function QRShare({ onClose }: QRShareProps) {
         {/* ステップ説明 */}
         <div className="px-6 mt-4 mb-6">
           <div className="bg-gray-50 rounded-2xl p-4 space-y-2.5">
-            {[
-              { step: '1', text: 'スマホ・タブレットのカメラを開く' },
-              { step: '2', text: 'QRコードに向けてスキャン' },
-              { step: '3', text: 'リンクをタップしてアプリを開く' },
-              { step: '4', text: 'ログインしてすぐに使い始める' },
-            ].map(({ step, text }) => (
-              <div key={step} className="flex items-center gap-3">
+            {steps.map((text, i) => (
+              <div key={i} className="flex items-center gap-3">
                 <span className="w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shrink-0">
-                  {step}
+                  {i + 1}
                 </span>
                 <span className="text-xs text-gray-600 font-medium">{text}</span>
               </div>

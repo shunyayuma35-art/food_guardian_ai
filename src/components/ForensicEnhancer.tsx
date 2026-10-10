@@ -312,8 +312,8 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
       })
       const data = await res.json()
       if (res.status === 429) {
-        setAiResult({ name: '上限超過', category: '', confidence: '', urgency: 'low',
-          action: '今月の無料解析上限（3回）に達しました。@hapifoodlab までご連絡ください。' })
+        setAiResult({ name: t('forensic.errorRateLimit'), category: '', confidence: '', urgency: 'low',
+          action: t('forensic.errorRateLimitMsg') })
         setShowResult(true)
         return
       }
@@ -323,8 +323,8 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
         if (data.remaining != null) setRemaining(data.remaining)
       }
     } catch {
-      setAiResult({ name: 'エラー', category: '', confidence: '', urgency: 'low',
-        action: 'ネットワークエラーが発生しました。' })
+      setAiResult({ name: t('forensic.errorNet'), category: '', confidence: '', urgency: 'low',
+        action: t('forensic.errorNetMsg') })
       setShowResult(true)
     } finally {
       setAnalyzing(false)
