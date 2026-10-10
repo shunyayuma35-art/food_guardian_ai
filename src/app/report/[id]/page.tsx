@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { getReport, updateReport, deleteReport, listReports } from '@/lib/firestore'
@@ -9,6 +9,37 @@ import Navigation from '@/components/Navigation'
 import toast from 'react-hot-toast'
 import type { Report } from '@/lib/types'
 import Link from 'next/link'
+
+/** 報告書の divider (─×32) を CSS hr に変換して表示 */
+function ReportContent({ content }: { content: string }) {
+  const DIVIDER_RE = /^─{8,}$/
+  const segments = content.split('\n')
+  const nodes: React.ReactNode[] = []
+  let textBuf: string[] = []
+
+  const flushText = () => {
+    if (textBuf.length > 0) {
+      nodes.push(
+        <pre key={nodes.length} className="text-xs text-gray-800 font-mono leading-relaxed whitespace-pre-wrap break-words m-0">
+          {textBuf.join('\n')}
+        </pre>
+      )
+      textBuf = []
+    }
+  }
+
+  for (const line of segments) {
+    if (DIVIDER_RE.test(line.trim())) {
+      flushText()
+      nodes.push(<hr key={nodes.length} className="my-2 border-t border-gray-300" />)
+    } else {
+      textBuf.push(line)
+    }
+  }
+  flushText()
+
+  return <div>{nodes}</div>
+}
 
 export default function ReportDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -314,9 +345,7 @@ export default function ReportDetailPage() {
 
             {/* 報告書本文 */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 print:shadow-none print:border-0">
-              <pre className="text-xs text-gray-800 font-mono leading-relaxed whitespace-pre-wrap break-words">
-                {report.content}
-              </pre>
+              <ReportContent content={report.content} />
             </div>
 
             {/* エクスポートパネル */}
