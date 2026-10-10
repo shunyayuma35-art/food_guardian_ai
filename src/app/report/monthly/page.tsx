@@ -72,7 +72,7 @@ export default function MonthlyReportPage() {
   const categoryCount = useMemo(() => {
     const map: Record<string, number> = {}
     filteredInc.forEach((i) => {
-      const cat = i.estimations?.[0]?.category ?? '未分類'
+      const cat = i.estimations?.[0]?.category ?? t('report.uncategorized')
       map[cat] = (map[cat] || 0) + 1
     })
     return Object.entries(map).sort((a, b) => b[1] - a[1])
@@ -93,7 +93,7 @@ export default function MonthlyReportPage() {
       const m = pad(i + 1)
       const key = `${year}-${m}`
       return {
-        label: `${i + 1}月`,
+        monthNum: i + 1,
         count: incidents.filter((inc) => inc.createdAt.startsWith(key)).length,
       }
     })
@@ -107,8 +107,8 @@ export default function MonthlyReportPage() {
   const totalReject = filteredInsp.reduce((s, i) => s + (i.rejectCount || 0), 0)
 
   const periodLabel = mode === 'month'
-    ? `${year}年${month}月`
-    : `${year}年（${t('report.yearly')}）`
+    ? `${year}${t('report.yearUnit')} ${month}${t('report.monthUnit')}`.trim()
+    : `${year}${t('report.yearUnit')} ${t('report.yearlyLabel')}`.trim()
 
   if (loading || fetching) {
     return (
@@ -134,22 +134,19 @@ export default function MonthlyReportPage() {
       {/* 印刷用ヘッダー */}
       <div className="hidden print:block p-6 border-b">
         <h1 className="text-2xl font-bold">{t('report.printTitle')} — {periodLabel}</h1>
-        <p className="text-sm text-gray-500">発行: {new Date().toLocaleString('ja-JP')}</p>
+        <p className="text-sm text-gray-500">{t('report.issuedAt')} {new Date().toLocaleString()}</p>
       </div>
 
       <div className="max-w-2xl mx-auto px-5 py-5 space-y-5">
         <UsageGuide
-          title={`📖 ${t('report.title')}の使い方`}
+          title={`📖 ${t('report.title')} — ${t('report.guide.title')}`}
           color="indigo"
           steps={[
-            { icon: '📅', title: `期間を選ぶ（${t('report.monthly')} or ${t('report.yearly')}）`, desc: '「月次」を選ぶと特定の月の集計、「年次」を選ぶと年間の月別推移グラフが表示されます。' },
-            { icon: '📊', title: '集計結果を確認する', desc: '異物事故の件数・種別・発見工程、検査記録の正常/異常件数が自動集計されます。' },
-            { icon: '🖨️', title: t('report.print'), desc: '右上の印刷ボタンから印刷できます。PDFで保存も可能です。' },
+            { icon: '📅', title: t('report.guide.step1.title'), desc: t('report.guide.step1.desc') },
+            { icon: '📊', title: t('report.guide.step2.title'), desc: t('report.guide.step2.desc') },
+            { icon: '🖨️', title: t('report.guide.step3.title'), desc: t('report.guide.step3.desc') },
           ]}
-          tips={[
-            '毎月の品質会議・食品安全チーム会議の資料として活用できます',
-            'FSSC22000・SQF・JFSなどの審査で「傾向分析の記録」として提出できます',
-          ]}
+          tips={[t('report.guide.tip1'), t('report.guide.tip2')]}
         />
 
         {/* 期間セレクター */}
@@ -168,14 +165,14 @@ export default function MonthlyReportPage() {
             <select value={year} onChange={(e) => setYear(Number(e.target.value))}
               className="input-field flex-1">
               {Array.from({ length: 5 }, (_, i) => now.getFullYear() - i).map((y) => (
-                <option key={y} value={y}>{y}年</option>
+                <option key={y} value={y}>{y}{t('report.yearUnit')}</option>
               ))}
             </select>
             {mode === 'month' && (
               <select value={month} onChange={(e) => setMonth(Number(e.target.value))}
                 className="input-field flex-1">
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                  <option key={m} value={m}>{m}月</option>
+                  <option key={m} value={m}>{m}{t('report.monthUnit')}</option>
                 ))}
               </select>
             )}
@@ -187,8 +184,8 @@ export default function MonthlyReportPage() {
           <p className="text-xs font-semibold opacity-80">{t('report.period')}</p>
           <p className="text-2xl font-extrabold">{periodLabel}</p>
           <div className="flex gap-4 mt-2 text-sm font-semibold">
-            <span>異物事故 {filteredInc.length}件</span>
-            <span>検査記録 {filteredInsp.length}件</span>
+            <span>{t('report.incidentCount')} {filteredInc.length}</span>
+            <span>{t('report.inspCount')} {filteredInsp.length}</span>
           </div>
         </div>
 
@@ -248,9 +245,9 @@ export default function MonthlyReportPage() {
         {/* 月別推移（年次モード） */}
         {mode === 'year' && (
           <div className="card p-4">
-            <p className="section-title">📈 {t('report.monthlyTrend')}（{year}年）</p>
-            {monthlyTrend.map(({ label, count }) => (
-              <BarRow key={label} label={label} count={count} max={maxMonthly} color="bg-rose-400" />
+            <p className="section-title">📈 {t('report.monthlyTrend')} {year}{t('report.yearUnit')}</p>
+            {monthlyTrend.map(({ monthNum, count }) => (
+              <BarRow key={monthNum} label={`${monthNum}${t('report.monthUnit')}`} count={count} max={maxMonthly} color="bg-rose-400" />
             ))}
           </div>
         )}

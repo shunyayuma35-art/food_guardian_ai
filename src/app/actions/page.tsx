@@ -24,11 +24,13 @@ function summarize(text: string, maxLen = 40): string {
   return first.length > maxLen ? first.slice(0, maxLen) + '…' : first
 }
 
-function toCSV(rows: Incident[]): string {
-  const header = ['発見日', '商品名', '異物種別', '是正処置(要約)', '再発防止(要約)', 'PDCA状態', '最終更新者', '最終更新日']
+function toCSV(rows: Incident[], isEn: boolean): string {
+  const header = isEn
+    ? ['Discovery Date', 'Product Name', 'Category', 'Corrective (summary)', 'Preventive (summary)', 'PDCA', 'Updated By', 'Updated At']
+    : ['発見日', '商品名', '異物種別', '是正処置(要約)', '再発防止(要約)', 'PDCA状態', '最終更新者', '最終更新日']
   const lines = [header.join(',')]
   for (const inc of rows) {
-    const pdca = inc.pdcaStatus ? PDCA_STATUS_LABELS[inc.pdcaStatus].replace(/[^a-zA-Zぁ-んぁ-龯]/g, '') : ''
+    const pdca = inc.pdcaStatus ? PDCA_STATUS_LABELS[inc.pdcaStatus] : ''
     const updatedAt = inc.actionsUpdatedAt
       ? new Date(inc.actionsUpdatedAt).toLocaleDateString('ja-JP')
       : inc.causeVerifiedAt
@@ -106,7 +108,7 @@ export default function ActionsPage() {
   }, [incidents])
 
   function handleCSV() {
-    const csv = toCSV(filtered)
+    const csv = toCSV(filtered, isEn)
     const bom = '﻿'
     const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -190,7 +192,7 @@ export default function ActionsPage() {
           <div className="flex gap-2 items-center">
             <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)}
               className="input-field text-xs flex-1" style={{ fontSize: '14px' }} />
-            <span className="text-gray-400 text-xs">〜</span>
+            <span className="text-gray-400 text-xs">{t('common.rangeSep')}</span>
             <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)}
               className="input-field text-xs flex-1" style={{ fontSize: '14px' }} />
           </div>

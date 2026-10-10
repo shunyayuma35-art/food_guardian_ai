@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { Incident } from '@/lib/types'
 import { DISCOVERY_PROCESS_LABELS, INCIDENT_STATUS_LABELS } from '@/lib/types'
 import { generateIncidentCode, formatDateTime } from '@/lib/utils'
+import { useLang } from '@/context/LanguageContext'
 
 interface Props {
   incident: Incident
@@ -28,6 +29,8 @@ const URGENCY_BAR_COLOR: Record<string, string> = {
 }
 
 export default function IncidentCard({ incident }: Props) {
+  const { t, lang } = useLang()
+  const isEn = lang === 'en'
   const topEst = incident.estimations?.[0]
   const statusClass = STATUS_CLASS[incident.status] ?? 'badge-open'
   const urgencyIcon = topEst ? (URGENCY_ICON[topEst.urgency] ?? '⚪') : ''
@@ -49,18 +52,18 @@ export default function IncidentCard({ incident }: Props) {
         </div>
 
         <p className="font-bold text-gray-800 text-base truncate">
-          {incident.productName || '商品名未記入'}
+          {incident.productName || t('common.noProductName')}
         </p>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-sm text-gray-500">
           {incident.lotNumber && (
             <span>
-              ロット: <span className="text-gray-700 font-medium">{incident.lotNumber}</span>
+              {isEn ? 'Lot: ' : 'ロット: '}<span className="text-gray-700 font-medium">{incident.lotNumber}</span>
             </span>
           )}
           {incident.factory && (
             <span>
-              工場: <span className="text-gray-700 font-medium">{incident.factory}</span>
+              {isEn ? 'Factory: ' : '工場: '}<span className="text-gray-700 font-medium">{incident.factory}</span>
             </span>
           )}
           <span className="text-gray-500">{DISCOVERY_PROCESS_LABELS[incident.discoveryProcess]}</span>

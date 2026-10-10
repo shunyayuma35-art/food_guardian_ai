@@ -27,10 +27,10 @@ export default function LoginPage() {
     setSubmitting(true)
     try {
       await login('user@foodeye.local', 'foodeye2024')
-      toast.success('ロック解除しました ✅')
+      toast.success(t('toast.unlocked'))
       router.replace('/')
     } catch {
-      toast.error('ログインに失敗しました')
+      toast.error(t('toast.loginFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -39,27 +39,27 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!email.trim() || !password.trim()) {
-      toast.error('メールアドレスとパスワードを入力してください')
+      toast.error(t('toast.enterEmailPass'))
       return
     }
     setSubmitting(true)
     try {
       if (isSignup) {
         await signup(email, password)
-        toast.success('アカウントを作成しました 🎉')
+        toast.success(t('toast.accountCreated'))
       } else {
         await login(email, password)
-        toast.success('ログインしました ✅')
+        toast.success(t('toast.loggedIn'))
       }
       router.replace('/')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : ''
       if (msg.includes('wrong-password') || msg.includes('user-not-found')) {
-        toast.error('メールアドレスまたはパスワードが違います')
+        toast.error(t('toast.wrongEmailPass'))
       } else if (msg.includes('email-already-in-use')) {
-        toast.error('このメールアドレスは既に使用されています')
+        toast.error(t('toast.emailInUse'))
       } else {
-        toast.error(isSignup ? 'アカウント作成に失敗しました' : 'ログインに失敗しました')
+        toast.error(isSignup ? t('toast.accountCreateFailed') : t('toast.loginFailed'))
       }
     } finally {
       setSubmitting(false)
@@ -134,12 +134,12 @@ export default function LoginPage() {
           <>
             <div className="card p-6">
               <h2 className="text-lg font-bold text-gray-700 mb-5 text-center">
-                {isSignup ? '🌟 新規アカウント作成' : '👋 ログイン'}
+                {isSignup ? t('login.form.titleSignup') : t('login.form.titleLogin')}
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="label">メールアドレス</label>
+                  <label className="label">{t('login.form.email')}</label>
                   <input
                     type="email"
                     value={email}
@@ -152,13 +152,13 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="label">パスワード</label>
+                  <label className="label">{t('login.form.password')}</label>
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="input-field"
-                    placeholder={isSignup ? '6文字以上' : ''}
+                    placeholder={isSignup ? t('login.form.passwordHint') : ''}
                     required
                     minLength={isSignup ? 6 : 1}
                     autoComplete={isSignup ? 'new-password' : 'current-password'}
@@ -173,12 +173,12 @@ export default function LoginPage() {
                   {submitting ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      処理中...
+                      {t('login.form.submitting')}
                     </span>
                   ) : isSignup ? (
-                    'アカウントを作成する 🚀'
+                    t('login.form.createBtn')
                   ) : (
-                    'ログインする →'
+                    t('login.form.loginBtn')
                   )}
                 </button>
               </form>
@@ -189,12 +189,11 @@ export default function LoginPage() {
               onClick={() => setIsSignup(!isSignup)}
               className="mt-4 w-full text-center text-sm text-gray-500 hover:text-orange-500 transition-colors py-2 font-medium"
             >
-              {isSignup ? '← 既にアカウントをお持ちの方' : 'アカウントを新規作成 →'}
+              {isSignup ? t('login.form.switchToLogin') : t('login.form.switchToSignup')}
             </button>
 
-            <p className="text-xs text-gray-400 text-center mt-6 leading-relaxed">
-              ※ AI一次判定・異物仮説分析・発生源推定支援システム<br />
-              確定分析には外部機関の鑑定が必要です
+            <p className="text-xs text-gray-400 text-center mt-6 leading-relaxed whitespace-pre-line">
+              {t('login.form.disclaimer')}
             </p>
           </>
         )}

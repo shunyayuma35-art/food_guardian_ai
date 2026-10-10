@@ -1,5 +1,6 @@
 'use client'
 
+import { useLang } from '@/context/LanguageContext'
 import type { FeatureChecklist } from '@/lib/types'
 
 interface Props {
@@ -20,6 +21,7 @@ interface CheckboxGroupProps {
   items: CheckItem[]
   onToggle: (key: string) => void
   accent?: 'orange' | 'blue' | 'purple' | 'teal' | 'red' | 'green'
+  selectedLabel: string
 }
 
 const ACCENT: Record<string, { active: string; hover: string }> = {
@@ -49,7 +51,7 @@ const ACCENT: Record<string, { active: string; hover: string }> = {
   },
 }
 
-function CheckboxGroup({ title, icon, subtitle, items, onToggle, accent = 'orange' }: CheckboxGroupProps) {
+function CheckboxGroup({ title, icon, subtitle, items, onToggle, accent = 'orange', selectedLabel }: CheckboxGroupProps) {
   const { active: activeClass, hover: hoverClass } = ACCENT[accent] ?? ACCENT.orange
   const checkedCount = items.filter(i => i.checked).length
 
@@ -61,7 +63,7 @@ function CheckboxGroup({ title, icon, subtitle, items, onToggle, accent = 'orang
         </p>
         {checkedCount > 0 && (
           <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full">
-            {checkedCount}選択
+            {selectedLabel.replace('{n}', String(checkedCount))}
           </span>
         )}
       </div>
@@ -86,7 +88,8 @@ function CheckboxGroup({ title, icon, subtitle, items, onToggle, accent = 'orang
 }
 
 export default function FeatureChecklistComponent({ value, onChange }: Props) {
-  // 後方互換：既存レコードに新フィールドがない場合のデフォルト
+  const { t } = useLang()
+
   const size = value.size ?? {
     finePowder: false, longFiber: false, thinFilm: false,
     thickPiece: false, tiny: false, medium: false, large: false,
@@ -101,26 +104,29 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
   const sm = value.smell
   const tx = value.texture
 
+  const sel = t('feat.selected')
+
   return (
     <div>
 
       {/* ① 触感 */}
       <CheckboxGroup
-        title="触感"
+        title={t('feat.texture.title')}
         icon="👆"
-        subtitle="触れたときの感触・質感"
+        subtitle={t('feat.texture.sub')}
         accent="orange"
+        selectedLabel={sel}
         items={[
-          { key: 'hard',      label: '固い',              checked: tx.hard },
-          { key: 'soft',      label: '柔らかい',          checked: tx.soft },
-          { key: 'elastic',   label: '弾力あり',          checked: tx.elastic },
-          { key: 'crumbly',   label: '崩れやすい',        checked: tx.crumbly },
-          { key: 'sticky',    label: '粘着あり',          checked: tx.sticky },
-          { key: 'sharp',     label: '鋭い・尖り⚠️',      checked: tx.sharp ?? false },
-          { key: 'smooth',    label: 'なめらか',          checked: tx.smooth ?? false },
-          { key: 'rough',     label: 'ざらざら',          checked: tx.rough ?? false },
-          { key: 'coldFeel',  label: '冷たい（熱伝導高）', checked: tx.coldFeel ?? false },
-          { key: 'brittle',   label: '脆い・パキッと割れる', checked: tx.brittle ?? false },
+          { key: 'hard',      label: t('feat.texture.hard'),     checked: tx.hard },
+          { key: 'soft',      label: t('feat.texture.soft'),     checked: tx.soft },
+          { key: 'elastic',   label: t('feat.texture.elastic'),  checked: tx.elastic },
+          { key: 'crumbly',   label: t('feat.texture.crumbly'),  checked: tx.crumbly },
+          { key: 'sticky',    label: t('feat.texture.sticky'),   checked: tx.sticky },
+          { key: 'sharp',     label: t('feat.texture.sharp'),    checked: tx.sharp ?? false },
+          { key: 'smooth',    label: t('feat.texture.smooth'),   checked: tx.smooth ?? false },
+          { key: 'rough',     label: t('feat.texture.rough'),    checked: tx.rough ?? false },
+          { key: 'coldFeel',  label: t('feat.texture.coldFeel'), checked: tx.coldFeel ?? false },
+          { key: 'brittle',   label: t('feat.texture.brittle'),  checked: tx.brittle ?? false },
         ]}
         onToggle={(key) =>
           onChange({ ...value, texture: { ...tx, [key]: !tx[key as keyof typeof tx] } })
@@ -129,22 +135,23 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
 
       {/* ② 形状・構造 */}
       <CheckboxGroup
-        title="形状・構造"
+        title={t('feat.shape.title')}
         icon="📐"
-        subtitle="異物の全体的な形・構造"
+        subtitle={t('feat.shape.sub')}
         accent="orange"
+        selectedLabel={sel}
         items={[
-          { key: 'fibrous',     label: '繊維状・糸状',    checked: ap.fibrous },
-          { key: 'wireShape',   label: '線状・針状・ワイヤー', checked: ap.wireShape ?? false },
-          { key: 'needleShape', label: '棘状・ニードル',  checked: ap.needleShape ?? false },
-          { key: 'spiralCoil',  label: 'コイル・らせん',  checked: ap.spiralCoil ?? false },
-          { key: 'flatPlate',   label: '薄板・プレート状', checked: ap.flatPlate ?? false },
-          { key: 'flakeChip',   label: 'フレーク・剥離片', checked: ap.flakeChip ?? false },
-          { key: 'layered',     label: '層構造',          checked: ap.layered },
-          { key: 'granular',    label: '粒状・ペレット状', checked: ap.granular },
-          { key: 'bubbly',      label: '泡状・気泡あり',  checked: ap.bubbly },
-          { key: 'breakSection',label: '破断面あり',       checked: ap.breakSection },
-          { key: 'bent',        label: '曲がり・変形',    checked: ap.bent },
+          { key: 'fibrous',     label: t('feat.shape.fibrous'),      checked: ap.fibrous },
+          { key: 'wireShape',   label: t('feat.shape.wireShape'),    checked: ap.wireShape ?? false },
+          { key: 'needleShape', label: t('feat.shape.needleShape'),  checked: ap.needleShape ?? false },
+          { key: 'spiralCoil',  label: t('feat.shape.spiralCoil'),   checked: ap.spiralCoil ?? false },
+          { key: 'flatPlate',   label: t('feat.shape.flatPlate'),    checked: ap.flatPlate ?? false },
+          { key: 'flakeChip',   label: t('feat.shape.flakeChip'),    checked: ap.flakeChip ?? false },
+          { key: 'layered',     label: t('feat.shape.layered'),      checked: ap.layered },
+          { key: 'granular',    label: t('feat.shape.granular'),     checked: ap.granular },
+          { key: 'bubbly',      label: t('feat.shape.bubbly'),       checked: ap.bubbly },
+          { key: 'breakSection',label: t('feat.shape.breakSection'), checked: ap.breakSection },
+          { key: 'bent',        label: t('feat.shape.bent'),         checked: ap.bent },
         ]}
         onToggle={(key) =>
           onChange({ ...value, appearance: { ...ap, [key]: !ap[key as keyof typeof ap] } })
@@ -153,21 +160,22 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
 
       {/* ③ 表面・外観 */}
       <CheckboxGroup
-        title="表面・外観"
+        title={t('feat.surface.title')}
         icon="🔎"
-        subtitle="表面の質感・光沢・状態"
+        subtitle={t('feat.surface.sub')}
         accent="orange"
+        selectedLabel={sel}
         items={[
-          { key: 'mirrorGloss', label: '鏡面・強光沢（SUS等）', checked: ap.mirrorGloss ?? false },
-          { key: 'glossy',      label: '光沢あり',              checked: ap.glossy },
-          { key: 'matte',       label: 'マット・つや消し',      checked: ap.matte },
-          { key: 'translucent', label: '半透明',                checked: ap.translucent },
-          { key: 'transparent', label: '透明感',                checked: ap.transparent },
-          { key: 'metallic',    label: '金属感',                checked: ap.metallic },
-          { key: 'rubbery',     label: 'ゴム感',                checked: ap.rubbery },
-          { key: 'burned',      label: '焦げ・炭化',            checked: ap.burned },
-          { key: 'scratched',   label: 'キズ・スジあり',        checked: ap.scratched },
-          { key: 'patterned',   label: '模様・印字あり',        checked: ap.patterned },
+          { key: 'mirrorGloss', label: t('feat.surface.mirrorGloss'), checked: ap.mirrorGloss ?? false },
+          { key: 'glossy',      label: t('feat.surface.glossy'),      checked: ap.glossy },
+          { key: 'matte',       label: t('feat.surface.matte'),       checked: ap.matte },
+          { key: 'translucent', label: t('feat.surface.translucent'), checked: ap.translucent },
+          { key: 'transparent', label: t('feat.surface.transparent'), checked: ap.transparent },
+          { key: 'metallic',    label: t('feat.surface.metallic'),    checked: ap.metallic },
+          { key: 'rubbery',     label: t('feat.surface.rubbery'),     checked: ap.rubbery },
+          { key: 'burned',      label: t('feat.surface.burned'),      checked: ap.burned },
+          { key: 'scratched',   label: t('feat.surface.scratched'),   checked: ap.scratched },
+          { key: 'patterned',   label: t('feat.surface.patterned'),   checked: ap.patterned },
         ]}
         onToggle={(key) =>
           onChange({ ...value, appearance: { ...ap, [key]: !ap[key as keyof typeof ap] } })
@@ -176,27 +184,28 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
 
       {/* ④ 色 */}
       <CheckboxGroup
-        title="色"
+        title={t('feat.color.title')}
         icon="🎨"
-        subtitle="異物の主な色調（複数選択可）"
+        subtitle={t('feat.color.sub')}
         accent="purple"
+        selectedLabel={sel}
         items={[
-          { key: 'black',       label: '黒・黒系',        checked: co.black },
-          { key: 'gray',        label: '灰色・鉄灰',      checked: co.gray ?? false },
-          { key: 'silver',      label: '銀色・シルバー',  checked: co.silver ?? false },
-          { key: 'metalColor',  label: '金属光沢（汎用）', checked: co.metalColor },
-          { key: 'gold',        label: '金色・黄金',      checked: co.gold ?? false },
-          { key: 'copperRed',   label: '銅色・橙赤色',    checked: co.copperRed ?? false },
-          { key: 'brown',       label: '茶・褐色・錆色',  checked: co.brown },
-          { key: 'red',         label: '赤色・赤系',      checked: co.red ?? false },
-          { key: 'orange',      label: '橙色',            checked: co.orange ?? false },
-          { key: 'yellow',      label: '黄色',            checked: co.yellow ?? false },
-          { key: 'green',       label: '緑色',            checked: co.green },
-          { key: 'blue',        label: '青色',            checked: co.blue ?? false },
-          { key: 'pink',        label: 'ピンク',          checked: co.pink ?? false },
-          { key: 'white',       label: '白・乳白',        checked: co.white },
-          { key: 'whiteTurbid', label: '白濁',            checked: co.whiteTurbid },
-          { key: 'transparent', label: '透明・無色',      checked: co.transparent },
+          { key: 'black',       label: t('feat.color.black'),       checked: co.black },
+          { key: 'gray',        label: t('feat.color.gray'),        checked: co.gray ?? false },
+          { key: 'silver',      label: t('feat.color.silver'),      checked: co.silver ?? false },
+          { key: 'metalColor',  label: t('feat.color.metalColor'),  checked: co.metalColor },
+          { key: 'gold',        label: t('feat.color.gold'),        checked: co.gold ?? false },
+          { key: 'copperRed',   label: t('feat.color.copperRed'),   checked: co.copperRed ?? false },
+          { key: 'brown',       label: t('feat.color.brown'),       checked: co.brown },
+          { key: 'red',         label: t('feat.color.red'),         checked: co.red ?? false },
+          { key: 'orange',      label: t('feat.color.orange'),      checked: co.orange ?? false },
+          { key: 'yellow',      label: t('feat.color.yellow'),      checked: co.yellow ?? false },
+          { key: 'green',       label: t('feat.color.green'),       checked: co.green },
+          { key: 'blue',        label: t('feat.color.blue'),        checked: co.blue ?? false },
+          { key: 'pink',        label: t('feat.color.pink'),        checked: co.pink ?? false },
+          { key: 'white',       label: t('feat.color.white'),       checked: co.white },
+          { key: 'whiteTurbid', label: t('feat.color.whiteTurbid'), checked: co.whiteTurbid },
+          { key: 'transparent', label: t('feat.color.transparent'), checked: co.transparent },
         ]}
         onToggle={(key) =>
           onChange({ ...value, color: { ...co, [key]: !co[key as keyof typeof co] } })
@@ -205,18 +214,19 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
 
       {/* ⑤ サイズ感 */}
       <CheckboxGroup
-        title="サイズ感"
+        title={t('feat.size.title')}
         icon="📏"
-        subtitle="異物のおおよその大きさ（AI推定精度に重要）"
+        subtitle={t('feat.size.sub')}
         accent="blue"
+        selectedLabel={sel}
         items={[
-          { key: 'tiny',       label: '微小 (<1mm)',     checked: size.tiny },
-          { key: 'finePowder', label: '粉末・粉状',      checked: size.finePowder },
-          { key: 'medium',     label: '中型 (1〜5mm)',   checked: size.medium },
-          { key: 'large',      label: '大型 (5mm超)',    checked: size.large ?? false },
-          { key: 'longFiber',  label: '長い繊維 (>5mm)', checked: size.longFiber },
-          { key: 'thinFilm',   label: '薄膜・フィルム状', checked: size.thinFilm },
-          { key: 'thickPiece', label: '厚片・塊・ブロック', checked: size.thickPiece },
+          { key: 'tiny',       label: t('feat.size.tiny'),       checked: size.tiny },
+          { key: 'finePowder', label: t('feat.size.finePowder'), checked: size.finePowder },
+          { key: 'medium',     label: t('feat.size.medium'),     checked: size.medium },
+          { key: 'large',      label: t('feat.size.large'),      checked: size.large ?? false },
+          { key: 'longFiber',  label: t('feat.size.longFiber'),  checked: size.longFiber },
+          { key: 'thinFilm',   label: t('feat.size.thinFilm'),   checked: size.thinFilm },
+          { key: 'thickPiece', label: t('feat.size.thickPiece'), checked: size.thickPiece },
         ]}
         onToggle={(key) => {
           const newSize = { ...size, [key]: !size[key as keyof typeof size] }
@@ -224,26 +234,28 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         }}
       />
 
-      {/* ⑥ 磁石試験（金属種別判定の最重要テスト） */}
+      {/* ⑥ 磁石試験 */}
       <div className="mb-5 bg-amber-50 border border-amber-200 rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-1">
           <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">
-            🧲 磁石試験
+            🧲 {t('feat.magnet.title')}
           </p>
           <span className="text-[10px] font-bold bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full">
-            金属種別判定に最重要
+            {t('feat.magnet.badge')}
           </span>
         </div>
         <p className="text-[10px] text-amber-600 mb-3">
-          磁石を異物に近づけたときの反応を選択してください
+          {t('feat.magnet.sub')}
         </p>
         <div className="flex flex-wrap gap-2">
-          {[
-            { key: 'sticks',       label: '🔴 磁石につく（鉄・鋼系）' },
-            { key: 'noStick',      label: '🔵 磁石につかない（SUS・Al・Cu等）' },
-            { key: 'partialStick', label: '🟡 一部つく（複合材）' },
-            { key: 'notTested',    label: '⬜ 未実施' },
-          ].map(({ key, label }) => {
+          {(
+            [
+              { key: 'sticks',       labelKey: 'feat.magnet.sticks' },
+              { key: 'noStick',      labelKey: 'feat.magnet.noStick' },
+              { key: 'partialStick', labelKey: 'feat.magnet.partialStick' },
+              { key: 'notTested',    labelKey: 'feat.magnet.notTested' },
+            ] as { key: string; labelKey: Parameters<typeof t>[0] }[]
+          ).map(({ key, labelKey }) => {
             const checked = magnetTest[key as keyof typeof magnetTest]
             return (
               <button
@@ -259,25 +271,26 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
                     : 'bg-white border-amber-200 text-gray-600 hover:border-amber-400 hover:bg-amber-50'
                 }`}
               >
-                {label}
+                {t(labelKey)}
               </button>
             )
           })}
         </div>
         <p className="text-[10px] text-amber-500 mt-2">
-          ※ SUS304（一般的なステンレス）は磁石につきません。SUS430は一部つきます。
+          {t('feat.magnet.note')}
         </p>
       </div>
 
       {/* ⑦ 重さ感 */}
       <CheckboxGroup
-        title="重さ感"
+        title={t('feat.weight.title')}
         icon="⚖️"
-        subtitle="手で持ったときの重量感"
+        subtitle={t('feat.weight.sub')}
         accent="teal"
+        selectedLabel={sel}
         items={[
-          { key: 'veryLight', label: '非常に軽い（プラ・発泡・アルミ薄板）', checked: weight.veryLight },
-          { key: 'heavy',     label: '重い・ずっしり（金属・ガラス・石）',   checked: weight.heavy },
+          { key: 'veryLight', label: t('feat.weight.veryLight'), checked: weight.veryLight },
+          { key: 'heavy',     label: t('feat.weight.heavy'),     checked: weight.heavy },
         ]}
         onToggle={(key) =>
           onChange({ ...value, weight: { ...weight, [key]: !weight[key as keyof typeof weight] } })
@@ -286,19 +299,20 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
 
       {/* ⑧ におい */}
       <CheckboxGroup
-        title="におい"
+        title={t('feat.smell.title')}
         icon="👃"
-        subtitle="嗅いだときの特徴"
+        subtitle={t('feat.smell.sub')}
         accent="teal"
+        selectedLabel={sel}
         items={[
-          { key: 'noSmell',      label: '無臭',              checked: sm.noSmell },
-          { key: 'burnedSmell',  label: '焦げ臭',            checked: sm.burnedSmell },
-          { key: 'oilSmell',     label: '油臭・潤滑油',      checked: sm.oilSmell },
-          { key: 'metalSmell',   label: '金属臭・鉄臭',      checked: sm.metalSmell ?? false },
-          { key: 'rubberSmell',  label: 'ゴム臭',            checked: sm.rubberSmell ?? false },
-          { key: 'plasticSmell', label: 'プラスチック臭',    checked: sm.plasticSmell ?? false },
-          { key: 'chemicalSmell',label: '薬品臭（その他）',   checked: sm.chemicalSmell },
-          { key: 'sourSmell',    label: '酸臭・錆臭',        checked: sm.sourSmell ?? false },
+          { key: 'noSmell',      label: t('feat.smell.noSmell'),      checked: sm.noSmell },
+          { key: 'burnedSmell',  label: t('feat.smell.burnedSmell'),  checked: sm.burnedSmell },
+          { key: 'oilSmell',     label: t('feat.smell.oilSmell'),     checked: sm.oilSmell },
+          { key: 'metalSmell',   label: t('feat.smell.metalSmell'),   checked: sm.metalSmell ?? false },
+          { key: 'rubberSmell',  label: t('feat.smell.rubberSmell'),  checked: sm.rubberSmell ?? false },
+          { key: 'plasticSmell', label: t('feat.smell.plasticSmell'), checked: sm.plasticSmell ?? false },
+          { key: 'chemicalSmell',label: t('feat.smell.chemicalSmell'),checked: sm.chemicalSmell },
+          { key: 'sourSmell',    label: t('feat.smell.sourSmell'),    checked: sm.sourSmell ?? false },
         ]}
         onToggle={(key) =>
           onChange({ ...value, smell: { ...sm, [key]: !sm[key as keyof typeof sm] } })
@@ -307,15 +321,16 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
 
       {/* ⑨ 水試験 */}
       <CheckboxGroup
-        title="水試験"
+        title={t('feat.water.title')}
         icon="💧"
-        subtitle="少量の水に入れたときの挙動"
+        subtitle={t('feat.water.sub')}
         accent="blue"
+        selectedLabel={sel}
         items={[
-          { key: 'floats',     label: '浮く',    checked: value.waterTest.floats },
-          { key: 'sinks',      label: '沈む',    checked: value.waterTest.sinks },
-          { key: 'dissolves',  label: 'とける',  checked: value.waterTest.dissolves },
-          { key: 'oilSurface', label: '油膜浮き', checked: value.waterTest.oilSurface },
+          { key: 'floats',     label: t('feat.water.floats'),     checked: value.waterTest.floats },
+          { key: 'sinks',      label: t('feat.water.sinks'),      checked: value.waterTest.sinks },
+          { key: 'dissolves',  label: t('feat.water.dissolves'),  checked: value.waterTest.dissolves },
+          { key: 'oilSurface', label: t('feat.water.oilSurface'), checked: value.waterTest.oilSurface },
         ]}
         onToggle={(key) =>
           onChange({

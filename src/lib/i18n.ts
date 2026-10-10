@@ -209,6 +209,84 @@ export type TranslationKey =
   | 'detail.aiNameLabel' | 'detail.aiRouteLabel' | 'detail.aiActionLabel'
   | 'detail.regenEn' | 'detail.regenEnLoading'
   | 'toast.regenEnDone' | 'toast.regenEnFailed'
+  // feature checklist – group titles / subtitles
+  | 'feat.texture.title' | 'feat.texture.sub'
+  | 'feat.shape.title' | 'feat.shape.sub'
+  | 'feat.surface.title' | 'feat.surface.sub'
+  | 'feat.color.title' | 'feat.color.sub'
+  | 'feat.size.title' | 'feat.size.sub'
+  | 'feat.magnet.title' | 'feat.magnet.badge' | 'feat.magnet.sub' | 'feat.magnet.note'
+  | 'feat.weight.title' | 'feat.weight.sub'
+  | 'feat.smell.title' | 'feat.smell.sub'
+  | 'feat.water.title' | 'feat.water.sub'
+  | 'feat.selected'
+  // feature checklist – texture items
+  | 'feat.texture.hard' | 'feat.texture.soft' | 'feat.texture.elastic' | 'feat.texture.crumbly'
+  | 'feat.texture.sticky' | 'feat.texture.sharp' | 'feat.texture.smooth' | 'feat.texture.rough'
+  | 'feat.texture.coldFeel' | 'feat.texture.brittle'
+  // feature checklist – shape items
+  | 'feat.shape.fibrous' | 'feat.shape.wireShape' | 'feat.shape.needleShape' | 'feat.shape.spiralCoil'
+  | 'feat.shape.flatPlate' | 'feat.shape.flakeChip' | 'feat.shape.layered' | 'feat.shape.granular'
+  | 'feat.shape.bubbly' | 'feat.shape.breakSection' | 'feat.shape.bent'
+  // feature checklist – surface items
+  | 'feat.surface.mirrorGloss' | 'feat.surface.glossy' | 'feat.surface.matte'
+  | 'feat.surface.translucent' | 'feat.surface.transparent' | 'feat.surface.metallic'
+  | 'feat.surface.rubbery' | 'feat.surface.burned' | 'feat.surface.scratched' | 'feat.surface.patterned'
+  // feature checklist – color items
+  | 'feat.color.black' | 'feat.color.gray' | 'feat.color.silver' | 'feat.color.metalColor'
+  | 'feat.color.gold' | 'feat.color.copperRed' | 'feat.color.brown' | 'feat.color.red'
+  | 'feat.color.orange' | 'feat.color.yellow' | 'feat.color.green' | 'feat.color.blue'
+  | 'feat.color.pink' | 'feat.color.white' | 'feat.color.whiteTurbid' | 'feat.color.transparent'
+  // feature checklist – size items
+  | 'feat.size.tiny' | 'feat.size.finePowder' | 'feat.size.medium' | 'feat.size.large'
+  | 'feat.size.longFiber' | 'feat.size.thinFilm' | 'feat.size.thickPiece'
+  // feature checklist – magnet items
+  | 'feat.magnet.sticks' | 'feat.magnet.noStick' | 'feat.magnet.partialStick' | 'feat.magnet.notTested'
+  // feature checklist – weight items
+  | 'feat.weight.veryLight' | 'feat.weight.heavy'
+  // feature checklist – smell items
+  | 'feat.smell.noSmell' | 'feat.smell.burnedSmell' | 'feat.smell.oilSmell' | 'feat.smell.metalSmell'
+  | 'feat.smell.rubberSmell' | 'feat.smell.plasticSmell' | 'feat.smell.chemicalSmell' | 'feat.smell.sourSmell'
+  // feature checklist – water test items
+  | 'feat.water.floats' | 'feat.water.sinks' | 'feat.water.dissolves' | 'feat.water.oilSurface'
+  // login form (Firebase mode)
+  | 'login.form.titleSignup' | 'login.form.titleLogin'
+  | 'login.form.email' | 'login.form.password' | 'login.form.passwordHint'
+  | 'login.form.submitting' | 'login.form.createBtn' | 'login.form.loginBtn'
+  | 'login.form.switchToLogin' | 'login.form.switchToSignup' | 'login.form.disclaimer'
+  // additional toast messages
+  | 'toast.unlocked' | 'toast.loginFailed' | 'toast.enterEmailPass'
+  | 'toast.accountCreated' | 'toast.loggedIn' | 'toast.wrongEmailPass'
+  | 'toast.emailInUse' | 'toast.accountCreateFailed'
+  // common extra
+  | 'common.rangeSep' | 'common.backBtn' | 'common.noProductName'
+  // actions page extra
+  | 'actions.csvFilename'
+  // master page
+  | 'master.title' | 'master.badge'
+  | 'master.info'
+  | 'master.guide.title'
+  | 'master.guide.step1.title' | 'master.guide.step1.desc'
+  | 'master.guide.step2.title' | 'master.guide.step2.desc'
+  | 'master.guide.step3.title' | 'master.guide.step3.desc'
+  | 'master.guide.step4.title' | 'master.guide.step4.desc'
+  | 'master.guide.tip1' | 'master.guide.tip2'
+  | 'master.staff.title' | 'master.staff.addBtn' | 'master.staff.placeholder' | 'master.staff.empty'
+  | 'master.product.title' | 'master.product.addBtn' | 'master.product.placeholder' | 'master.product.empty'
+  | 'master.device.title' | 'master.device.addBtn' | 'master.device.empty'
+  | 'master.device.namePlaceholder' | 'master.device.linePlaceholder'
+  | 'master.device.typeMetal' | 'master.device.typeXray'
+  | 'master.deleteBtn'
+  | 'master.unit.staff' | 'master.unit.products' | 'master.unit.devices'
+  | 'master.duplicate' | 'master.enterName' | 'master.enterDeviceName'
+  // report page extras
+  | 'report.issuedAt' | 'report.incidentCount' | 'report.inspCount'
+  | 'report.uncategorized' | 'report.guide.title'
+  | 'report.guide.step1.title' | 'report.guide.step1.desc'
+  | 'report.guide.step2.title' | 'report.guide.step2.desc'
+  | 'report.guide.step3.title' | 'report.guide.step3.desc'
+  | 'report.guide.tip1' | 'report.guide.tip2'
+  | 'report.yearUnit' | 'report.monthUnit' | 'report.yearlyLabel'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -579,6 +657,150 @@ const ja: Dict = {
   'detail.regenEnLoading': '🔄 生成中...',
   'toast.regenEnDone': '英語の解析結果を保存しました',
   'toast.regenEnFailed': '英語の再生成に失敗しました',
+  // feature checklist – group titles/subtitles
+  'feat.texture.title': '触感', 'feat.texture.sub': '触れたときの感触・質感',
+  'feat.shape.title': '形状・構造', 'feat.shape.sub': '異物の全体的な形・構造',
+  'feat.surface.title': '表面・外観', 'feat.surface.sub': '表面の質感・光沢・状態',
+  'feat.color.title': '色', 'feat.color.sub': '異物の主な色調（複数選択可）',
+  'feat.size.title': 'サイズ感', 'feat.size.sub': '異物のおおよその大きさ（AI推定精度に重要）',
+  'feat.magnet.title': '磁石試験',
+  'feat.magnet.badge': '金属種別判定に最重要',
+  'feat.magnet.sub': '磁石を異物に近づけたときの反応を選択してください',
+  'feat.magnet.note': '※ SUS304（一般的なステンレス）は磁石につきません。SUS430は一部つきます。',
+  'feat.weight.title': '重さ感', 'feat.weight.sub': '手で持ったときの重量感',
+  'feat.smell.title': 'におい', 'feat.smell.sub': '嗅いだときの特徴',
+  'feat.water.title': '水試験', 'feat.water.sub': '少量の水に入れたときの挙動',
+  'feat.selected': '{n}選択',
+  // texture items
+  'feat.texture.hard': '固い', 'feat.texture.soft': '柔らかい', 'feat.texture.elastic': '弾力あり',
+  'feat.texture.crumbly': '崩れやすい', 'feat.texture.sticky': '粘着あり',
+  'feat.texture.sharp': '鋭い・尖り⚠️', 'feat.texture.smooth': 'なめらか',
+  'feat.texture.rough': 'ざらざら', 'feat.texture.coldFeel': '冷たい（熱伝導高）',
+  'feat.texture.brittle': '脆い・パキッと割れる',
+  // shape items
+  'feat.shape.fibrous': '繊維状・糸状', 'feat.shape.wireShape': '線状・針状・ワイヤー',
+  'feat.shape.needleShape': '棘状・ニードル', 'feat.shape.spiralCoil': 'コイル・らせん',
+  'feat.shape.flatPlate': '薄板・プレート状', 'feat.shape.flakeChip': 'フレーク・剥離片',
+  'feat.shape.layered': '層構造', 'feat.shape.granular': '粒状・ペレット状',
+  'feat.shape.bubbly': '泡状・気泡あり', 'feat.shape.breakSection': '破断面あり',
+  'feat.shape.bent': '曲がり・変形',
+  // surface items
+  'feat.surface.mirrorGloss': '鏡面・強光沢（SUS等）', 'feat.surface.glossy': '光沢あり',
+  'feat.surface.matte': 'マット・つや消し', 'feat.surface.translucent': '半透明',
+  'feat.surface.transparent': '透明感', 'feat.surface.metallic': '金属感',
+  'feat.surface.rubbery': 'ゴム感', 'feat.surface.burned': '焦げ・炭化',
+  'feat.surface.scratched': 'キズ・スジあり', 'feat.surface.patterned': '模様・印字あり',
+  // color items
+  'feat.color.black': '黒・黒系', 'feat.color.gray': '灰色・鉄灰',
+  'feat.color.silver': '銀色・シルバー', 'feat.color.metalColor': '金属光沢（汎用）',
+  'feat.color.gold': '金色・黄金', 'feat.color.copperRed': '銅色・橙赤色',
+  'feat.color.brown': '茶・褐色・錆色', 'feat.color.red': '赤色・赤系',
+  'feat.color.orange': '橙色', 'feat.color.yellow': '黄色',
+  'feat.color.green': '緑色', 'feat.color.blue': '青色',
+  'feat.color.pink': 'ピンク', 'feat.color.white': '白・乳白',
+  'feat.color.whiteTurbid': '白濁', 'feat.color.transparent': '透明・無色',
+  // size items
+  'feat.size.tiny': '微小 (<1mm)', 'feat.size.finePowder': '粉末・粉状',
+  'feat.size.medium': '中型 (1〜5mm)', 'feat.size.large': '大型 (5mm超)',
+  'feat.size.longFiber': '長い繊維 (>5mm)', 'feat.size.thinFilm': '薄膜・フィルム状',
+  'feat.size.thickPiece': '厚片・塊・ブロック',
+  // magnet items
+  'feat.magnet.sticks': '🔴 磁石につく（鉄・鋼系）',
+  'feat.magnet.noStick': '🔵 磁石につかない（SUS・Al・Cu等）',
+  'feat.magnet.partialStick': '🟡 一部つく（複合材）',
+  'feat.magnet.notTested': '⬜ 未実施',
+  // weight items
+  'feat.weight.veryLight': '非常に軽い（プラ・発泡・アルミ薄板）',
+  'feat.weight.heavy': '重い・ずっしり（金属・ガラス・石）',
+  // smell items
+  'feat.smell.noSmell': '無臭', 'feat.smell.burnedSmell': '焦げ臭',
+  'feat.smell.oilSmell': '油臭・潤滑油', 'feat.smell.metalSmell': '金属臭・鉄臭',
+  'feat.smell.rubberSmell': 'ゴム臭', 'feat.smell.plasticSmell': 'プラスチック臭',
+  'feat.smell.chemicalSmell': '薬品臭（その他）', 'feat.smell.sourSmell': '酸臭・錆臭',
+  // water test items
+  'feat.water.floats': '浮く', 'feat.water.sinks': '沈む',
+  'feat.water.dissolves': 'とける', 'feat.water.oilSurface': '油膜浮き',
+  // login form (Firebase mode)
+  'login.form.titleSignup': '🌟 新規アカウント作成',
+  'login.form.titleLogin': '👋 ログイン',
+  'login.form.email': 'メールアドレス',
+  'login.form.password': 'パスワード',
+  'login.form.passwordHint': '6文字以上',
+  'login.form.submitting': '処理中...',
+  'login.form.createBtn': 'アカウントを作成する 🚀',
+  'login.form.loginBtn': 'ログインする →',
+  'login.form.switchToLogin': '← 既にアカウントをお持ちの方',
+  'login.form.switchToSignup': 'アカウントを新規作成 →',
+  'login.form.disclaimer': '※ AI一次判定・異物仮説分析・発生源推定支援システム\n確定分析には外部機関の鑑定が必要です',
+  // additional toast messages
+  'toast.unlocked': 'ロック解除しました ✅',
+  'toast.loginFailed': 'ログインに失敗しました',
+  'toast.enterEmailPass': 'メールアドレスとパスワードを入力してください',
+  'toast.accountCreated': 'アカウントを作成しました 🎉',
+  'toast.loggedIn': 'ログインしました ✅',
+  'toast.wrongEmailPass': 'メールアドレスまたはパスワードが違います',
+  'toast.emailInUse': 'このメールアドレスは既に使用されています',
+  'toast.accountCreateFailed': 'アカウント作成に失敗しました',
+  // common extra
+  'common.rangeSep': '〜',
+  'common.backBtn': '←',
+  'common.noProductName': '商品名未記入',
+  // actions page
+  'actions.csvFilename': '是正再発防止一覧',
+  // master page
+  'master.title': 'マスターデータ管理',
+  'master.badge': '設定',
+  'master.info': 'ここで登録した担当者・製品名・検査機器は、各登録フォームでドロップダウン選択できます。毎回手入力が不要になり、入力ミス・表記ゆれを防げます。',
+  'master.guide.title': '📖 マスターデータの使い方',
+  'master.guide.step1.title': '担当者を登録する',
+  'master.guide.step1.desc': '工場の担当者・スタッフの名前を登録します。登録後は異物登録・検査記録の担当者欄で選択できるようになります。',
+  'master.guide.step2.title': '製品を登録する',
+  'master.guide.step2.desc': '取り扱う製品名を登録します。登録後は各画面の製品名欄で選択できるようになり、入力ミス・表記ゆれを防げます。',
+  'master.guide.step3.title': '検査機器を登録する',
+  'master.guide.step3.desc': '工場の金属探知機・X線検査機の名前・ライン番号を登録します。検査記録登録時にドロップダウンから選択できます。',
+  'master.guide.step4.title': '追加したら自動保存される',
+  'master.guide.step4.desc': '「追加」ボタンを押すと即座に保存されます。削除する場合は各アイテムの「削除」ボタンを押してください。',
+  'master.guide.tip1': '最初にここで担当者・製品・機器を全て登録しておくと、毎日の入力がとても速くなります',
+  'master.guide.tip2': '担当者が増えた・機器が追加された場合はいつでも追加できます',
+  'master.staff.title': '👤 担当者マスター',
+  'master.staff.addBtn': '追加',
+  'master.staff.placeholder': '例: 山田 太郎',
+  'master.staff.empty': '担当者が登録されていません',
+  'master.product.title': '📦 製品マスター',
+  'master.product.addBtn': '追加',
+  'master.product.placeholder': '例: 万能ごま 220g',
+  'master.product.empty': '製品が登録されていません',
+  'master.device.title': '🔧 検査機器マスター',
+  'master.device.addBtn': '機器を追加',
+  'master.device.empty': '機器が登録されていません',
+  'master.device.namePlaceholder': '機器名 例: 1号金属探知機',
+  'master.device.linePlaceholder': 'ライン例: 1ライン',
+  'master.device.typeMetal': '🧲 金属探知機',
+  'master.device.typeXray': '☢️ X線検査機',
+  'master.deleteBtn': '削除',
+  'master.unit.staff': '名',
+  'master.unit.products': '件',
+  'master.unit.devices': '台',
+  'master.duplicate': '重複または空の名前です',
+  'master.enterName': '重複または空の製品名です',
+  'master.enterDeviceName': '機器名を入力してください',
+  // report page extras
+  'report.issuedAt': '発行:',
+  'report.incidentCount': '異物事故',
+  'report.inspCount': '検査記録',
+  'report.uncategorized': '未分類',
+  'report.guide.title': '使い方',
+  'report.guide.step1.title': '期間を選ぶ',
+  'report.guide.step1.desc': '「月次」を選ぶと特定の月の集計、「年次」を選ぶと年間の月別推移グラフが表示されます。',
+  'report.guide.step2.title': '集計結果を確認する',
+  'report.guide.step2.desc': '異物事故の件数・種別・発見工程、検査記録の正常/異常件数が自動集計されます。',
+  'report.guide.step3.title': '印刷する',
+  'report.guide.step3.desc': '右上の印刷ボタンから印刷できます。PDFで保存も可能です。',
+  'report.guide.tip1': '毎月の品質会議・食品安全チーム会議の資料として活用できます',
+  'report.guide.tip2': 'FSSC22000・SQF・JFSなどの審査で「傾向分析の記録」として提出できます',
+  'report.yearUnit': '年',
+  'report.monthUnit': '月',
+  'report.yearlyLabel': '（年次）',
 }
 
 const en: Dict = {
@@ -948,6 +1170,150 @@ const en: Dict = {
   'detail.regenEnLoading': '🔄 Generating...',
   'toast.regenEnDone': 'English analysis saved',
   'toast.regenEnFailed': 'Failed to regenerate English',
+  // feature checklist – group titles/subtitles
+  'feat.texture.title': 'Texture', 'feat.texture.sub': 'Texture and feel on touch',
+  'feat.shape.title': 'Shape & Structure', 'feat.shape.sub': 'Overall shape and structure',
+  'feat.surface.title': 'Surface & Appearance', 'feat.surface.sub': 'Surface texture, gloss & condition',
+  'feat.color.title': 'Color', 'feat.color.sub': 'Main color(s) — multiple selection OK',
+  'feat.size.title': 'Size', 'feat.size.sub': 'Approximate size (important for AI accuracy)',
+  'feat.magnet.title': 'Magnet Test',
+  'feat.magnet.badge': 'Critical for metal type ID',
+  'feat.magnet.sub': 'Select the reaction when a magnet is brought near the foreign matter',
+  'feat.magnet.note': '※ SUS304 (common stainless steel) does not attract magnets. SUS430 partially does.',
+  'feat.weight.title': 'Weight', 'feat.weight.sub': 'Sense of weight when held',
+  'feat.smell.title': 'Smell', 'feat.smell.sub': 'Characteristics when sniffed',
+  'feat.water.title': 'Water Test', 'feat.water.sub': 'Behavior when placed in a small amount of water',
+  'feat.selected': '{n} selected',
+  // texture items
+  'feat.texture.hard': 'Hard', 'feat.texture.soft': 'Soft', 'feat.texture.elastic': 'Elastic',
+  'feat.texture.crumbly': 'Crumbly', 'feat.texture.sticky': 'Sticky',
+  'feat.texture.sharp': 'Sharp / Pointed ⚠️', 'feat.texture.smooth': 'Smooth',
+  'feat.texture.rough': 'Rough', 'feat.texture.coldFeel': 'Cold Feel (high thermal conductivity)',
+  'feat.texture.brittle': 'Brittle / Snaps',
+  // shape items
+  'feat.shape.fibrous': 'Fibrous / Thread-like', 'feat.shape.wireShape': 'Wire / Needle / Line',
+  'feat.shape.needleShape': 'Spike / Needle-shaped', 'feat.shape.spiralCoil': 'Coil / Spiral',
+  'feat.shape.flatPlate': 'Thin Plate', 'feat.shape.flakeChip': 'Flake / Chip',
+  'feat.shape.layered': 'Layered', 'feat.shape.granular': 'Granular / Pellet',
+  'feat.shape.bubbly': 'Bubbly / Porous', 'feat.shape.breakSection': 'Fracture Surface',
+  'feat.shape.bent': 'Bent / Deformed',
+  // surface items
+  'feat.surface.mirrorGloss': 'Mirror / High Gloss (SUS etc.)', 'feat.surface.glossy': 'Glossy',
+  'feat.surface.matte': 'Matte', 'feat.surface.translucent': 'Translucent',
+  'feat.surface.transparent': 'Transparent', 'feat.surface.metallic': 'Metallic',
+  'feat.surface.rubbery': 'Rubbery', 'feat.surface.burned': 'Burned / Carbonized',
+  'feat.surface.scratched': 'Scratched / Streaked', 'feat.surface.patterned': 'Patterned / Printed',
+  // color items
+  'feat.color.black': 'Black', 'feat.color.gray': 'Gray / Iron Gray',
+  'feat.color.silver': 'Silver', 'feat.color.metalColor': 'Metallic Luster',
+  'feat.color.gold': 'Gold', 'feat.color.copperRed': 'Copper / Orange-Red',
+  'feat.color.brown': 'Brown / Rust', 'feat.color.red': 'Red',
+  'feat.color.orange': 'Orange', 'feat.color.yellow': 'Yellow',
+  'feat.color.green': 'Green', 'feat.color.blue': 'Blue',
+  'feat.color.pink': 'Pink', 'feat.color.white': 'White / Milk White',
+  'feat.color.whiteTurbid': 'Cloudy White', 'feat.color.transparent': 'Transparent / Colorless',
+  // size items
+  'feat.size.tiny': 'Tiny (<1mm)', 'feat.size.finePowder': 'Powder',
+  'feat.size.medium': 'Medium (1–5mm)', 'feat.size.large': 'Large (>5mm)',
+  'feat.size.longFiber': 'Long Fiber (>5mm)', 'feat.size.thinFilm': 'Thin Film',
+  'feat.size.thickPiece': 'Thick Piece / Block',
+  // magnet items
+  'feat.magnet.sticks': '🔴 Attracted (iron / steel)',
+  'feat.magnet.noStick': '🔵 Not attracted (SUS / Al / Cu etc.)',
+  'feat.magnet.partialStick': '🟡 Partially attracted (composite)',
+  'feat.magnet.notTested': '⬜ Not tested',
+  // weight items
+  'feat.weight.veryLight': 'Very light (plastic / foam / thin aluminum)',
+  'feat.weight.heavy': 'Heavy (metal / glass / stone)',
+  // smell items
+  'feat.smell.noSmell': 'No smell', 'feat.smell.burnedSmell': 'Burned smell',
+  'feat.smell.oilSmell': 'Oil / Lubricant', 'feat.smell.metalSmell': 'Metallic smell',
+  'feat.smell.rubberSmell': 'Rubber smell', 'feat.smell.plasticSmell': 'Plastic smell',
+  'feat.smell.chemicalSmell': 'Chemical smell', 'feat.smell.sourSmell': 'Sour / Rust smell',
+  // water test items
+  'feat.water.floats': 'Floats', 'feat.water.sinks': 'Sinks',
+  'feat.water.dissolves': 'Dissolves', 'feat.water.oilSurface': 'Oil film on surface',
+  // login form (Firebase mode)
+  'login.form.titleSignup': '🌟 Create Account',
+  'login.form.titleLogin': '👋 Log In',
+  'login.form.email': 'Email Address',
+  'login.form.password': 'Password',
+  'login.form.passwordHint': 'At least 6 characters',
+  'login.form.submitting': 'Processing...',
+  'login.form.createBtn': 'Create Account 🚀',
+  'login.form.loginBtn': 'Log In →',
+  'login.form.switchToLogin': '← Already have an account?',
+  'login.form.switchToSignup': 'Create new account →',
+  'login.form.disclaimer': '* AI primary analysis & source estimation support system.\nFinal analysis requires external laboratory examination.',
+  // additional toast messages
+  'toast.unlocked': '✅ Unlocked',
+  'toast.loginFailed': 'Login failed',
+  'toast.enterEmailPass': 'Enter email and password',
+  'toast.accountCreated': 'Account created 🎉',
+  'toast.loggedIn': '✅ Logged in',
+  'toast.wrongEmailPass': 'Incorrect email or password',
+  'toast.emailInUse': 'Email address already in use',
+  'toast.accountCreateFailed': 'Failed to create account',
+  // common extra
+  'common.rangeSep': '–',
+  'common.backBtn': '←',
+  'common.noProductName': 'No product name',
+  // actions page
+  'actions.csvFilename': 'corrective-actions',
+  // master page
+  'master.title': 'Master Data',
+  'master.badge': 'Settings',
+  'master.info': 'Operators, products & devices registered here become dropdowns throughout the app — speeding up entry and preventing typos.',
+  'master.guide.title': '📖 Master Data Guide',
+  'master.guide.step1.title': 'Register Operators',
+  'master.guide.step1.desc': 'Enter the names of factory staff. After saving, they appear as dropdown options in incident and inspection forms.',
+  'master.guide.step2.title': 'Register Products',
+  'master.guide.step2.desc': 'Enter product names you handle. They become dropdown options to prevent typos and inconsistencies.',
+  'master.guide.step3.title': 'Register Inspection Devices',
+  'master.guide.step3.desc': 'Register metal detectors and X-ray inspectors (name + line). Selectable from dropdowns when logging inspections.',
+  'master.guide.step4.title': 'Auto-saved on Add',
+  'master.guide.step4.desc': 'Data is saved instantly when you tap Add. Use the Delete button to remove individual entries.',
+  'master.guide.tip1': 'Register all operators, products and devices here first — it speeds up daily data entry significantly',
+  'master.guide.tip2': 'You can add new staff or devices at any time when the team or equipment changes',
+  'master.staff.title': '👤 Operators',
+  'master.staff.addBtn': 'Add',
+  'master.staff.placeholder': 'e.g. Taro Yamada',
+  'master.staff.empty': 'No operators registered',
+  'master.product.title': '📦 Products',
+  'master.product.addBtn': 'Add',
+  'master.product.placeholder': 'e.g. Sesame Blend 220g',
+  'master.product.empty': 'No products registered',
+  'master.device.title': '🔧 Inspection Devices',
+  'master.device.addBtn': 'Add Device',
+  'master.device.empty': 'No devices registered',
+  'master.device.namePlaceholder': 'Device name e.g. Metal Detector #1',
+  'master.device.linePlaceholder': 'Line e.g. Line 1',
+  'master.device.typeMetal': '🧲 Metal Detector',
+  'master.device.typeXray': '☢️ X-ray Inspector',
+  'master.deleteBtn': 'Delete',
+  'master.unit.staff': '',
+  'master.unit.products': '',
+  'master.unit.devices': '',
+  'master.duplicate': 'Duplicate or empty name',
+  'master.enterName': 'Duplicate or empty product name',
+  'master.enterDeviceName': 'Enter device name',
+  // report page extras
+  'report.issuedAt': 'Issued:',
+  'report.incidentCount': 'Incidents',
+  'report.inspCount': 'Inspections',
+  'report.uncategorized': 'Uncategorized',
+  'report.guide.title': 'Guide',
+  'report.guide.step1.title': 'Select Period',
+  'report.guide.step1.desc': 'Monthly shows a specific month; Annual shows a monthly trend chart for the year.',
+  'report.guide.step2.title': 'Review Summary',
+  'report.guide.step2.desc': 'Incident counts, category breakdown, discovery process, and inspection pass/fail are automatically aggregated.',
+  'report.guide.step3.title': 'Print',
+  'report.guide.step3.desc': 'Print from the button in the top-right. Save as PDF from the print dialog.',
+  'report.guide.tip1': 'Use for monthly quality meetings and food safety team reviews',
+  'report.guide.tip2': 'Can be submitted as a trend analysis record for FSSC22000, SQF, JFS audits',
+  'report.yearUnit': '',
+  'report.monthUnit': '',
+  'report.yearlyLabel': '(Annual)',
 }
 
 const zh: Dict = {
