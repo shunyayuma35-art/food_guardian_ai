@@ -102,7 +102,7 @@ export default function IncidentDetailPage() {
           setActionsUpdatedAt(data.actionsUpdatedAt ?? data.causeVerifiedAt ?? '')
         }
       })
-      .catch(() => toast.error('データの取得に失敗しました'))
+      .catch(() => toast.error(t('toast.fetchFailed') || 'データの取得に失敗しました'))
       .finally(() => setFetching(false))
   }, [id, user, router])
 
@@ -138,7 +138,7 @@ export default function IncidentDetailPage() {
         setEditCorrective(prev => prev ? `${prev}\n\n${corrDraft}` : corrDraft)
         setEditPreventive(prev => prev ? `${prev}\n\n${prevDraft}` : prevDraft)
       }
-      toast.success(lang === 'en' ? 'AI draft created ✅' : 'AI下書きを作成しました ✅')
+      toast.success(t('toast.aiDraftCreated') || (lang === 'en' ? 'AI draft created ✅' : 'AI下書きを作成しました ✅'))
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'AI draft failed'
       toast.error(msg)
@@ -195,9 +195,7 @@ export default function IncidentDetailPage() {
   async function handleSaveActions() {
     if (!incident) return
     if (!actionsEditor.trim()) {
-      toast.error(typeof window !== 'undefined' && localStorage.getItem('foodeye_lang') === 'en'
-        ? 'Please enter the editor name'
-        : '編集者名を入力してください')
+      toast.error(t('toast.enterEditorName'))
       return
     }
     setSavingActions(true)
@@ -217,11 +215,9 @@ export default function IncidentDetailPage() {
         actionsUpdatedBy: actionsEditor,
         actionsUpdatedAt: now,
       } : prev)
-      toast.success(typeof window !== 'undefined' && localStorage.getItem('foodeye_lang') === 'en'
-        ? 'Saved ✅'
-        : '保存しました ✅')
+      toast.success(t('toast.saveOk'))
     } catch {
-      toast.error('保存に失敗しました')
+      toast.error(t('toast.saveFailed'))
     } finally {
       setSavingActions(false)
     }
@@ -247,9 +243,9 @@ export default function IncidentDetailPage() {
       setPreventiveText(data.preventive ?? '')
       setVerifyText(data.verify ?? '')
       setShowCausePanel(true)
-      toast.success('AI分析を生成しました')
+      toast.success(t('toast.aiCauseGenerated'))
     } catch (err) {
-      toast.error('AI分析の生成に失敗しました')
+      toast.error(t('toast.aiCauseFailed'))
       console.error(err)
     } finally {
       setCauseLoading(false)
@@ -258,7 +254,7 @@ export default function IncidentDetailPage() {
 
   async function handleSaveCause() {
     if (!incident || !verifierName.trim()) {
-      toast.error('確認者名を入力してください')
+      toast.error(t('toast.enterVerifierName'))
       return
     }
     setSavingCause(true)
@@ -284,9 +280,9 @@ export default function IncidentDetailPage() {
         editedPreventive: preventiveText, editedVerify: verifyText,
         causeVerifiedBy: verifierName, causeVerifiedAt: verifiedAt,
       } : prev)
-      toast.success('確認済みとして保存しました ✅')
+      toast.success(t('toast.verifiedSaved'))
     } catch {
-      toast.error('保存に失敗しました')
+      toast.error(t('toast.saveFailed'))
     } finally {
       setSavingCause(false)
     }
@@ -297,9 +293,9 @@ export default function IncidentDetailPage() {
     try {
       await updateIncident(incident.id, { status })
       setIncident({ ...incident, status })
-      toast.success('ステータスを更新しました')
+      toast.success(t('toast.statusUpdated'))
     } catch {
-      toast.error('ステータスの更新に失敗しました')
+      toast.error(t('toast.statusFailed'))
     }
   }
 
@@ -309,9 +305,9 @@ export default function IncidentDetailPage() {
     try {
       await updateIncident(incident.id, { pdcaStatus, pdcaDeadline: pdcaDeadline || undefined, pdcaNotes: pdcaNotes || undefined })
       setIncident({ ...incident, pdcaStatus, pdcaDeadline: pdcaDeadline || undefined, pdcaNotes: pdcaNotes || undefined })
-      toast.success('PDCA状況を保存しました ✅')
+      toast.success(t('toast.pdcaSaved'))
     } catch {
-      toast.error('保存に失敗しました')
+      toast.error(t('toast.saveFailed'))
     } finally {
       setSavingPdca(false)
     }
@@ -320,7 +316,7 @@ export default function IncidentDetailPage() {
   async function handleDelete() {
     if (!incident) return
     await deleteIncident(incident.id)
-    toast.success('削除しました')
+    toast.success(t('toast.deleted'))
     router.replace('/list')
   }
 
@@ -336,9 +332,9 @@ export default function IncidentDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <div className="text-5xl">😕</div>
-        <p className="text-gray-500 font-medium">データが見つかりません</p>
+        <p className="text-gray-500 font-medium">{t('common.notFound') || 'データが見つかりません'}</p>
         <button onClick={() => router.replace('/list')} className="btn-secondary text-sm">
-          一覧に戻る
+          {t('common.backToList') || '一覧に戻る'}
         </button>
       </div>
     )
@@ -367,17 +363,17 @@ export default function IncidentDetailPage() {
         <div className="fixed inset-0 bg-black/60 z-[150] flex items-center justify-center p-5 no-print">
           <div className="card p-6 w-full max-w-sm">
             <div className="text-4xl text-center mb-3">🗑️</div>
-            <h3 className="font-extrabold text-gray-800 text-lg mb-2 text-center">削除の確認</h3>
+            <h3 className="font-extrabold text-gray-800 text-lg mb-2 text-center">{t('detail.deleteConfirmTitle')}</h3>
             <p className="text-gray-500 text-sm mb-5 text-center">
-              この記録を完全に削除します。<br />この操作は取り消せません。
+              {t('detail.deleteConfirmMsg')}
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 btn-secondary text-sm">
-                キャンセル
+                {t('common.cancel')}
               </button>
               <button onClick={handleDelete}
                 className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm transition-all shadow-md shadow-red-200">
-                削除する
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -407,19 +403,17 @@ export default function IncidentDetailPage() {
 
       {/* 印刷用ヘッダー */}
       <div className="hidden print:block p-6 border-b">
-        <h1 className="text-2xl font-bold text-gray-900">食品異物事故報告書</h1>
-        <p className="text-gray-600 text-sm">管理番号: {generateIncidentCode(incident.id)}</p>
-        <p className="text-gray-600 text-sm">発行: {new Date().toLocaleString('ja-JP')}</p>
-        <p className="text-xs text-gray-400 mt-1">
-          ※ 本報告書はAI一次判定に基づく推定支援システムの出力です。確定分析には外部専門機関による鑑定が必要です。
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('detail.printTitle')}</h1>
+        <p className="text-gray-600 text-sm">{t('detail.printMgmtNo')} {generateIncidentCode(incident.id)}</p>
+        <p className="text-gray-600 text-sm">{t('detail.printIssued')} {new Date().toLocaleString()}</p>
+        <p className="text-xs text-gray-400 mt-1">{t('detail.printDisclaimer')}</p>
       </div>
 
       <div className="max-w-2xl mx-auto px-5 py-5 space-y-5">
         {/* ステータス */}
         <div className="card p-4 no-print">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-gray-500 font-medium">ステータス変更</span>
+            <span className="text-sm text-gray-500 font-medium">{t('detail.statusChange')}</span>
             <div className="flex gap-2">
               {(['open', 'investigating', 'closed'] as IncidentStatus[]).map((s) => (
                 <button key={s} onClick={() => handleStatusChange(s)}
@@ -522,7 +516,7 @@ export default function IncidentDetailPage() {
         {incident.occurrenceType === 'external' && (
           <div className="card p-4 border-l-4 border-purple-400">
             <p className="section-title">
-              📦 外部クレーム情報
+              {t('detail.externalClaimInfo')}
               <span className="ml-2 text-xs font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
                 {OCCURRENCE_TYPE_LABELS['external']}
               </span>
@@ -530,25 +524,25 @@ export default function IncidentDetailPage() {
             <dl className="space-y-2.5">
               {incident.claimSource && (
                 <div className="flex items-start gap-3">
-                  <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">クレーム元</dt>
+                  <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">{t('detail.claimSource')}</dt>
                   <dd className="text-sm text-gray-800 font-medium">{incident.claimSource}</dd>
                 </div>
               )}
               {incident.claimDate && (
                 <div className="flex items-start gap-3">
-                  <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">受付日</dt>
+                  <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">{t('detail.claimDate')}</dt>
                   <dd className="text-sm text-gray-800 font-medium">{incident.claimDate}</dd>
                 </div>
               )}
               {incident.claimRoute && (
                 <div className="flex items-start gap-3">
-                  <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">クレーム経路</dt>
+                  <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">{t('detail.claimRoute')}</dt>
                   <dd className="text-sm text-gray-800 font-medium">{CLAIM_ROUTE_LABELS[incident.claimRoute]}</dd>
                 </div>
               )}
               {incident.claimContent && (
                 <div className="flex items-start gap-3">
-                  <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">クレーム内容</dt>
+                  <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">{t('detail.claimContent')}</dt>
                   <dd className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{incident.claimContent}</dd>
                 </div>
               )}
@@ -556,7 +550,7 @@ export default function IncidentDetailPage() {
             {/* クレーム写真 */}
             {incident.claimPhotos && incident.claimPhotos.length > 0 && (
               <div className="mt-3">
-                <p className="text-xs text-gray-400 font-semibold mb-2">クレーム写真</p>
+                <p className="text-xs text-gray-400 font-semibold mb-2">{t('detail.claimPhotos')}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {incident.claimPhotos.map((src, i) => (
                     <button key={i} type="button" onClick={() => setLightboxPhoto(src)}
@@ -573,16 +567,16 @@ export default function IncidentDetailPage() {
 
         {/* 商品情報 */}
         <div className="card p-4">
-          <p className="section-title">📦 商品情報</p>
+          <p className="section-title">{t('detail.productInfo')}</p>
           <dl className="space-y-2.5">
             {[
-              { label: '商品名', value: incident.productName },
-              { label: 'ロット番号', value: incident.lotNumber },
-              { label: '製造日', value: formatDate(incident.manufacturingDate) },
-              { label: '賞味・消費期限', value: formatDate(incident.expiryDate) },
-              { label: 'ライン番号', value: incident.lineNumber },
-              { label: '工場名', value: incident.factory },
-              { label: '担当者', value: incident.operator },
+              { label: t('detail.productName'), value: incident.productName },
+              { label: t('detail.lotNumber'), value: incident.lotNumber },
+              { label: t('detail.manufactureDate'), value: formatDate(incident.manufacturingDate) },
+              { label: t('detail.expiryDate'), value: formatDate(incident.expiryDate) },
+              { label: t('detail.lineNumber'), value: incident.lineNumber },
+              { label: t('detail.factoryName'), value: incident.factory },
+              { label: t('detail.operator'), value: incident.operator },
             ].map(({ label, value }) =>
               value ? (
                 <div key={label} className="flex items-start gap-3">
@@ -592,13 +586,13 @@ export default function IncidentDetailPage() {
               ) : null
             )}
             <div className="flex items-start gap-3">
-              <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">発見工程</dt>
+              <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">{t('detail.discoveryProcess')}</dt>
               <dd className="text-sm text-gray-800 font-medium">
                 {DISCOVERY_PROCESS_LABELS[incident.discoveryProcess]}
               </dd>
             </div>
             <div className="flex items-start gap-3">
-              <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">発見日時</dt>
+              <dt className="text-xs text-gray-400 font-semibold w-28 shrink-0 pt-0.5">{t('detail.discoveryDatetime')}</dt>
               <dd className="text-sm text-gray-800 font-medium">{formatDateTime(incident.discoveryDate)}</dd>
             </div>
           </dl>
@@ -607,10 +601,10 @@ export default function IncidentDetailPage() {
         {/* 写真 */}
         {(incident.photos.length > 0 || incident.microscopePhotos.length > 0) && (
           <div className="card p-4">
-            <p className="section-title">📷 写真</p>
+            <p className="section-title">{t('detail.photoSection')}</p>
             {incident.photos.length > 0 && (
               <div className="mb-4">
-                <p className="text-xs text-gray-500 font-semibold mb-2">通常写真</p>
+                <p className="text-xs text-gray-500 font-semibold mb-2">{t('detail.normalPhotos')}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {incident.photos.map((src, i) => (
                     <button key={i} type="button" onClick={() => setLightboxPhoto(src)}
@@ -624,7 +618,7 @@ export default function IncidentDetailPage() {
             )}
             {incident.microscopePhotos.length > 0 && (
               <div>
-                <p className="text-xs text-gray-500 font-semibold mb-2">顕微鏡写真</p>
+                <p className="text-xs text-gray-500 font-semibold mb-2">{t('detail.microscopePhotos')}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {incident.microscopePhotos.map((src, i) => (
                     <button key={i} type="button" onClick={() => setLightboxPhoto(src)}
@@ -641,18 +635,18 @@ export default function IncidentDetailPage() {
 
         {/* 異物特徴 */}
         <div className="card p-4">
-          <p className="section-title">🔍 異物特徴チェック結果</p>
+          <p className="section-title">{t('detail.featureCheck')}</p>
           <FeatureSummary features={incident.features} />
         </div>
 
         {/* 対応記録 */}
         {(incident.comment || incident.correctiveAction || incident.preventiveMeasure) && (
           <div className="card p-4">
-            <p className="section-title">📝 対応記録</p>
+            <p className="section-title">{t('detail.actionRecord')}</p>
             <div className="space-y-3">
               {incident.comment && (
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-1">💡 心当たり・状況コメント</p>
+                  <p className="text-xs text-gray-400 font-semibold mb-1">{t('detail.situationComment')}</p>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{incident.comment}</p>
                 </div>
               )}
@@ -954,36 +948,37 @@ export default function IncidentDetailPage() {
 }
 
 function FeatureSummary({ features }: { features: Incident['features'] }) {
+  const { t } = useLang()
   const tags: string[] = []
-  if (features.texture.hard) tags.push('固い')
-  if (features.texture.soft) tags.push('柔らかい')
-  if (features.texture.elastic) tags.push('弾力あり')
-  if (features.texture.crumbly) tags.push('崩れやすい')
-  if (features.texture.sticky) tags.push('粘着あり')
-  if (features.appearance.glossy) tags.push('光沢')
-  if (features.appearance.translucent) tags.push('半透明')
-  if (features.appearance.burned) tags.push('焦げ')
-  if (features.appearance.fibrous) tags.push('繊維状')
-  if (features.appearance.granular) tags.push('粒状')
-  if (features.appearance.layered) tags.push('層構造')
-  if (features.appearance.bubbly) tags.push('気泡あり')
-  if (features.appearance.metallic) tags.push('金属感')
-  if (features.color.black) tags.push('黒色')
-  if (features.color.brown) tags.push('茶色')
-  if (features.color.white) tags.push('白色')
-  if (features.color.metalColor) tags.push('金属色')
-  if (features.color.transparent) tags.push('透明')
-  if (features.color.green) tags.push('緑色')
-  if (features.smell.burnedSmell) tags.push('焦げ臭')
-  if (features.smell.oilSmell) tags.push('油臭')
-  if (features.smell.chemicalSmell) tags.push('薬品臭')
-  if (features.smell.noSmell) tags.push('無臭')
-  if (features.waterTest.floats) tags.push('水に浮く')
-  if (features.waterTest.sinks) tags.push('水に沈む')
-  if (features.waterTest.dissolves) tags.push('溶ける')
-  if (features.waterTest.oilSurface) tags.push('油浮き')
+  if (features.texture.hard) tags.push(t('feat.texture.hard'))
+  if (features.texture.soft) tags.push(t('feat.texture.soft'))
+  if (features.texture.elastic) tags.push(t('feat.texture.elastic'))
+  if (features.texture.crumbly) tags.push(t('feat.texture.crumbly'))
+  if (features.texture.sticky) tags.push(t('feat.texture.sticky'))
+  if (features.appearance.glossy) tags.push(t('feat.surface.glossy'))
+  if (features.appearance.translucent) tags.push(t('feat.surface.translucent'))
+  if (features.appearance.burned) tags.push(t('feat.surface.burned'))
+  if (features.appearance.fibrous) tags.push(t('feat.shape.fibrous'))
+  if (features.appearance.granular) tags.push(t('feat.shape.granular'))
+  if (features.appearance.layered) tags.push(t('feat.shape.layered'))
+  if (features.appearance.bubbly) tags.push(t('feat.shape.bubbly'))
+  if (features.appearance.metallic) tags.push(t('feat.surface.metallic'))
+  if (features.color.black) tags.push(t('feat.color.black'))
+  if (features.color.brown) tags.push(t('feat.color.brown'))
+  if (features.color.white) tags.push(t('feat.color.white'))
+  if (features.color.metalColor) tags.push(t('feat.color.metalColor'))
+  if (features.color.transparent) tags.push(t('feat.color.transparent'))
+  if (features.color.green) tags.push(t('feat.color.green'))
+  if (features.smell.burnedSmell) tags.push(t('feat.smell.burnedSmell'))
+  if (features.smell.oilSmell) tags.push(t('feat.smell.oilSmell'))
+  if (features.smell.chemicalSmell) tags.push(t('feat.smell.chemicalSmell'))
+  if (features.smell.noSmell) tags.push(t('feat.smell.noSmell'))
+  if (features.waterTest.floats) tags.push(t('feat.water.floats'))
+  if (features.waterTest.sinks) tags.push(t('feat.water.sinks'))
+  if (features.waterTest.dissolves) tags.push(t('feat.water.dissolves'))
+  if (features.waterTest.oilSurface) tags.push(t('feat.water.oilSurface'))
 
-  if (tags.length === 0) return <p className="text-sm text-gray-400">特徴チェックなし</p>
+  if (tags.length === 0) return <p className="text-sm text-gray-400">{t('feat.noCheck')}</p>
 
   return (
     <div className="flex flex-wrap gap-2">

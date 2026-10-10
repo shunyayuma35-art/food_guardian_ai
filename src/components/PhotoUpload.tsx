@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
+import { useLang } from '@/context/LanguageContext'
 
 interface PhotoUploadProps {
   label: string
@@ -12,6 +13,7 @@ interface PhotoUploadProps {
 export default function PhotoUpload({ label, photos, onChange, icon = '📷' }: PhotoUploadProps) {
   const cameraRef = useRef<HTMLInputElement>(null)
   const galleryRef = useRef<HTMLInputElement>(null)
+  const { t } = useLang()
 
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
@@ -57,20 +59,18 @@ export default function PhotoUpload({ label, photos, onChange, icon = '📷' }: 
           onClick={() => cameraRef.current?.click()}
           className="flex-1 py-3.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl text-sm text-white flex items-center justify-center gap-2 transition-colors"
         >
-          📷 カメラ撮影
+          {t('photo.camera')}
         </button>
         <button
           type="button"
           onClick={() => galleryRef.current?.click()}
           className="flex-1 py-3.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl text-sm text-white flex items-center justify-center gap-2 transition-colors"
         >
-          🖼️ ギャラリー
+          {t('photo.gallery')}
         </button>
       </div>
       <p className="text-[10px] text-gray-400 mt-1 text-center leading-relaxed">
-        カメラが開かない場合は Chrome でページを開いてください
-        <br />
-        <span className="text-[9px] opacity-70">(If camera doesn't open, use Chrome browser)</span>
+        {t('photo.cameraHint')}
       </p>
 
       <input

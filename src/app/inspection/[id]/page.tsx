@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import Navigation from '@/components/Navigation'
 import toast from 'react-hot-toast'
 import {
@@ -31,6 +32,7 @@ function CheckRow({ label, value }: { label: string; value: boolean | null }) {
 
 export default function InspectionDetailPage() {
   const { user, loading } = useAuth()
+  const { t } = useLang()
   const router = useRouter()
   const params = useParams<{ id: string }>()
   const [record, setRecord] = useState<InspectionRecord | null>(null)
@@ -53,10 +55,10 @@ export default function InspectionDetailPage() {
     if (!record) return
     try {
       await deleteInspection(record.id)
-      toast.success('削除しました')
+      toast.success(t('toast.deleted'))
       router.replace('/inspection')
     } catch {
-      toast.error('削除に失敗しました')
+      toast.error(t('toast.deleteFailed'))
     }
   }
 
@@ -107,7 +109,7 @@ export default function InspectionDetailPage() {
     a.download = `検査記録_${record.deviceName}_${record.inspectionDate}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('CSVをダウンロードしました 📗')
+    toast.success(t('insp.csvOk'))
   }
 
   if (loading || fetching) {
@@ -121,9 +123,9 @@ export default function InspectionDetailPage() {
   if (!record) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">記録が見つかりません</p>
+        <p className="text-gray-500">{t('insp.notFound')}</p>
         <button onClick={() => router.replace('/inspection')} className="btn-secondary text-sm">
-          一覧に戻る
+          {t('insp.backToList')}
         </button>
       </div>
     )
@@ -137,13 +139,13 @@ export default function InspectionDetailPage() {
       {showDelete && (
         <div className="fixed inset-0 bg-black/60 z-[150] flex items-center justify-center p-5">
           <div className="card p-6 w-full max-w-sm">
-            <p className="font-extrabold text-gray-800 text-lg mb-2 text-center">削除の確認</p>
-            <p className="text-gray-500 text-sm mb-5 text-center">この記録を完全に削除します。取り消せません。</p>
+            <p className="font-extrabold text-gray-800 text-lg mb-2 text-center">{t('insp.deleteConfirmTitle')}</p>
+            <p className="text-gray-500 text-sm mb-5 text-center">{t('insp.deleteConfirmMsg')}</p>
             <div className="flex gap-3">
-              <button onClick={() => setShowDelete(false)} className="flex-1 btn-secondary text-sm">キャンセル</button>
+              <button onClick={() => setShowDelete(false)} className="flex-1 btn-secondary text-sm">{t('common.cancel')}</button>
               <button onClick={handleDelete}
                 className="flex-1 py-3 bg-red-500 text-white rounded-2xl font-bold text-sm shadow-md shadow-red-200">
-                削除する
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -158,16 +160,16 @@ export default function InspectionDetailPage() {
           </span>
           <button onClick={() => window.print()}
             className="text-xs text-gray-500 hover:text-teal-500 px-3 py-1.5 rounded-xl border border-gray-200 hover:border-teal-300 bg-white transition-all">
-            🖨️ 印刷
+            {t('insp.pdfPrint')}
           </button>
         </div>
       </header>
 
       {/* 印刷用ヘッダー */}
       <div className="hidden print:block p-6 border-b">
-        <h1 className="text-2xl font-bold">検査記録表 — {DEVICE_TYPE_LABELS[record.deviceType]}</h1>
-        <p className="text-sm text-gray-600">検査日: {record.inspectionDate} / 機器: {record.deviceName}</p>
-        <p className="text-xs text-gray-400 mt-1">発行: {new Date().toLocaleString('ja-JP')}</p>
+        <h1 className="text-2xl font-bold">{t('insp.printHeader')}{DEVICE_TYPE_LABELS[record.deviceType]}</h1>
+        <p className="text-sm text-gray-600">{t('insp.printDate')} {record.inspectionDate} / {t('insp.printDevice')} {record.deviceName}</p>
+        <p className="text-xs text-gray-400 mt-1">{t('insp.printIssued')} {new Date().toLocaleString()}</p>
       </div>
 
       <div className="max-w-2xl mx-auto px-5 py-5 space-y-4">
@@ -175,21 +177,21 @@ export default function InspectionDetailPage() {
         {/* 総合判定バナー */}
         <div className={`rounded-2xl p-4 border ${RESULT_STYLE[record.result]} flex items-center justify-between`}>
           <div>
-            <p className="text-xs font-semibold opacity-70">総合判定</p>
+            <p className="text-xs font-semibold opacity-70">{t('insp.overallJudgment')}</p>
             <p className="text-2xl font-extrabold">{INSPECTION_RESULT_LABELS[record.result]}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs opacity-70">テストピース</p>
+            <p className="text-xs opacity-70">{t('insp.testpieceLabel')}</p>
             <p className="text-sm font-bold">
-              始業 {record.startCheck.passed ? '✅合格' : '❌不合格'} ／
-              終業 {record.endCheck.passed ? '✅合格' : '❌不合格'}
+              {t('insp.startLabel')} {record.startCheck.passed ? t('insp.passShort') : t('insp.failShort')} ／
+              {t('insp.endLabel')} {record.endCheck.passed ? t('insp.passShort') : t('insp.failShort')}
             </p>
           </div>
         </div>
 
         {/* 機器・製品情報 */}
         <div className="card p-4">
-          <p className="section-title">📋 基本情報</p>
+          <p className="section-title">{t('insp.basicInfo')}</p>
           <dl className="space-y-2">
             {[
               ['機器名', record.deviceName],
@@ -211,7 +213,7 @@ export default function InspectionDetailPage() {
         {/* 感度設定 */}
         {(record.sensitivity.fe || record.sensitivity.sus || record.sensitivity.nonFe || record.sensitivity.xrayThreshold) && (
           <div className="card p-4">
-            <p className="section-title">⚙️ 検出感度設定値</p>
+            <p className="section-title">{t('insp.sensitivitySection')}</p>
             {isMetal ? (
               <div className="grid grid-cols-3 gap-3 text-center">
                 {[
@@ -234,14 +236,14 @@ export default function InspectionDetailPage() {
         {/* テストピース始業 */}
         <div className="card p-4 border-l-4 border-teal-400">
           <div className="flex items-center justify-between mb-3">
-            <p className="section-title mb-0">🟢 始業テストピース確認</p>
+            <p className="section-title mb-0">{t('insp.startTestpiece')}</p>
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
               record.startCheck.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
             }`}>
-              {record.startCheck.passed ? '合格' : '不合格'}
+              {record.startCheck.passed ? t('insp.pass') : t('insp.fail')}
             </span>
           </div>
-          <p className="text-xs text-gray-400 mb-2">確認時刻: {record.startCheck.time}</p>
+          <p className="text-xs text-gray-400 mb-2">{t('insp.checkTime')}: {record.startCheck.time}</p>
           <div className="space-y-1.5">
             {isMetal ? (
               <>
@@ -261,14 +263,14 @@ export default function InspectionDetailPage() {
         {/* テストピース終業 */}
         <div className="card p-4 border-l-4 border-slate-400">
           <div className="flex items-center justify-between mb-3">
-            <p className="section-title mb-0">🔴 終業テストピース確認</p>
+            <p className="section-title mb-0">{t('insp.endTestpiece')}</p>
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
               record.endCheck.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
             }`}>
-              {record.endCheck.passed ? '合格' : '不合格'}
+              {record.endCheck.passed ? t('insp.pass') : t('insp.fail')}
             </span>
           </div>
-          <p className="text-xs text-gray-400 mb-2">確認時刻: {record.endCheck.time}</p>
+          <p className="text-xs text-gray-400 mb-2">{t('insp.checkTime')}: {record.endCheck.time}</p>
           <div className="space-y-1.5">
             {isMetal ? (
               <>
@@ -288,24 +290,24 @@ export default function InspectionDetailPage() {
         {/* 排除・是正 */}
         {(record.rejectCount > 0 || record.correctionAction || record.comment) && (
           <div className="card p-4">
-            <p className="section-title">⚠️ 排除・是正処置</p>
+            <p className="section-title">{t('insp.rejectSection')}</p>
             <div className="space-y-3">
               {record.rejectCount > 0 && (
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-1">排除件数</p>
-                  <p className="text-2xl font-extrabold text-red-500">{record.rejectCount}<span className="text-sm text-gray-500 ml-1">件</span></p>
+                  <p className="text-xs text-gray-400 font-semibold mb-1">{t('insp.rejectCountLabel')}</p>
+                  <p className="text-2xl font-extrabold text-red-500">{record.rejectCount}<span className="text-sm text-gray-500 ml-1">{t('insp.unit')}</span></p>
                   {record.rejectDetails && <p className="text-sm text-gray-700 mt-1">{record.rejectDetails}</p>}
                 </div>
               )}
               {record.correctionAction && (
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-1">是正処置</p>
+                  <p className="text-xs text-gray-400 font-semibold mb-1">{t('insp.correctionActionLabel')}</p>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{record.correctionAction}</p>
                 </div>
               )}
               {record.comment && (
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-1">コメント</p>
+                  <p className="text-xs text-gray-400 font-semibold mb-1">{t('insp.inspCommentLabel')}</p>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{record.comment}</p>
                 </div>
               )}
@@ -315,26 +317,26 @@ export default function InspectionDetailPage() {
 
         {/* エクスポート */}
         <div className="card p-4 no-print">
-          <p className="section-title">📤 エクスポート</p>
+          <p className="section-title">{t('insp.exportSection')}</p>
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => window.print()}
               className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-green-100 text-green-700 font-bold text-xs hover:bg-green-200 transition-all">
-              🖨️ PDF印刷
+              {t('insp.pdfPrint')}
             </button>
             <button onClick={downloadCSV}
               className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-teal-100 text-teal-700 font-bold text-xs hover:bg-teal-200 transition-all">
-              📗 CSV出力
+              {t('insp.csvExport')}
             </button>
           </div>
         </div>
 
         <p className="text-xs text-gray-400 text-center">
-          登録: {new Date(record.createdAt).toLocaleString('ja-JP')}
+          {t('insp.registered')} {new Date(record.createdAt).toLocaleString()}
         </p>
 
         <button onClick={() => setShowDelete(true)}
           className="w-full py-3.5 text-red-500 border border-red-200 hover:border-red-400 rounded-2xl text-sm bg-red-50/50 hover:bg-red-50 font-semibold no-print transition-all">
-          🗑️ この記録を削除
+          {t('insp.deleteBtn')}
         </button>
       </div>
 

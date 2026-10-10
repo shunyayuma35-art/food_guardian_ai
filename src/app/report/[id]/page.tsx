@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import { getReport, updateReport, deleteReport, listReports } from '@/lib/firestore'
 import { reportToWordHTML } from '@/lib/report-generator'
 import Navigation from '@/components/Navigation'
@@ -44,6 +45,7 @@ function ReportContent({ content }: { content: string }) {
 export default function ReportDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user, loading } = useAuth()
+  const { t } = useLang()
   const router = useRouter()
 
   const [report, setReport] = useState<Report | null>(null)
@@ -85,13 +87,13 @@ export default function ReportDetailPage() {
     await updateReport(id, { content: editContent, title: editTitle })
     setReport({ ...report, content: editContent, title: editTitle })
     setEditing(false)
-    toast.success('保存しました ✅')
+    toast.success(t('toast.saveOk'))
     setSaving(false)
   }
 
   async function handleDelete() {
     await deleteReport(id)
-    toast.success('削除しました')
+    toast.success(t('toast.deleted'))
     router.replace('/')
   }
 
@@ -105,7 +107,7 @@ export default function ReportDetailPage() {
     a.download = `${report.title.replace(/[/\\:*?"<>|]/g, '_')}.doc`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('Word文書をダウンロードしました 📘')
+    toast.success(t('toast.wordDownloaded'))
   }
 
   function downloadTxt() {
@@ -117,7 +119,7 @@ export default function ReportDetailPage() {
     a.download = `${report.title.replace(/[/\\:*?"<>|]/g, '_')}.txt`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('テキストファイルをダウンロードしました')
+    toast.success(t('toast.txtDownloaded'))
   }
 
   async function copyToClipboard() {
@@ -125,7 +127,7 @@ export default function ReportDetailPage() {
     const text = `${report.title}\n${'─'.repeat(40)}\n${report.content}`
     try {
       await navigator.clipboard.writeText(text)
-      toast.success('クリップボードにコピーしました 📋')
+      toast.success(t('toast.copied'))
     } catch {
       // fallback for environments without clipboard API
       const el = document.createElement('textarea')
@@ -136,7 +138,7 @@ export default function ReportDetailPage() {
       el.select()
       document.execCommand('copy')
       document.body.removeChild(el)
-      toast.success('コピーしました 📋')
+      toast.success(t('toast.copied'))
     }
   }
 
@@ -146,7 +148,7 @@ export default function ReportDetailPage() {
     if (navigator.share) {
       try {
         await navigator.share({ title: report.title, text })
-        toast.success('共有しました ✅')
+        toast.success(t('toast.shared'))
       } catch (e: unknown) {
         if (e instanceof Error && e.name !== 'AbortError') {
           await copyToClipboard()
@@ -172,8 +174,8 @@ export default function ReportDetailPage() {
   if (!report) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">報告書が見つかりません</p>
-        <button onClick={() => router.push('/')} className="btn-primary">ホームに戻る</button>
+        <p className="text-gray-500">{t('report.notFound')}</p>
+        <button onClick={() => router.push('/')} className="btn-primary">{t('report.backToHome')}</button>
       </div>
     )
   }
@@ -184,11 +186,11 @@ export default function ReportDetailPage() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
-            <p className="text-lg font-extrabold text-gray-800 mb-2">削除の確認</p>
-            <p className="text-sm text-gray-500 mb-6">この報告書を削除しますか？この操作は取り消せません。</p>
+            <p className="text-lg font-extrabold text-gray-800 mb-2">{t('report.deleteConfirmTitle')}</p>
+            <p className="text-sm text-gray-500 mb-6">{t('report.deleteConfirmMsg')}</p>
             <div className="flex gap-3">
-              <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-2xl bg-gray-100 text-gray-700 font-bold text-sm">キャンセル</button>
-              <button onClick={handleDelete} className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-sm shadow-md shadow-red-200">削除する</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-2xl bg-gray-100 text-gray-700 font-bold text-sm">{t('common.cancel')}</button>
+              <button onClick={handleDelete} className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-sm shadow-md shadow-red-200">{t('common.delete')}</button>
             </div>
           </div>
         </div>
@@ -200,8 +202,8 @@ export default function ReportDetailPage() {
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowSidebar(false)} />
           <div className="relative z-10 w-72 h-full bg-white shadow-2xl overflow-y-auto">
             <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-5">
-              <p className="text-white font-extrabold text-base">📁 報告書フォルダ</p>
-              <p className="text-white/80 text-xs mt-0.5">全 {allReports.length} 件</p>
+              <p className="text-white font-extrabold text-base">{t('report.sidebar.folder')}</p>
+              <p className="text-white/80 text-xs mt-0.5">{t('report.sidebar.total').replace('{n}', String(allReports.length))}</p>
             </div>
             <div className="p-3 space-y-1">
               {allReports.map((r) => (
@@ -224,7 +226,7 @@ export default function ReportDetailPage() {
                 </Link>
               ))}
               {allReports.length === 0 && (
-                <p className="text-xs text-gray-400 text-center py-8">報告書はまだありません</p>
+                <p className="text-xs text-gray-400 text-center py-8">{t('report.sidebar.empty')}</p>
               )}
             </div>
           </div>
@@ -247,8 +249,8 @@ export default function ReportDetailPage() {
                 <h1 className="font-extrabold text-gray-800 text-sm leading-tight truncate">{report.title}</h1>
               )}
               <p className="text-xs text-gray-400 mt-0.5">
-                {new Date(report.createdAt).toLocaleDateString('ja-JP')} 生成
-                {report.updatedAt !== report.createdAt && ' · 編集済み'}
+                {t('report.banner.generated')}{new Date(report.createdAt).toLocaleDateString()}
+                {report.updatedAt !== report.createdAt && ` · ${t('report.banner.edited')}`}
               </p>
             </div>
             <button
@@ -268,13 +270,13 @@ export default function ReportDetailPage() {
                   disabled={saving}
                   className="shrink-0 px-3 py-1.5 rounded-xl bg-green-500 text-white text-xs font-bold disabled:opacity-50"
                 >
-                  {saving ? '保存中...' : '✅ 保存'}
+                  {saving ? t('report.toolbar.saving') : t('report.toolbar.save')}
                 </button>
                 <button
                   onClick={() => { setEditing(false); setEditContent(report.content); setEditTitle(report.title) }}
                   className="shrink-0 px-3 py-1.5 rounded-xl bg-gray-200 text-gray-600 text-xs font-bold"
                 >
-                  キャンセル
+                  {t('report.toolbar.cancel')}
                 </button>
               </>
             ) : (
@@ -283,25 +285,25 @@ export default function ReportDetailPage() {
                   onClick={() => setEditing(true)}
                   className="shrink-0 px-3 py-1.5 rounded-xl bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200"
                 >
-                  ✏️ 編集
+                  {t('report.toolbar.edit')}
                 </button>
                 <button onClick={handleShare} className="shrink-0 px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-xs font-bold hover:bg-gray-200">
-                  📤 共有
+                  {t('report.toolbar.share')}
                 </button>
                 <button onClick={copyToClipboard} className="shrink-0 px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 text-xs font-bold hover:bg-gray-200">
-                  📋 コピー
+                  {t('report.toolbar.copy')}
                 </button>
                 <button onClick={downloadWord} className="shrink-0 px-3 py-1.5 rounded-xl bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200">
-                  📘 Word
+                  {t('report.toolbar.word')}
                 </button>
                 <button onClick={downloadTxt} className="shrink-0 px-3 py-1.5 rounded-xl bg-green-100 text-green-700 text-xs font-bold hover:bg-green-200">
-                  📄 TXT
+                  {t('report.toolbar.txt')}
                 </button>
                 <button onClick={handlePrint} className="shrink-0 px-3 py-1.5 rounded-xl bg-purple-100 text-purple-700 text-xs font-bold hover:bg-purple-200">
-                  🖨️ 印刷
+                  {t('report.toolbar.print')}
                 </button>
                 <button onClick={() => setShowDeleteConfirm(true)} className="shrink-0 px-3 py-1.5 rounded-xl bg-red-100 text-red-600 text-xs font-bold hover:bg-red-200">
-                  🗑️ 削除
+                  {t('report.toolbar.delete')}
                 </button>
               </>
             )}
@@ -313,7 +315,7 @@ export default function ReportDetailPage() {
         {editing ? (
           /* 編集モード */
           <div className="card p-4">
-            <p className="text-xs text-gray-500 font-semibold mb-2">✏️ 報告書を編集（自由に修正できます）</p>
+            <p className="text-xs text-gray-500 font-semibold mb-2">{t('report.editHint')}</p>
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
@@ -329,17 +331,16 @@ export default function ReportDetailPage() {
               <div className="text-3xl mb-2">📄</div>
               <p className="text-white font-extrabold text-lg leading-tight">{report.title}</p>
               <p className="text-white/70 text-xs mt-1">
-                {report.type === 'incident' ? '異物混入クレーム報告書' : '官能検査報告書'} ·
-                生成：{new Date(report.createdAt).toLocaleDateString('ja-JP')}
+                {report.type === 'incident' ? t('report.banner.foreign') : t('report.banner.sensory')} ·
+                {t('report.banner.generated')}{new Date(report.createdAt).toLocaleDateString()}
               </p>
             </div>
 
             {/* 注意バナー */}
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-4">
-              <p className="text-amber-700 text-xs font-bold">✏️ 報告書は編集できます</p>
+              <p className="text-amber-700 text-xs font-bold">{t('report.editHint')}</p>
               <p className="text-gray-600 text-xs mt-0.5 leading-relaxed">
-                「編集」ボタンで内容を修正し、「保存」で更新されます。
-                Word・TXT でダウンロードして社内編集も可能です。
+                {t('report.editGuide')}
               </p>
             </div>
 
@@ -350,7 +351,7 @@ export default function ReportDetailPage() {
 
             {/* エクスポートパネル */}
             <div className="mt-4 card p-5">
-              <p className="section-title">📤 エクスポート・外部共有</p>
+              <p className="section-title">{t('report.export.title')}</p>
 
               {/* 外部共有ボタン（最優先） */}
               <button
@@ -359,8 +360,8 @@ export default function ReportDetailPage() {
               >
                 <span className="text-2xl">📤</span>
                 <div className="text-left">
-                  <p className="text-sm font-extrabold">外部アプリへ共有</p>
-                  <p className="text-xs text-white/70 font-normal">LINE・メール・メモなどに直接送信</p>
+                  <p className="text-sm font-extrabold">{t('report.export.shareBtn')}</p>
+                  <p className="text-xs text-white/70 font-normal">{t('report.export.shareDesc')}</p>
                 </div>
               </button>
 
@@ -369,13 +370,13 @@ export default function ReportDetailPage() {
                   onClick={copyToClipboard}
                   className="flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-purple-100 text-purple-700 font-bold text-sm transition-all active:scale-[0.98] hover:bg-purple-200"
                 >
-                  <span>📋</span> テキストコピー
+                  {t('report.export.textCopy')}
                 </button>
                 <button
                   onClick={handlePrint}
                   className="flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-green-100 text-green-700 font-bold text-sm transition-all active:scale-[0.98] hover:bg-green-200"
                 >
-                  <span>🖨️</span> PDF印刷
+                  {t('report.export.pdfPrint')}
                 </button>
                 <button
                   onClick={downloadWord}
@@ -391,8 +392,7 @@ export default function ReportDetailPage() {
                 </button>
               </div>
               <p className="text-xs text-gray-400 mt-3 text-center leading-relaxed">
-                「外部共有」はLINE・メール・Slack等へ直接送れます。<br />
-                スマートフォンではアプリ選択画面が開きます。
+                {t('report.export.footerDesc')}
               </p>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import {
   getSensoryEvaluation, updateSensoryEvaluation, deleteSensoryEvaluation,
   findIncidentsByLot, createReport,
@@ -34,6 +35,7 @@ function RowItem({ label, value }: { label: string; value: string }) {
 export default function SensoryDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user, loading } = useAuth()
+  const { t } = useLang()
   const router = useRouter()
 
   const [ev, setEv] = useState<SensoryEvaluation | null>(null)
@@ -81,7 +83,7 @@ export default function SensoryDetailPage() {
 
   async function handleDelete() {
     await deleteSensoryEvaluation(id)
-    toast.success('削除しました')
+    toast.success(t('toast.deleted'))
     router.replace('/sensory')
   }
 
@@ -100,7 +102,7 @@ export default function SensoryDetailPage() {
         lotNumber: ev.lotNumber,
         createdBy: user.uid,
       })
-      toast.success('報告書を生成しました 📄')
+      toast.success(t('toast.reportSaved'))
       router.push(`/report/${reportId}`)
     } catch {
       toast.error('報告書の生成に失敗しました')
@@ -119,7 +121,7 @@ export default function SensoryDetailPage() {
     a.download = `官能検査_${ev.productName}_${ev.lotNumber}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('Excelデータをダウンロードしました')
+    toast.success(t('toast.excelDownloaded'))
   }
 
   function downloadWord() {
@@ -133,7 +135,7 @@ export default function SensoryDetailPage() {
     a.download = `官能検査報告書_${ev.productName}_${ev.lotNumber}.doc`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('Word文書をダウンロードしました')
+    toast.success(t('toast.wordDownloaded'))
   }
 
   async function copyToClipboard() {
@@ -143,7 +145,7 @@ export default function SensoryDetailPage() {
     const text = `${title}\n${'─'.repeat(40)}\n${content}`
     try {
       await navigator.clipboard.writeText(text)
-      toast.success('クリップボードにコピーしました 📋')
+      toast.success(t('toast.copied'))
     } catch {
       const el = document.createElement('textarea')
       el.value = text
@@ -153,7 +155,7 @@ export default function SensoryDetailPage() {
       el.select()
       document.execCommand('copy')
       document.body.removeChild(el)
-      toast.success('コピーしました 📋')
+      toast.success(t('toast.copied'))
     }
   }
 
@@ -165,7 +167,7 @@ export default function SensoryDetailPage() {
     if (navigator.share) {
       try {
         await navigator.share({ title, text })
-        toast.success('共有しました ✅')
+        toast.success(t('toast.shared'))
       } catch (e: unknown) {
         if (e instanceof Error && e.name !== 'AbortError') {
           await copyToClipboard()
@@ -187,8 +189,8 @@ export default function SensoryDetailPage() {
   if (!ev) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">検査記録が見つかりません</p>
-        <button onClick={() => router.push('/sensory')} className="btn-primary">一覧に戻る</button>
+        <p className="text-gray-500">{t('sensory.notFound')}</p>
+        <button onClick={() => router.push('/sensory')} className="btn-primary">{t('sensory.backToList')}</button>
       </div>
     )
   }
@@ -201,11 +203,11 @@ export default function SensoryDetailPage() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-5 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
-            <p className="text-lg font-extrabold text-gray-800 mb-2">削除の確認</p>
-            <p className="text-sm text-gray-500 mb-6">この検査記録を削除しますか？この操作は取り消せません。</p>
+            <p className="text-lg font-extrabold text-gray-800 mb-2">{t('sensory.deleteConfirmTitle')}</p>
+            <p className="text-sm text-gray-500 mb-6">{t('sensory.deleteConfirmMsg')}</p>
             <div className="flex gap-3">
-              <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-2xl bg-gray-100 text-gray-700 font-bold text-sm">キャンセル</button>
-              <button onClick={handleDelete} className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-sm shadow-md shadow-red-200">削除する</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-2xl bg-gray-100 text-gray-700 font-bold text-sm">{t('common.cancel')}</button>
+              <button onClick={handleDelete} className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-sm shadow-md shadow-red-200">{t('common.delete')}</button>
             </div>
           </div>
         </div>
@@ -219,9 +221,9 @@ export default function SensoryDetailPage() {
             <h1 className="font-extrabold text-gray-800 text-base leading-tight truncate">
               {ev.productName}
             </h1>
-            <p className="text-xs text-gray-500">官能検査詳細</p>
+            <p className="text-xs text-gray-500">{t('sensory.detail.subtitle')}</p>
           </div>
-          <button onClick={() => setShowDeleteConfirm(true)} className="text-xs text-red-400 hover:text-red-500 font-bold px-2 py-1">削除</button>
+          <button onClick={() => setShowDeleteConfirm(true)} className="text-xs text-red-400 hover:text-red-500 font-bold px-2 py-1">{t('sensory.deleteBtn')}</button>
         </div>
       </header>
 
@@ -233,34 +235,34 @@ export default function SensoryDetailPage() {
           <p className="text-white/80 text-sm mt-1">{ev.productName}</p>
           {ev.approvedAt ? (
             <div className="mt-3 bg-white/20 rounded-2xl px-4 py-2 inline-block">
-              <p className="text-white text-xs font-bold">✅ 承認済み（{ev.approvedBy}）</p>
+              <p className="text-white text-xs font-bold">{t('sensory.approvedStatus')}（{ev.approvedBy}）</p>
             </div>
           ) : (
             <div className="mt-3 bg-white/20 rounded-2xl px-4 py-2 inline-block">
-              <p className="text-white text-xs font-bold">⏳ 承認待ち</p>
+              <p className="text-white text-xs font-bold">{t('sensory.pendingStatus')}</p>
             </div>
           )}
         </div>
 
         {/* 基本情報 */}
         <div className="card p-5">
-          <p className="section-title">基本情報</p>
-          <RowItem label="製品名" value={ev.productName} />
-          <RowItem label="ロット番号" value={ev.lotNumber || '未入力'} />
-          <RowItem label="検査日時" value={new Date(ev.date).toLocaleString('ja-JP')} />
-          <RowItem label="検査担当者" value={ev.inspectorName} />
-          <RowItem label="最終承認者" value={ev.approverName || '未設定'} />
+          <p className="section-title">{t('sensory.basicInfo')}</p>
+          <RowItem label={t('sensory.productName')} value={ev.productName} />
+          <RowItem label={t('sensory.lotNumber')} value={ev.lotNumber || '—'} />
+          <RowItem label={t('sensory.datetime')} value={new Date(ev.date).toLocaleString()} />
+          <RowItem label={t('sensory.inspectorName')} value={ev.inspectorName} />
+          <RowItem label={t('sensory.approverName')} value={ev.approverName || '—'} />
         </div>
 
         {/* 官能評価 */}
         <div className="card p-5">
-          <p className="section-title">官能評価結果</p>
+          <p className="section-title">{t('sensory.evaluations')}</p>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: '👁️ 外観', value: APPEARANCE_EVAL_LABELS[ev.appearance] },
-              { label: '👃 におい', value: SMELL_EVAL_LABELS[ev.smell] },
-              { label: '👅 味', value: TASTE_EVAL_LABELS[ev.taste] },
-              { label: '✋ 食感', value: TEXTURE_EVAL_LABELS[ev.texture] },
+              { label: t('sensory.evalAppearance'), value: APPEARANCE_EVAL_LABELS[ev.appearance] },
+              { label: t('sensory.evalSmell'), value: SMELL_EVAL_LABELS[ev.smell] },
+              { label: t('sensory.evalTaste'), value: TASTE_EVAL_LABELS[ev.taste] },
+              { label: t('sensory.evalTexture'), value: TEXTURE_EVAL_LABELS[ev.texture] },
             ].map(({ label, value }) => (
               <div key={label} className={`rounded-2xl p-3 ${value === '正常' ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
                 <p className="text-xs text-gray-500 font-semibold">{label}</p>
@@ -270,7 +272,7 @@ export default function SensoryDetailPage() {
           </div>
           {ev.comment && (
             <div className="mt-4 bg-gray-50 rounded-2xl p-3">
-              <p className="text-xs text-gray-500 font-semibold mb-1">コメント</p>
+              <p className="text-xs text-gray-500 font-semibold mb-1">{t('sensory.evalComment')}</p>
               <p className="text-sm text-gray-700 leading-relaxed">{ev.comment}</p>
             </div>
           )}
@@ -279,7 +281,7 @@ export default function SensoryDetailPage() {
         {/* 詳細スコア（新UI） */}
         {(ev.tasteScore || ev.scentEval || ev.appearanceGrade || ev.textureScore) && (
           <div className="card p-5">
-            <p className="section-title">📊 詳細評価スコア</p>
+            <p className="section-title">{t('sensory.detailScore')}</p>
 
             {/* 味覚 */}
             {ev.tasteScore && (
@@ -407,7 +409,7 @@ export default function SensoryDetailPage() {
         {/* 判定方法 */}
         {ev.judgementMethod.length > 0 && (
           <div className="card p-5">
-            <p className="section-title">判定方法</p>
+            <p className="section-title">{t('sensory.judgementMethod')}</p>
             <div className="flex flex-wrap gap-2">
               {ev.judgementMethod.map((m) => (
                 <span key={m} className="px-3 py-1.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-xl">{m}</span>
@@ -419,7 +421,7 @@ export default function SensoryDetailPage() {
         {/* 異物事故ひもづけ */}
         {linkedIncidents.length > 0 && (
           <div className="card p-5">
-            <p className="section-title">⚠️ 同ロットの異物事故 ({linkedIncidents.length}件)</p>
+            <p className="section-title">{t('sensory.linkedIncidents')} ({linkedIncidents.length}{t('insp.unit')})</p>
             <div className="space-y-2">
               {linkedIncidents.map((inc) => (
                 <button
@@ -441,24 +443,24 @@ export default function SensoryDetailPage() {
         {/* 承認ボタン */}
         {!ev.approvedAt && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4">
-            <p className="text-xs font-bold text-blue-700 mb-1">最終承認が必要です</p>
+            <p className="text-xs font-bold text-blue-700 mb-1">{t('sensory.approvalNeeded')}</p>
             <p className="text-xs text-gray-600 mb-3">
-              承認権限者が内容を確認し、承認ボタンを押してください。
-              {ev.approverName && ` 承認者：${ev.approverName}`}
+              {t('sensory.approvalDesc')}
+              {ev.approverName && ` ${t('sensory.approvedByLabel')}${ev.approverName}`}
             </p>
             <button
               onClick={handleApprove}
               disabled={approving}
               className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-sm shadow-md shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              {approving ? '承認中...' : '✅ この検査結果を承認する'}
+              {approving ? t('sensory.approvingBtn') : t('sensory.approveBtn')}
             </button>
           </div>
         )}
 
         {/* 報告書・エクスポート */}
         <div className="card p-5">
-          <p className="section-title">📄 報告書・外部共有</p>
+          <p className="section-title">{t('sensory.reportSection')}</p>
           <div className="space-y-2">
             {/* AI報告書生成 */}
             <button
@@ -467,7 +469,7 @@ export default function SensoryDetailPage() {
               className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-sm shadow-md shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50"
             >
               <span className="text-xl">📝</span>
-              <span>{generatingReport ? 'AI報告書を生成中...' : 'AI報告書を自動生成・保存'}</span>
+              <span>{generatingReport ? t('sensory.generatingReport') : t('sensory.generateReport')}</span>
             </button>
 
             {/* 外部共有ボタン */}
@@ -477,8 +479,8 @@ export default function SensoryDetailPage() {
             >
               <span className="text-xl">📤</span>
               <div className="text-left">
-                <p className="text-sm font-extrabold">外部アプリへ共有</p>
-                <p className="text-xs text-white/70 font-normal">LINE・メール・メモなどに直接送信</p>
+                <p className="text-sm font-extrabold">{t('sensory.shareBtn')}</p>
+                <p className="text-xs text-white/70 font-normal">{t('sensory.shareDesc')}</p>
               </div>
             </button>
 
@@ -487,7 +489,7 @@ export default function SensoryDetailPage() {
                 onClick={copyToClipboard}
                 className="flex flex-col items-center justify-center gap-1 p-3 rounded-2xl bg-purple-100 text-purple-700 font-bold text-xs transition-all active:scale-[0.98] hover:bg-purple-200"
               >
-                <span className="text-lg">📋</span>コピー
+                <span className="text-lg">📋</span>{t('report.toolbar.copy').replace('📋 ', '')}
               </button>
               <button
                 onClick={downloadWord}
@@ -503,7 +505,7 @@ export default function SensoryDetailPage() {
               </button>
             </div>
             <p className="text-[10px] text-gray-400 text-center leading-relaxed">
-              「外部共有」はLINE・メール・Slack等へ直接送れます。スマートフォンではアプリ選択画面が開きます。
+              {t('sensory.exportFooter')}
             </p>
           </div>
         </div>

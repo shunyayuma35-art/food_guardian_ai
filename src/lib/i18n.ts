@@ -260,6 +260,7 @@ export type TranslationKey =
   | 'toast.emailInUse' | 'toast.accountCreateFailed'
   // common extra
   | 'common.rangeSep' | 'common.backBtn' | 'common.noProductName'
+  | 'common.notFound' | 'common.delete' | 'common.backToList'
   // actions page extra
   | 'actions.csvFilename'
   // master page
@@ -287,6 +288,100 @@ export type TranslationKey =
   | 'report.guide.step3.title' | 'report.guide.step3.desc'
   | 'report.guide.tip1' | 'report.guide.tip2'
   | 'report.yearUnit' | 'report.monthUnit' | 'report.yearlyLabel'
+  // photo upload
+  | 'photo.camera' | 'photo.gallery' | 'photo.cameraHint'
+  // feature summary
+  | 'feat.noCheck'
+  // toast extras
+  | 'toast.saveOk' | 'toast.saveFailed' | 'toast.deleted' | 'toast.deleteFailed'
+  | 'toast.enterEditorName' | 'toast.enterVerifierName' | 'toast.verifiedSaved'
+  | 'toast.statusUpdated' | 'toast.statusFailed' | 'toast.pdcaSaved'
+  | 'toast.wordDownloaded' | 'toast.txtDownloaded' | 'toast.copied' | 'toast.shared'
+  | 'toast.aiCauseGenerated' | 'toast.aiCauseFailed'
+  | 'toast.fetchFailed' | 'toast.aiDraftCreated'
+  | 'toast.reportSaved' | 'toast.reportDeleted'
+  | 'toast.csvDownloaded' | 'toast.excelDownloaded'
+  // detail page labels
+  | 'detail.deleteConfirmTitle' | 'detail.deleteConfirmMsg'
+  | 'detail.printTitle' | 'detail.printMgmtNo' | 'detail.printIssued' | 'detail.printDisclaimer'
+  | 'detail.statusChange'
+  | 'detail.productInfo' | 'detail.productName' | 'detail.lotNumber'
+  | 'detail.manufactureDate' | 'detail.expiryDate' | 'detail.lineNumber' | 'detail.factoryName'
+  | 'detail.operator' | 'detail.discoveryProcess' | 'detail.discoveryDatetime'
+  | 'detail.photoSection' | 'detail.normalPhotos' | 'detail.microscopePhotos'
+  | 'detail.featureCheck' | 'detail.actionRecord' | 'detail.situationComment'
+  | 'detail.externalClaimInfo' | 'detail.claimSource' | 'detail.claimDate'
+  | 'detail.claimRoute' | 'detail.claimContent' | 'detail.claimPhotos'
+  // agent panel
+  | 'agent.title' | 'agent.subtitle'
+  | 'agent.step0Title' | 'agent.step0Subtitle'
+  | 'agent.startBtn' | 'agent.startWithRecall'
+  | 'agent.running' | 'agent.stepsLabel'
+  | 'agent.approvalRequired' | 'agent.approvalDesc'
+  | 'agent.checklistSummaryLabel'
+  | 'agent.approve' | 'agent.reject'
+  | 'agent.processing' | 'agent.approverPlaceholder' | 'agent.commentPlaceholder'
+  | 'agent.trendAlert' | 'agent.checklist'
+  | 'agent.capaReport' | 'agent.customerReport'
+  | 'agent.savedConfirm' | 'agent.viewList'
+  | 'agent.rejected' | 'agent.error' | 'agent.retry'
+  | 'agent.recallTitle' | 'agent.recallDisclaimer'
+  | 'agent.showMore' | 'agent.showLess'
+  | 'agent.copyDone' | 'agent.copyBtn' | 'agent.printBtn'
+  // report detail page
+  | 'report.toolbar.saving' | 'report.toolbar.save' | 'report.toolbar.cancel'
+  | 'report.toolbar.edit' | 'report.toolbar.share' | 'report.toolbar.copy'
+  | 'report.toolbar.word' | 'report.toolbar.txt' | 'report.toolbar.print' | 'report.toolbar.delete'
+  | 'report.sidebar.folder' | 'report.sidebar.total' | 'report.sidebar.empty'
+  | 'report.banner.foreign' | 'report.banner.sensory'
+  | 'report.banner.generated' | 'report.banner.edited'
+  | 'report.editHint' | 'report.editGuide'
+  | 'report.deleteConfirmTitle' | 'report.deleteConfirmMsg'
+  | 'report.notFound' | 'report.backToHome'
+  | 'report.export.title' | 'report.export.shareBtn' | 'report.export.shareDesc'
+  | 'report.export.textCopy' | 'report.export.pdfPrint' | 'report.export.footerDesc'
+  // inspection detail page
+  | 'insp.notFound' | 'insp.backToList'
+  | 'insp.deleteConfirmTitle' | 'insp.deleteConfirmMsg'
+  | 'insp.printHeader' | 'insp.printDate' | 'insp.printDevice' | 'insp.printIssued'
+  | 'insp.overallJudgment' | 'insp.testpieceLabel'
+  | 'insp.startLabel' | 'insp.endLabel' | 'insp.passShort' | 'insp.failShort'
+  | 'insp.basicInfo' | 'insp.sensitivitySection'
+  | 'insp.startTestpiece' | 'insp.endTestpiece'
+  | 'insp.rejectSection' | 'insp.exportSection'
+  | 'insp.registered' | 'insp.deleteBtn'
+  | 'insp.csvOk' | 'insp.pdfPrint' | 'insp.csvExport'
+  | 'insp.rejectCountLabel' | 'insp.rejectDetailsLabel' | 'insp.correctionActionLabel' | 'insp.inspCommentLabel'
+  // sensory list page
+  | 'sensory.title' | 'sensory.newBtn' | 'sensory.totalCount'
+  | 'sensory.searchPlaceholder' | 'sensory.clearFilter'
+  | 'sensory.filterAll' | 'sensory.filterPass' | 'sensory.filterWarn' | 'sensory.filterFail'
+  | 'sensory.statsToday' | 'sensory.statsPass' | 'sensory.statsWarn' | 'sensory.statsFail'
+  | 'sensory.noRecords' | 'sensory.noMatch' | 'sensory.firstRecord'
+  | 'sensory.showingCount' | 'sensory.approvedBadge' | 'sensory.lot' | 'sensory.inspector'
+  // sensory detail page
+  | 'sensory.notFound' | 'sensory.backToList'
+  | 'sensory.detail.subtitle' | 'sensory.deleteBtn'
+  | 'sensory.deleteConfirmTitle' | 'sensory.deleteConfirmMsg'
+  | 'sensory.approvedStatus' | 'sensory.pendingStatus'
+  | 'sensory.basicInfo' | 'sensory.productName' | 'sensory.lotNumber' | 'sensory.datetime'
+  | 'sensory.inspectorName' | 'sensory.approverName'
+  | 'sensory.evaluations' | 'sensory.evalComment'
+  | 'sensory.evalAppearance' | 'sensory.evalSmell' | 'sensory.evalTaste' | 'sensory.evalTexture'
+  | 'sensory.detailScore' | 'sensory.judgementMethod'
+  | 'sensory.linkedIncidents'
+  | 'sensory.approvalNeeded' | 'sensory.approvalDesc' | 'sensory.approveBtn' | 'sensory.approvingBtn'
+  | 'sensory.approvedByLabel'
+  | 'sensory.reportSection'
+  | 'sensory.generateReport' | 'sensory.generatingReport'
+  | 'sensory.shareBtn' | 'sensory.shareDesc' | 'sensory.exportFooter'
+  // error boundary
+  | 'error.title' | 'error.message' | 'error.reload'
+  // demo-login page
+  | 'demoLogin.subtitle' | 'demoLogin.placeholder'
+  | 'demoLogin.error' | 'demoLogin.submitBtn' | 'demoLogin.checkingBtn' | 'demoLogin.footer'
+  // home
+  | 'home.demoUser'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -801,6 +896,231 @@ const ja: Dict = {
   'report.yearUnit': '年',
   'report.monthUnit': '月',
   'report.yearlyLabel': '（年次）',
+  // common extra
+  'common.notFound': 'データが見つかりません',
+  'common.delete': '削除する',
+  'common.backToList': '一覧に戻る',
+  // photo upload
+  'photo.camera': '📷 カメラ撮影',
+  'photo.gallery': '🖼️ ギャラリー',
+  'photo.cameraHint': 'カメラが開かない場合は Chrome でページを開いてください',
+  // feature summary
+  'feat.noCheck': '特徴チェックなし',
+  // toast extras
+  'toast.saveOk': '保存しました ✅',
+  'toast.saveFailed': '保存に失敗しました',
+  'toast.deleted': '削除しました',
+  'toast.deleteFailed': '削除に失敗しました',
+  'toast.enterEditorName': '編集者名を入力してください',
+  'toast.enterVerifierName': '確認者名を入力してください',
+  'toast.verifiedSaved': '確認済みとして保存しました ✅',
+  'toast.statusUpdated': 'ステータスを更新しました',
+  'toast.statusFailed': 'ステータスの更新に失敗しました',
+  'toast.pdcaSaved': 'PDCA状況を保存しました ✅',
+  'toast.wordDownloaded': 'Word文書をダウンロードしました 📘',
+  'toast.txtDownloaded': 'テキストファイルをダウンロードしました',
+  'toast.copied': 'クリップボードにコピーしました 📋',
+  'toast.shared': '共有しました ✅',
+  'toast.aiCauseGenerated': 'AI分析を生成しました',
+  'toast.aiCauseFailed': 'AI分析の生成に失敗しました',
+  'toast.fetchFailed': 'データの取得に失敗しました',
+  'toast.aiDraftCreated': 'AI下書きを生成しました ✅',
+  'toast.reportSaved': '報告書を生成しました 📄',
+  'toast.reportDeleted': '削除しました',
+  'toast.csvDownloaded': 'CSVをダウンロードしました 📗',
+  'toast.excelDownloaded': 'Excelデータをダウンロードしました',
+  // detail page labels
+  'detail.deleteConfirmTitle': '削除の確認',
+  'detail.deleteConfirmMsg': 'この記録を完全に削除します。この操作は取り消せません。',
+  'detail.printTitle': '食品異物事故報告書',
+  'detail.printMgmtNo': '管理番号:',
+  'detail.printIssued': '発行:',
+  'detail.printDisclaimer': '※ 本報告書はAI一次判定に基づく推定支援システムの出力です。確定分析には外部専門機関による鑑定が必要です。',
+  'detail.statusChange': 'ステータス変更',
+  'detail.productInfo': '📦 商品情報',
+  'detail.productName': '商品名',
+  'detail.lotNumber': 'ロット番号',
+  'detail.manufactureDate': '製造日',
+  'detail.expiryDate': '賞味・消費期限',
+  'detail.lineNumber': 'ライン番号',
+  'detail.factoryName': '工場名',
+  'detail.operator': '担当者',
+  'detail.discoveryProcess': '発見工程',
+  'detail.discoveryDatetime': '発見日時',
+  'detail.photoSection': '📷 写真',
+  'detail.normalPhotos': '通常写真',
+  'detail.microscopePhotos': '顕微鏡写真',
+  'detail.featureCheck': '🔍 異物特徴チェック結果',
+  'detail.actionRecord': '📝 対応記録',
+  'detail.situationComment': '💡 心当たり・状況コメント',
+  'detail.externalClaimInfo': '📦 外部クレーム情報',
+  'detail.claimSource': 'クレーム元',
+  'detail.claimDate': '受付日',
+  'detail.claimRoute': 'クレーム経路',
+  'detail.claimContent': 'クレーム内容',
+  'detail.claimPhotos': 'クレーム写真',
+  // agent panel
+  'agent.title': 'AI エージェント対応',
+  'agent.subtitle': '異物事故の自律対応フロー',
+  'agent.step0Title': 'Step 0: 出荷状況を確認',
+  'agent.step0Subtitle': '自主回収リスク評価を行う場合は出荷状況を選択してください。スキップして通常の対応フローに進むこともできます。',
+  'agent.startBtn': '対応を開始する',
+  'agent.startWithRecall': '回収リスク評価を含めて開始',
+  'agent.running': 'エージェントが対応中…',
+  'agent.stepsLabel': 'ステップ',
+  'agent.approvalRequired': '責任者の承認が必要です',
+  'agent.approvalDesc': 'CAPA報告書の作成・異物記録・取引先への第一報の前に、責任者の承認が必要です。',
+  'agent.checklistSummaryLabel': 'チェックリスト概要:',
+  'agent.approve': '✅ 承認して続行',
+  'agent.reject': '却下',
+  'agent.processing': '処理中…',
+  'agent.approverPlaceholder': '承認者名（必須）',
+  'agent.commentPlaceholder': 'コメント（任意）',
+  'agent.trendAlert': '傾向アラート',
+  'agent.checklist': '📋 対応チェックリスト',
+  'agent.capaReport': '📝 CAPA 報告書ドラフト',
+  'agent.customerReport': '📨 取引先向け第一報ドラフト',
+  'agent.savedConfirm': '異物一覧に記録しました',
+  'agent.viewList': '一覧を見る →',
+  'agent.rejected': '対応を却下しました',
+  'agent.error': 'エラーが発生しました',
+  'agent.retry': 'やり直す',
+  'agent.recallTitle': '自主回収リスク評価（判断材料）',
+  'agent.recallDisclaimer': '⚠️ これは判断材料です。最終判断ではありません。必ず責任者および保健所に相談してください。',
+  'agent.showMore': 'すべて表示',
+  'agent.showLess': '閉じる',
+  'agent.copyDone': '✅ コピー完了',
+  'agent.copyBtn': '📋 コピー',
+  'agent.printBtn': '🖨️ 印刷',
+  // report detail page
+  'report.toolbar.saving': '保存中...',
+  'report.toolbar.save': '✅ 保存',
+  'report.toolbar.cancel': 'キャンセル',
+  'report.toolbar.edit': '✏️ 編集',
+  'report.toolbar.share': '📤 共有',
+  'report.toolbar.copy': '📋 コピー',
+  'report.toolbar.word': '📘 Word',
+  'report.toolbar.txt': '📄 TXT',
+  'report.toolbar.print': '🖨️ 印刷',
+  'report.toolbar.delete': '🗑️ 削除',
+  'report.sidebar.folder': '📁 報告書フォルダ',
+  'report.sidebar.total': '全 {n} 件',
+  'report.sidebar.empty': '報告書はまだありません',
+  'report.banner.foreign': '異物混入クレーム報告書',
+  'report.banner.sensory': '官能検査報告書',
+  'report.banner.generated': '生成：',
+  'report.banner.edited': '編集済み',
+  'report.editHint': '✏️ 報告書を編集（自由に修正できます）',
+  'report.editGuide': '「編集」ボタンで内容を修正し、「保存」で更新されます。Word・TXT でダウンロードして社内編集も可能です。',
+  'report.deleteConfirmTitle': '削除の確認',
+  'report.deleteConfirmMsg': 'この報告書を削除しますか？この操作は取り消せません。',
+  'report.notFound': '報告書が見つかりません',
+  'report.backToHome': 'ホームに戻る',
+  'report.export.title': '📤 エクスポート・外部共有',
+  'report.export.shareBtn': '外部アプリへ共有',
+  'report.export.shareDesc': 'LINE・メール・メモなどに直接送信',
+  'report.export.textCopy': '📋 テキストコピー',
+  'report.export.pdfPrint': '🖨️ PDF印刷',
+  'report.export.footerDesc': '「外部共有」はLINE・メール・Slack等へ直接送れます。スマートフォンではアプリ選択画面が開きます。',
+  // inspection detail page
+  'insp.notFound': '記録が見つかりません',
+  'insp.backToList': '一覧に戻る',
+  'insp.deleteConfirmTitle': '削除の確認',
+  'insp.deleteConfirmMsg': 'この記録を完全に削除します。取り消せません。',
+  'insp.printHeader': '検査記録表 — ',
+  'insp.printDate': '検査日:',
+  'insp.printDevice': '機器:',
+  'insp.printIssued': '発行:',
+  'insp.overallJudgment': '総合判定',
+  'insp.testpieceLabel': 'テストピース',
+  'insp.startLabel': '始業',
+  'insp.endLabel': '終業',
+  'insp.passShort': '✅合格',
+  'insp.failShort': '❌不合格',
+  'insp.basicInfo': '📋 基本情報',
+  'insp.sensitivitySection': '⚙️ 検出感度設定値',
+  'insp.startTestpiece': '🟢 始業テストピース確認',
+  'insp.endTestpiece': '🔴 終業テストピース確認',
+  'insp.rejectSection': '⚠️ 排除・是正処置',
+  'insp.exportSection': '📤 エクスポート',
+  'insp.registered': '登録:',
+  'insp.deleteBtn': '🗑️ この記録を削除',
+  'insp.csvOk': 'CSVをダウンロードしました 📗',
+  'insp.pdfPrint': '🖨️ PDF印刷',
+  'insp.csvExport': '📗 CSV出力',
+  'insp.rejectCountLabel': '排除件数',
+  'insp.rejectDetailsLabel': '排除内容',
+  'insp.correctionActionLabel': '是正処置',
+  'insp.inspCommentLabel': 'コメント',
+  // sensory list page
+  'sensory.title': '官能検査',
+  'sensory.newBtn': '＋ 新規検査',
+  'sensory.totalCount': '全 {n} 件',
+  'sensory.searchPlaceholder': '🔍 製品名・ロット番号で検索',
+  'sensory.clearFilter': '✕ クリア',
+  'sensory.filterAll': 'すべての判定',
+  'sensory.filterPass': '✅ 合格',
+  'sensory.filterWarn': '⚠️ 要注意',
+  'sensory.filterFail': '❌ 不合格',
+  'sensory.statsToday': '今日',
+  'sensory.statsPass': '合格',
+  'sensory.statsWarn': '要注意',
+  'sensory.statsFail': '不合格',
+  'sensory.noRecords': '検査記録がありません',
+  'sensory.noMatch': '条件に一致する記録がありません',
+  'sensory.firstRecord': '最初の官能検査を記録する',
+  'sensory.showingCount': '{n} 件を表示',
+  'sensory.approvedBadge': '承認済み',
+  'sensory.lot': 'ロット:',
+  'sensory.inspector': '検査:',
+  // sensory detail page
+  'sensory.notFound': '検査記録が見つかりません',
+  'sensory.backToList': '一覧に戻る',
+  'sensory.detail.subtitle': '官能検査詳細',
+  'sensory.deleteBtn': '削除',
+  'sensory.deleteConfirmTitle': '削除の確認',
+  'sensory.deleteConfirmMsg': 'この検査記録を削除しますか？この操作は取り消せません。',
+  'sensory.approvedStatus': '✅ 承認済み',
+  'sensory.pendingStatus': '⏳ 承認待ち',
+  'sensory.basicInfo': '基本情報',
+  'sensory.productName': '製品名',
+  'sensory.lotNumber': 'ロット番号',
+  'sensory.datetime': '検査日時',
+  'sensory.inspectorName': '検査担当者',
+  'sensory.approverName': '最終承認者',
+  'sensory.evaluations': '官能評価結果',
+  'sensory.evalComment': 'コメント',
+  'sensory.evalAppearance': '👁️ 外観',
+  'sensory.evalSmell': '👃 におい',
+  'sensory.evalTaste': '👅 味',
+  'sensory.evalTexture': '✋ 食感',
+  'sensory.detailScore': '📊 詳細評価スコア',
+  'sensory.judgementMethod': '判定方法',
+  'sensory.linkedIncidents': '⚠️ 同ロットの異物事故',
+  'sensory.approvalNeeded': '最終承認が必要です',
+  'sensory.approvalDesc': '承認権限者が内容を確認し、承認ボタンを押してください。',
+  'sensory.approveBtn': '✅ この検査結果を承認する',
+  'sensory.approvingBtn': '承認中...',
+  'sensory.approvedByLabel': '承認者：',
+  'sensory.reportSection': '📄 報告書・外部共有',
+  'sensory.generateReport': 'AI報告書を自動生成・保存',
+  'sensory.generatingReport': 'AI報告書を生成中...',
+  'sensory.shareBtn': '外部アプリへ共有',
+  'sensory.shareDesc': 'LINE・メール・メモなどに直接送信',
+  'sensory.exportFooter': '「外部共有」はLINE・メール・Slack等へ直接送れます。スマートフォンではアプリ選択画面が開きます。',
+  // error boundary
+  'error.title': 'エラーが発生しました',
+  'error.message': '予期しないエラーが発生しました',
+  'error.reload': '🔄 再読み込み',
+  // demo-login page
+  'demoLogin.subtitle': 'アクセスコードを入力してください',
+  'demoLogin.placeholder': 'アクセスコード',
+  'demoLogin.error': 'コードが違います。もう一度お試しください。',
+  'demoLogin.submitBtn': '入室する →',
+  'demoLogin.checkingBtn': '確認中…',
+  'demoLogin.footer': 'このシステムはデモ・試用版です',
+  // home
+  'home.demoUser': 'デモユーザー',
 }
 
 const en: Dict = {
@@ -1314,6 +1634,231 @@ const en: Dict = {
   'report.yearUnit': '',
   'report.monthUnit': '',
   'report.yearlyLabel': '(Annual)',
+  // common extra
+  'common.notFound': 'Record not found',
+  'common.delete': 'Delete',
+  'common.backToList': 'Back to List',
+  // photo upload
+  'photo.camera': '📷 Camera',
+  'photo.gallery': '🖼️ Gallery',
+  'photo.cameraHint': 'If camera does not open, try opening in Chrome browser',
+  // feature summary
+  'feat.noCheck': 'No features checked',
+  // toast extras
+  'toast.saveOk': 'Saved ✅',
+  'toast.saveFailed': 'Save failed',
+  'toast.deleted': 'Deleted',
+  'toast.deleteFailed': 'Delete failed',
+  'toast.enterEditorName': 'Please enter the editor name',
+  'toast.enterVerifierName': 'Please enter the verifier name',
+  'toast.verifiedSaved': 'Saved as verified ✅',
+  'toast.statusUpdated': 'Status updated',
+  'toast.statusFailed': 'Failed to update status',
+  'toast.pdcaSaved': 'PDCA status saved ✅',
+  'toast.wordDownloaded': 'Word document downloaded 📘',
+  'toast.txtDownloaded': 'Text file downloaded',
+  'toast.copied': 'Copied to clipboard 📋',
+  'toast.shared': 'Shared ✅',
+  'toast.aiCauseGenerated': 'AI analysis generated',
+  'toast.aiCauseFailed': 'Failed to generate AI analysis',
+  'toast.fetchFailed': 'Failed to fetch data',
+  'toast.aiDraftCreated': 'AI draft generated ✅',
+  'toast.reportSaved': 'Report generated 📄',
+  'toast.reportDeleted': 'Deleted',
+  'toast.csvDownloaded': 'CSV downloaded 📗',
+  'toast.excelDownloaded': 'Excel data downloaded',
+  // detail page labels
+  'detail.deleteConfirmTitle': 'Confirm Delete',
+  'detail.deleteConfirmMsg': 'This will permanently delete the record. This action cannot be undone.',
+  'detail.printTitle': 'Food Foreign Matter Incident Report',
+  'detail.printMgmtNo': 'Ref No.:',
+  'detail.printIssued': 'Issued:',
+  'detail.printDisclaimer': '* Output from AI-assisted estimation system. External specialist assessment required for definitive analysis.',
+  'detail.statusChange': 'Status',
+  'detail.productInfo': '📦 Product Info',
+  'detail.productName': 'Product Name',
+  'detail.lotNumber': 'Lot Number',
+  'detail.manufactureDate': 'Manufacture Date',
+  'detail.expiryDate': 'Best Before / Expiry',
+  'detail.lineNumber': 'Line Number',
+  'detail.factoryName': 'Factory',
+  'detail.operator': 'Operator',
+  'detail.discoveryProcess': 'Discovery Process',
+  'detail.discoveryDatetime': 'Discovery Date/Time',
+  'detail.photoSection': '📷 Photos',
+  'detail.normalPhotos': 'Standard Photos',
+  'detail.microscopePhotos': 'Microscope Photos',
+  'detail.featureCheck': '🔍 Feature Check Results',
+  'detail.actionRecord': '📝 Action Record',
+  'detail.situationComment': '💡 Situation Comment',
+  'detail.externalClaimInfo': '📦 External Claim Info',
+  'detail.claimSource': 'Claim Source',
+  'detail.claimDate': 'Receipt Date',
+  'detail.claimRoute': 'Claim Route',
+  'detail.claimContent': 'Claim Details',
+  'detail.claimPhotos': 'Claim Photos',
+  // agent panel
+  'agent.title': 'AI Agent Response',
+  'agent.subtitle': 'Automated foreign matter incident flow',
+  'agent.step0Title': 'Step 0: Shipment Status',
+  'agent.step0Subtitle': 'Select the current shipment status to enable recall risk assessment. You may also skip this step.',
+  'agent.startBtn': 'Start Agent',
+  'agent.startWithRecall': 'Start with Recall Assessment',
+  'agent.running': 'Agent is working…',
+  'agent.stepsLabel': 'Steps',
+  'agent.approvalRequired': 'Approval Required',
+  'agent.approvalDesc': 'A manager must approve before the agent proceeds with CAPA report, incident record, and customer notification.',
+  'agent.checklistSummaryLabel': 'Checklist summary:',
+  'agent.approve': '✅ Approve & Continue',
+  'agent.reject': 'Reject',
+  'agent.processing': 'Processing…',
+  'agent.approverPlaceholder': 'Approver name (required)',
+  'agent.commentPlaceholder': 'Comment (optional)',
+  'agent.trendAlert': 'Trend Alert',
+  'agent.checklist': '📋 Action Checklist',
+  'agent.capaReport': '📝 CAPA Report Draft',
+  'agent.customerReport': '📨 Customer Notification Draft',
+  'agent.savedConfirm': 'Incident saved successfully',
+  'agent.viewList': 'View List →',
+  'agent.rejected': 'Response rejected',
+  'agent.error': 'An error occurred',
+  'agent.retry': 'Retry',
+  'agent.recallTitle': 'Recall Risk Assessment (Decision Support)',
+  'agent.recallDisclaimer': '⚠️ This is decision-support material only. NOT a final determination. Always consult your supervisor and the local health authority.',
+  'agent.showMore': 'Show more',
+  'agent.showLess': 'Show less',
+  'agent.copyDone': '✅ Copied',
+  'agent.copyBtn': '📋 Copy',
+  'agent.printBtn': '🖨️ Print',
+  // report detail page
+  'report.toolbar.saving': 'Saving...',
+  'report.toolbar.save': '✅ Save',
+  'report.toolbar.cancel': 'Cancel',
+  'report.toolbar.edit': '✏️ Edit',
+  'report.toolbar.share': '📤 Share',
+  'report.toolbar.copy': '📋 Copy',
+  'report.toolbar.word': '📘 Word',
+  'report.toolbar.txt': '📄 TXT',
+  'report.toolbar.print': '🖨️ Print',
+  'report.toolbar.delete': '🗑️ Delete',
+  'report.sidebar.folder': '📁 Report Folder',
+  'report.sidebar.total': '{n} total',
+  'report.sidebar.empty': 'No reports yet',
+  'report.banner.foreign': 'Foreign Matter Complaint Report',
+  'report.banner.sensory': 'Sensory Inspection Report',
+  'report.banner.generated': 'Generated:',
+  'report.banner.edited': 'Edited',
+  'report.editHint': '✏️ Edit Report (free to modify)',
+  'report.editGuide': 'Tap "Edit" to modify the content, then "Save" to update. Download as Word or TXT for editing outside the app.',
+  'report.deleteConfirmTitle': 'Confirm Delete',
+  'report.deleteConfirmMsg': 'Delete this report? This action cannot be undone.',
+  'report.notFound': 'Report not found',
+  'report.backToHome': 'Back to Home',
+  'report.export.title': '📤 Export & Share',
+  'report.export.shareBtn': 'Share to External App',
+  'report.export.shareDesc': 'Send directly to LINE, email, notes, etc.',
+  'report.export.textCopy': '📋 Copy Text',
+  'report.export.pdfPrint': '🖨️ PDF Print',
+  'report.export.footerDesc': '"Share" sends directly to LINE, email, Slack, etc.\nOn smartphones, an app picker will open.',
+  // inspection detail page
+  'insp.notFound': 'Record not found',
+  'insp.backToList': 'Back to List',
+  'insp.deleteConfirmTitle': 'Confirm Delete',
+  'insp.deleteConfirmMsg': 'This will permanently delete the record. Cannot be undone.',
+  'insp.printHeader': 'Inspection Record — ',
+  'insp.printDate': 'Date:',
+  'insp.printDevice': 'Device:',
+  'insp.printIssued': 'Issued:',
+  'insp.overallJudgment': 'Overall Judgment',
+  'insp.testpieceLabel': 'Test Piece',
+  'insp.startLabel': 'Start',
+  'insp.endLabel': 'End',
+  'insp.passShort': '✅ Pass',
+  'insp.failShort': '❌ Fail',
+  'insp.basicInfo': '📋 Basic Info',
+  'insp.sensitivitySection': '⚙️ Detection Sensitivity',
+  'insp.startTestpiece': '🟢 Start Test Piece Check',
+  'insp.endTestpiece': '🔴 End Test Piece Check',
+  'insp.rejectSection': '⚠️ Rejected Items & Corrective Action',
+  'insp.exportSection': '📤 Export',
+  'insp.registered': 'Registered:',
+  'insp.deleteBtn': '🗑️ Delete this record',
+  'insp.csvOk': 'CSV downloaded 📗',
+  'insp.pdfPrint': '🖨️ PDF Print',
+  'insp.csvExport': '📗 CSV Export',
+  'insp.rejectCountLabel': 'Reject Count',
+  'insp.rejectDetailsLabel': 'Details',
+  'insp.correctionActionLabel': 'Corrective Action',
+  'insp.inspCommentLabel': 'Comment',
+  // sensory list page
+  'sensory.title': 'Sensory Inspection',
+  'sensory.newBtn': '+ New Inspection',
+  'sensory.totalCount': '{n} total',
+  'sensory.searchPlaceholder': '🔍 Search by product name or lot number',
+  'sensory.clearFilter': '✕ Clear',
+  'sensory.filterAll': 'All Judgments',
+  'sensory.filterPass': '✅ Pass',
+  'sensory.filterWarn': '⚠️ Warning',
+  'sensory.filterFail': '❌ Fail',
+  'sensory.statsToday': 'Today',
+  'sensory.statsPass': 'Pass',
+  'sensory.statsWarn': 'Warning',
+  'sensory.statsFail': 'Fail',
+  'sensory.noRecords': 'No inspection records',
+  'sensory.noMatch': 'No records match the filter',
+  'sensory.firstRecord': 'Log your first sensory inspection',
+  'sensory.showingCount': 'Showing {n}',
+  'sensory.approvedBadge': 'Approved',
+  'sensory.lot': 'Lot:',
+  'sensory.inspector': 'Inspector:',
+  // sensory detail page
+  'sensory.notFound': 'Inspection record not found',
+  'sensory.backToList': 'Back to List',
+  'sensory.detail.subtitle': 'Sensory Inspection Details',
+  'sensory.deleteBtn': 'Delete',
+  'sensory.deleteConfirmTitle': 'Confirm Delete',
+  'sensory.deleteConfirmMsg': 'Delete this inspection record? This action cannot be undone.',
+  'sensory.approvedStatus': '✅ Approved',
+  'sensory.pendingStatus': '⏳ Pending Approval',
+  'sensory.basicInfo': 'Basic Info',
+  'sensory.productName': 'Product',
+  'sensory.lotNumber': 'Lot Number',
+  'sensory.datetime': 'Date & Time',
+  'sensory.inspectorName': 'Inspector',
+  'sensory.approverName': 'Final Approver',
+  'sensory.evaluations': 'Sensory Evaluation Results',
+  'sensory.evalComment': 'Comment',
+  'sensory.evalAppearance': '👁️ Appearance',
+  'sensory.evalSmell': '👃 Smell',
+  'sensory.evalTaste': '👅 Taste',
+  'sensory.evalTexture': '✋ Texture',
+  'sensory.detailScore': '📊 Detailed Scores',
+  'sensory.judgementMethod': 'Judgment Method',
+  'sensory.linkedIncidents': '⚠️ Linked Incidents (same lot)',
+  'sensory.approvalNeeded': 'Final approval required',
+  'sensory.approvalDesc': 'An authorized approver must review and tap the Approve button.',
+  'sensory.approveBtn': '✅ Approve this inspection',
+  'sensory.approvingBtn': 'Approving...',
+  'sensory.approvedByLabel': 'Approver: ',
+  'sensory.reportSection': '📄 Report & Export',
+  'sensory.generateReport': 'Auto-Generate & Save AI Report',
+  'sensory.generatingReport': 'Generating AI report...',
+  'sensory.shareBtn': 'Share to External App',
+  'sensory.shareDesc': 'Send directly to LINE, email, notes, etc.',
+  'sensory.exportFooter': '"Share" sends directly to LINE, email, Slack, etc. On smartphones, an app picker will open.',
+  // error boundary
+  'error.title': 'An error occurred',
+  'error.message': 'An unexpected error occurred',
+  'error.reload': '🔄 Reload',
+  // demo-login page
+  'demoLogin.subtitle': 'Enter the access code',
+  'demoLogin.placeholder': 'Access code',
+  'demoLogin.error': 'Incorrect code. Please try again.',
+  'demoLogin.submitBtn': 'Enter →',
+  'demoLogin.checkingBtn': 'Checking…',
+  'demoLogin.footer': 'This is a demo / trial version',
+  // home
+  'home.demoUser': 'Demo User',
 }
 
 const zh: Dict = {

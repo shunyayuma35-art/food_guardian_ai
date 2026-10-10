@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useLang } from '@/context/LanguageContext'
 import { listSensoryEvaluations } from '@/lib/firestore'
 import { SENSORY_JUDGEMENT_LABELS } from '@/lib/types'
 import Navigation from '@/components/Navigation'
@@ -19,6 +20,7 @@ const JUDGEMENT_ICON: Record<SensoryJudgement, string> = {
 }
 
 function EvalCard({ ev, onClick }: { ev: SensoryEvaluation; onClick: () => void }) {
+  const { t } = useLang()
   const style = JUDGEMENT_STYLE[ev.judgement]
   return (
     <button
@@ -33,18 +35,18 @@ function EvalCard({ ev, onClick }: { ev: SensoryEvaluation; onClick: () => void 
               {SENSORY_JUDGEMENT_LABELS[ev.judgement]}
             </span>
             {ev.approvedAt && (
-              <span className="text-xs text-gray-400 font-medium">承認済み</span>
+              <span className="text-xs text-gray-400 font-medium">{t('sensory.approvedBadge')}</span>
             )}
           </div>
           <p className="font-bold text-gray-800 text-sm truncate">{ev.productName}</p>
           <p className="text-xs text-gray-500 mt-0.5">
-            ロット: {ev.lotNumber}
-            {ev.inspectorName && ` · 検査: ${ev.inspectorName}`}
+            {t('sensory.lot')} {ev.lotNumber}
+            {ev.inspectorName && ` · ${t('sensory.inspector')} ${ev.inspectorName}`}
           </p>
         </div>
         <div className="text-right shrink-0">
           <p className="text-xs text-gray-400 font-medium">
-            {new Date(ev.date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
+            {new Date(ev.date).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}
           </p>
           <span className="text-gray-300 text-lg">›</span>
         </div>
@@ -55,6 +57,7 @@ function EvalCard({ ev, onClick }: { ev: SensoryEvaluation; onClick: () => void 
 
 export default function SensoryListPage() {
   const { user, loading } = useAuth()
+  const { t } = useLang()
   const router = useRouter()
   const [evaluations, setEvaluations] = useState<SensoryEvaluation[]>([])
   const [fetching, setFetching] = useState(true)
@@ -108,14 +111,14 @@ export default function SensoryListPage() {
           <div className="flex items-center gap-3 mb-3">
             <button onClick={() => router.push('/')} className="back-btn shrink-0">←</button>
             <div className="flex-1">
-              <h1 className="font-extrabold text-gray-800 text-lg leading-tight">官能検査</h1>
-              <p className="text-xs text-gray-500">全 {evaluations.length} 件</p>
+              <h1 className="font-extrabold text-gray-800 text-lg leading-tight">{t('sensory.title')}</h1>
+              <p className="text-xs text-gray-500">{t('sensory.totalCount').replace('{n}', String(evaluations.length))}</p>
             </div>
             <button
               onClick={() => router.push('/sensory/new')}
               className="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-xl transition-all shadow-md shadow-blue-200"
             >
-              ＋ 新規検査
+              {t('sensory.newBtn')}
             </button>
           </div>
 
@@ -123,7 +126,7 @@ export default function SensoryListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input-field text-sm mb-2"
-            placeholder="🔍 製品名・ロット番号で検索"
+            placeholder={t('sensory.searchPlaceholder')}
           />
 
           <div className="flex gap-2 overflow-x-auto pb-0.5">
@@ -132,17 +135,17 @@ export default function SensoryListPage() {
               onChange={(e) => setFilterJudgement(e.target.value as SensoryJudgement | '')}
               className="text-xs bg-white border border-blue-200 text-gray-600 rounded-xl px-3 py-2 shrink-0 focus:border-blue-400 focus:outline-none font-medium"
             >
-              <option value="">すべての判定</option>
-              <option value="pass">✅ 合格</option>
-              <option value="warning">⚠️ 要注意</option>
-              <option value="fail">❌ 不合格</option>
+              <option value="">{t('sensory.filterAll')}</option>
+              <option value="pass">{t('sensory.filterPass')}</option>
+              <option value="warning">{t('sensory.filterWarn')}</option>
+              <option value="fail">{t('sensory.filterFail')}</option>
             </select>
             {(search || filterJudgement) && (
               <button
                 onClick={() => { setSearch(''); setFilterJudgement('') }}
                 className="text-xs text-blue-500 hover:text-blue-600 font-bold px-2 py-2 shrink-0"
               >
-                ✕ クリア
+                {t('sensory.clearFilter')}
               </button>
             )}
           </div>
@@ -153,10 +156,10 @@ export default function SensoryListPage() {
         {/* 統計 */}
         <div className="grid grid-cols-4 gap-2">
           {[
-            { value: todayCount, label: '今日', color: 'text-blue-600', bg: 'bg-blue-50' },
-            { value: passCount, label: '合格', color: 'text-green-600', bg: 'bg-green-50' },
-            { value: warnCount, label: '要注意', color: 'text-amber-600', bg: 'bg-amber-50' },
-            { value: failCount, label: '不合格', color: 'text-red-600', bg: 'bg-red-50' },
+            { value: todayCount, label: t('sensory.statsToday'), color: 'text-blue-600', bg: 'bg-blue-50' },
+            { value: passCount, label: t('sensory.statsPass'), color: 'text-green-600', bg: 'bg-green-50' },
+            { value: warnCount, label: t('sensory.statsWarn'), color: 'text-amber-600', bg: 'bg-amber-50' },
+            { value: failCount, label: t('sensory.statsFail'), color: 'text-red-600', bg: 'bg-red-50' },
           ].map(({ value, label, color, bg }) => (
             <div key={label} className={`${bg} rounded-2xl border border-gray-100 p-3 text-center`}>
               <p className={`text-xl font-extrabold ${color}`}>{value}</p>
@@ -174,14 +177,14 @@ export default function SensoryListPage() {
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🔬</div>
             <p className="text-gray-500 font-medium text-base">
-              {evaluations.length === 0 ? '検査記録がありません' : '条件に一致する記録がありません'}
+              {evaluations.length === 0 ? t('sensory.noRecords') : t('sensory.noMatch')}
             </p>
             {evaluations.length === 0 && (
               <button
                 onClick={() => router.push('/sensory/new')}
                 className="mt-5 px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-2xl shadow-md shadow-blue-200 transition-all"
               >
-                最初の官能検査を記録する
+                {t('sensory.firstRecord')}
               </button>
             )}
           </div>
@@ -195,8 +198,8 @@ export default function SensoryListPage() {
               />
             ))}
             <p className="text-xs text-gray-400 text-center pt-2 font-medium">
-              {filtered.length} 件を表示
-              {filtered.length !== evaluations.length && `（全 ${evaluations.length} 件）`}
+              {t('sensory.showingCount').replace('{n}', String(filtered.length))}
+              {filtered.length !== evaluations.length && `（${t('sensory.totalCount').replace('{n}', String(evaluations.length))}）`}
             </p>
           </div>
         )}

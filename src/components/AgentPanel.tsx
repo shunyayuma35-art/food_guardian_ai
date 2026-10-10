@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useLang } from '@/context/LanguageContext'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { AgentStep, PartialResult, AgentSessionData } from '@/lib/agent/types'
@@ -70,7 +71,7 @@ const TOOL_LABELS: Record<string, { ja: string; en: string; icon: string }> = {
 type PanelStatus = 'preflight' | 'running' | 'awaiting_approval' | 'completed' | 'rejected' | 'error'
 
 export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentPanelProps) {
-  const isEn = lang === 'en'
+  const { t } = useLang()
 
   const [status, setStatus] = useState<PanelStatus>('preflight')
   const [shipmentStatus, setShipmentStatus] = useState<ShipmentStatus>('')
@@ -119,10 +120,8 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
       })
       const data = await res.json()
       if (!res.ok) {
-        const rawErr = data.error ?? (isEn ? 'Agent error' : 'エージェントエラー')
-        const friendlyErr = isEn
-          ? 'An error occurred in AI processing. Please try again.'
-          : 'AIの処理でエラーが起きました。もう一度お試しください。'
+        const rawErr = data.error ?? t('agent.error')
+        const friendlyErr = t('agent.error')
         const isApiErr = typeof rawErr === 'string' && (
           rawErr.includes('INVALID_ARGUMENT') ||
           rawErr.includes('function response') ||
@@ -146,10 +145,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
       }
     } catch (err) {
       console.error('[AgentPanel] fetch error:', err)
-      setErrorMsg(isEn
-        ? 'An error occurred in AI processing. Please try again.'
-        : 'AIの処理でエラーが起きました。もう一度お試しください。'
-      )
+      setErrorMsg(t('agent.error'))
       setStatus('error')
     }
   }
@@ -171,7 +167,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
       })
       const data = await res.json()
       if (!res.ok) {
-        setErrorMsg(data.error ?? (isEn ? 'Confirm error' : '確認エラー'))
+        setErrorMsg(data.error ?? t('agent.error'))
         setStatus('error')
         return
       }
@@ -220,10 +216,10 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
             <span className="text-xl">🤖</span>
             <div>
               <h2 className="text-sm font-bold text-gray-900">
-                {isEn ? 'AI Agent Response' : 'AI エージェント対応'}
+                {t('agent.title')}
               </h2>
               <p className="text-[10px] text-gray-400 leading-none mt-0.5">
-                {isEn ? 'Automated foreign matter incident flow' : '異物事故の自律対応フロー'}
+                {t('agent.subtitle')}
               </p>
             </div>
           </div>
@@ -244,12 +240,10 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
             <div className="space-y-4">
               <div>
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
-                  {isEn ? 'Step 0: Shipment Status' : 'Step 0: 出荷状況を確認'}
+                  {t('agent.step0Title')}
                 </p>
                 <p className="text-xs text-gray-500 mb-3 leading-relaxed">
-                  {isEn
-                    ? 'Select the current shipment status to enable recall risk assessment. You may also skip this step.'
-                    : '自主回収リスク評価を行う場合は出荷状況を選択してください。スキップして通常の対応フローに進むこともできます。'}
+                  {t('agent.step0Subtitle')}
                 </p>
                 <div className="space-y-2">
                   {shipmentOptions.map(opt => (
@@ -271,7 +265,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                       />
                       <span className="text-base">{opt.badge}</span>
                       <span className="text-xs font-medium text-gray-800">
-                        {isEn ? opt.en : opt.ja}
+                        {lang === 'en' ? opt.en : opt.ja}
                       </span>
                     </label>
                   ))}
@@ -283,9 +277,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                   onClick={() => startAgent()}
                   className="flex-1 py-3 bg-orange-500 text-white text-sm font-bold rounded-xl active:scale-95 transition-all shadow-sm"
                 >
-                  🤖 {shipmentStatus
-                    ? (isEn ? 'Start with Recall Assessment' : '回収リスク評価を含めて開始')
-                    : (isEn ? 'Start Agent' : '対応を開始する')}
+                  🤖 {shipmentStatus ? t('agent.startWithRecall') : t('agent.startBtn')}
                 </button>
               </div>
             </div>
@@ -295,7 +287,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
           {status !== 'preflight' && (
             <div>
               <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
-                {isEn ? 'Steps' : 'ステップ'}
+                {t('agent.stepsLabel')}
               </p>
               <div className="space-y-2">
                 {steps.map((step, i) => {
@@ -309,7 +301,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                         <p className="text-xs font-semibold text-gray-800">
                           Step {step.step}:&nbsp;
                           <span className="font-medium text-gray-700">
-                            {isEn ? label?.en : label?.ja}
+                            {lang === 'en' ? label?.en : label?.ja}
                           </span>
                         </p>
                         <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{step.resultSummary}</p>
@@ -324,7 +316,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                   <div className="flex items-center gap-2 py-1">
                     <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin shrink-0" />
                     <span className="text-xs text-orange-600 font-medium">
-                      {isEn ? 'Agent is working…' : 'エージェントが対応中…'}
+                      {t('agent.running')}
                     </span>
                   </div>
                 )}
@@ -338,19 +330,17 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
               <div className="flex items-center gap-2">
                 <span className="text-lg">🔐</span>
                 <h3 className="text-sm font-bold text-amber-800">
-                  {isEn ? 'Approval Required' : '責任者の承認が必要です'}
+                  {t('agent.approvalRequired')}
                 </h3>
               </div>
               <p className="text-xs text-amber-700 leading-relaxed">
-                {isEn
-                  ? 'A manager must approve before the agent proceeds with CAPA report, incident record, and customer notification.'
-                  : 'CAPA報告書の作成・異物記録・取引先への第一報の前に、責任者の承認が必要です。'}
+                {t('agent.approvalDesc')}
               </p>
 
               {result?.checklistSummary && (
                 <div className="bg-white rounded-xl border border-amber-200 p-2.5">
                   <p className="text-[10px] font-semibold text-amber-700 mb-1">
-                    {isEn ? 'Checklist summary:' : 'チェックリスト概要:'}
+                    {t('agent.checklistSummaryLabel')}
                   </p>
                   <p className="text-xs text-gray-700 leading-relaxed">{result.checklistSummary}</p>
                 </div>
@@ -358,7 +348,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
 
               {/* 承認前に回収リスク評価を表示 */}
               {result?.recallAssessment && (
-                <RecallAssessmentBox text={result.recallAssessment} isEn={isEn} />
+                <RecallAssessmentBox text={result.recallAssessment} />
               )}
 
               <div className="space-y-2">
@@ -366,14 +356,14 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                   type="text"
                   value={approverName}
                   onChange={e => setApproverName(e.target.value)}
-                  placeholder={isEn ? 'Approver name (required)' : '承認者名（必須）'}
+                  placeholder={t('agent.approverPlaceholder')}
                   className="w-full text-xs px-3 py-2.5 rounded-xl border border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/50 placeholder-gray-400"
                 />
                 <input
                   type="text"
                   value={approverComment}
                   onChange={e => setApproverComment(e.target.value)}
-                  placeholder={isEn ? 'Comment (optional)' : 'コメント（任意）'}
+                  placeholder={t('agent.commentPlaceholder')}
                   className="w-full text-xs px-3 py-2.5 rounded-xl border border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/50 placeholder-gray-400"
                 />
               </div>
@@ -384,16 +374,14 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                   disabled={confirming || !approverName.trim()}
                   className="flex-1 py-3 bg-orange-500 text-white text-sm font-bold rounded-xl active:scale-95 transition-all disabled:opacity-40 shadow-sm"
                 >
-                  {confirming
-                    ? (isEn ? 'Processing…' : '処理中…')
-                    : (isEn ? '✅ Approve & Continue' : '✅ 承認して続行')}
+                  {confirming ? t('agent.processing') : t('agent.approve')}
                 </button>
                 <button
                   onClick={() => handleConfirm(false)}
                   disabled={confirming}
                   className="px-4 py-3 bg-gray-100 text-gray-600 text-sm font-medium rounded-xl active:scale-95 transition-all disabled:opacity-40"
                 >
-                  {isEn ? 'Reject' : '却下'}
+                  {t('agent.reject')}
                 </button>
               </div>
             </div>
@@ -403,7 +391,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
           {status === 'rejected' && result && (
             <div className="bg-gray-100 border border-gray-200 rounded-2xl p-4">
               <p className="text-xs text-gray-500 font-semibold mb-1">
-                {isEn ? 'Response rejected' : '対応を却下しました'}
+                {t('agent.rejected')}
               </p>
               <p className="text-xs text-gray-600 leading-relaxed">{result.summary}</p>
             </div>
@@ -417,7 +405,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
               {result.trendAlert && /⚠️/.test(result.trendAlert) && (
                 <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
                   <p className="text-xs font-bold text-orange-700 mb-2">
-                    📊 {isEn ? 'Trend Alert' : '傾向アラート'}
+                    📊 {t('agent.trendAlert')}
                   </p>
                   <MarkdownProse text={result.trendAlert} className="text-orange-800" />
                 </div>
@@ -425,14 +413,14 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
 
               {/* Recall assessment */}
               {recallText && (
-                <RecallAssessmentBox text={recallText} isEn={isEn} />
+                <RecallAssessmentBox text={recallText} />
               )}
 
               {/* Checklist */}
               {result.checklist && result.checklist.length > 0 && (
                 <div>
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
-                    {isEn ? '📋 Action Checklist' : '📋 対応チェックリスト'}
+                    {t('agent.checklist')}
                   </p>
                   <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden divide-y divide-gray-100">
                     {result.checklist.map((item, i) => (
@@ -458,24 +446,22 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
               {/* CAPA report */}
               {capaText && (
                 <ReportTextArea
-                  label={isEn ? '📝 CAPA Report Draft' : '📝 CAPA 報告書ドラフト'}
+                  label={t('agent.capaReport')}
                   text={capaText}
                   onTextChange={setCapaText}
                   copied={copiedCapa}
                   onCopy={() => copy(capaText, setCopiedCapa)}
-                  isEn={isEn}
                 />
               )}
 
               {/* Customer report */}
               {customerReportText && (
                 <ReportTextArea
-                  label={isEn ? '📨 Customer Notification Draft' : '📨 取引先向け第一報ドラフト'}
+                  label={t('agent.customerReport')}
                   text={customerReportText}
                   onTextChange={setCustomerReportText}
                   copied={copiedReport}
                   onCopy={() => copy(customerReportText, setCopiedReport)}
-                  isEn={isEn}
                 />
               )}
 
@@ -486,7 +472,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                     <span className="text-lg shrink-0">✅</span>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-green-700">
-                        {isEn ? 'Incident saved successfully' : '異物一覧に記録しました'}
+                        {t('agent.savedConfirm')}
                       </p>
                       <p className="text-[10px] text-green-600 font-mono">ID: {result.savedIncidentId}</p>
                     </div>
@@ -495,7 +481,7 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
                     href="/list"
                     className="shrink-0 text-xs px-3 py-2 bg-green-600 text-white rounded-xl font-semibold active:scale-95 transition-all"
                   >
-                    {isEn ? 'View List →' : '一覧を見る →'}
+                    {t('agent.viewList')}
                   </a>
                 </div>
               )}
@@ -513,14 +499,14 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
           {status === 'error' && (
             <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2.5">
               <p className="text-xs font-semibold text-red-700">
-                {isEn ? 'An error occurred' : 'エラーが発生しました'}
+                {t('agent.error')}
               </p>
               <p className="text-[10px] text-red-600 leading-relaxed break-all">{errorMsg}</p>
               <button
                 onClick={() => { setStatus('preflight') }}
                 className="text-xs px-3 py-2 bg-red-500 text-white rounded-xl font-medium active:scale-95 transition-all"
               >
-                {isEn ? 'Retry' : 'やり直す'}
+                {t('agent.retry')}
               </button>
             </div>
           )}
@@ -533,7 +519,8 @@ export default function AgentPanel({ analysis, lang, userHint, onClose }: AgentP
 
 // ── 自主回収リスク評価ボックス ─────────────────────────────────────
 
-function RecallAssessmentBox({ text, isEn }: { text: string; isEn: boolean }) {
+function RecallAssessmentBox({ text }: { text: string }) {
+  const { t } = useLang()
   const [expanded, setExpanded] = useState(false)
   const preview = text.slice(0, 180)
   const hasMore = text.length > 180
@@ -543,14 +530,12 @@ function RecallAssessmentBox({ text, isEn }: { text: string; isEn: boolean }) {
       <div className="flex items-center gap-2">
         <span className="text-base">⚖️</span>
         <h3 className="text-xs font-bold text-orange-800">
-          {isEn ? 'Recall Risk Assessment (Decision Support)' : '自主回収リスク評価（判断材料）'}
+          {t('agent.recallTitle')}
         </h3>
       </div>
       <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2">
         <p className="text-[10px] font-bold text-red-700">
-          {isEn
-            ? '⚠️ This is decision-support material only. NOT a final determination. Always consult your supervisor and the local health authority.'
-            : '⚠️ これは判断材料です。最終判断ではありません。必ず責任者および保健所に相談してください。'}
+          {t('agent.recallDisclaimer')}
         </p>
       </div>
       {expanded
@@ -562,7 +547,7 @@ function RecallAssessmentBox({ text, isEn }: { text: string; isEn: boolean }) {
           onClick={() => setExpanded(v => !v)}
           className="text-[10px] text-orange-600 font-semibold underline"
         >
-          {expanded ? (isEn ? 'Show less' : '閉じる') : (isEn ? 'Show more' : 'すべて表示')}
+          {expanded ? t('agent.showLess') : t('agent.showMore')}
         </button>
       )}
     </div>
@@ -572,15 +557,15 @@ function RecallAssessmentBox({ text, isEn }: { text: string; isEn: boolean }) {
 // ── 報告書テキストエリア（共通） ──────────────────────────────────
 
 function ReportTextArea({
-  label, text, onTextChange, copied, onCopy, isEn,
+  label, text, onTextChange, copied, onCopy,
 }: {
   label: string
   text: string
   onTextChange: (v: string) => void
   copied: boolean
   onCopy: () => void
-  isEn: boolean
 }) {
+  const { t } = useLang()
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -590,13 +575,13 @@ function ReportTextArea({
             onClick={onCopy}
             className="text-[10px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg active:scale-95 transition-all font-medium"
           >
-            {copied ? (isEn ? '✅ Copied' : '✅ コピー完了') : (isEn ? '📋 Copy' : '📋 コピー')}
+            {copied ? t('agent.copyDone') : t('agent.copyBtn')}
           </button>
           <button
             onClick={() => window.print()}
             className="text-[10px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg active:scale-95 transition-all font-medium"
           >
-            {isEn ? '🖨️ Print' : '🖨️ 印刷'}
+            {t('agent.printBtn')}
           </button>
         </div>
       </div>
