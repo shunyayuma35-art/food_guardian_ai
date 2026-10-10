@@ -480,7 +480,7 @@ export default function IncidentDetailPage() {
             <div className="space-y-3">
               {incident.comment && (
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-1">状況コメント</p>
+                  <p className="text-xs text-gray-400 font-semibold mb-1">💡 心当たり・状況コメント</p>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{incident.comment}</p>
                 </div>
               )}
