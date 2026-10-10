@@ -10,7 +10,8 @@ import {
   type IncidentStatus, type PdcaStatus,
 } from '@/lib/types'
 import { generateIncidentCode, formatDate, formatDateTime } from '@/lib/utils'
-import { generateIncidentReport, incidentToCSV, reportToWordHTML } from '@/lib/report-generator'
+import { generateIncidentReport, incidentToCSV } from '@/lib/report-generator'
+import { generateIncidentDocx } from '@/lib/docx-generator'
 import Navigation from '@/components/Navigation'
 import toast from 'react-hot-toast'
 import type { Incident } from '@/lib/types'
@@ -650,18 +651,21 @@ export default function IncidentDetailPage() {
             </button>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => {
-                  const html = reportToWordHTML(`クレーム報告書 - ${incident.productName}`, generateIncidentReport(incident))
-                  const blob = new Blob([html], { type: 'application/msword' })
-                  const url = URL.createObjectURL(blob)
-                  const a = document.createElement('a')
-                  a.href = url; a.download = `クレーム報告書_${incident.productName}.doc`; a.click()
-                  URL.revokeObjectURL(url)
-                  toast.success('Word文書をダウンロードしました 📘')
+                onClick={async () => {
+                  try {
+                    const blob = await generateIncidentDocx(incident)
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url; a.download = `クレーム報告書_${incident.productName}_${incident.lotNumber}.docx`; a.click()
+                    URL.revokeObjectURL(url)
+                    toast.success('Word文書をダウンロードしました 📘')
+                  } catch {
+                    toast.error('Word生成に失敗しました')
+                  }
                 }}
                 className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-blue-100 text-blue-700 font-bold text-xs transition-all active:scale-[0.98] hover:bg-blue-200"
               >
-                <span>📘</span> Word (.doc)
+                <span>📘</span> Word (.docx)
               </button>
               <button
                 onClick={() => {

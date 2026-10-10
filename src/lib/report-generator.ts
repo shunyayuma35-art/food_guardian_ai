@@ -76,8 +76,22 @@ function buildFeatureSummary(features: FeatureChecklist): string {
   return lines.length ? lines.join('\n') : '  （特徴データ未入力）'
 }
 
+function getCorrective(incident: Incident): string {
+  return incident.editedCorrective || incident.aiCorrectiveRaw || incident.correctiveAction || '（未入力）'
+}
+
+function getPreventive(incident: Incident): string {
+  return incident.editedPreventive || incident.aiPreventiveRaw || incident.preventiveMeasure || '（未入力）'
+}
+
+function getStatusLabel(incident: Incident): string {
+  if (incident.pdcaStatus === 'done') return '対応完了'
+  return INCIDENT_STATUS_LABELS[incident.status]
+}
+
 function generateCauseAnalysis(incident: Incident): string {
   const top = incident.estimations[0]
+  const isAiVision = top?.source === 'ai_vision'
   const process = incident.discoveryProcess
 
   const processMap: Record<string, string> = {
@@ -107,8 +121,9 @@ function generateCauseAnalysis(incident: Incident): string {
     ? (categoryMap[top.category] ?? `${top.category}に関連する設備・資材の点検を実施すること。`)
     : '特徴データが不足しているため、現時点では詳細な分析が困難です。異物を保管の上、専門機関への依頼を検討してください。'
 
+  const sourceLabel = isAiVision ? 'AI画像解析結果' : 'AI推定第1候補'
   return top
-    ? `AI推定第1候補「${top.category}」（可能性 ${top.probability}%）に基づく分析：
+    ? `${sourceLabel}「${top.category}」（可能性 ${top.probability}%）に基づく分析：
 
 【工程別分析】
 ${processPart}
@@ -122,14 +137,14 @@ ${catPart}`
 
 export function generateIncidentReport(incident: Incident): string {
   const processLabel = DISCOVERY_PROCESS_LABELS[incident.discoveryProcess]
-  const statusLabel = INCIDENT_STATUS_LABELS[incident.status]
+  const statusLabel = getStatusLabel(incident)
   const topEsts = incident.estimations.slice(0, 3)
   const featuresSummary = buildFeatureSummary(incident.features)
   const causeAnalysis = generateCauseAnalysis(incident)
 
-  return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  return `────────────────────────────────
 【異物混入クレーム報告書】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 件　名：${incident.productName}（ロット：${incident.lotNumber}）における異物混入報告
 
@@ -137,9 +152,9 @@ export function generateIncidentReport(incident: Incident): string {
 報告者：${incident.operator}
 ステータス：${statusLabel}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 1. 発生概要
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 発生日時　：${incident.discoveryDate}
 発見場所　：${incident.factory}（${incident.lineNumber} ライン）
@@ -150,18 +165,18 @@ export function generateIncidentReport(incident: Incident): string {
 賞 味 期 限：${incident.expiryDate || '不明'}
 担　当　者：${incident.operator}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 2. 異物の特徴（現場観察結果）
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 ${featuresSummary}
 
 【現場担当者コメント】
 ${incident.comment || '（記録なし）'}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 3. AI 一次推定結果（参考）
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 ※本推定は FoodEye AI システムによる一次判定です。
   確定診断には専門機関（外部検査機関等）による鑑定が必要です。
@@ -172,15 +187,15 @@ ${topEsts.length > 0
     ).join('\n\n')
   : '  推定結果なし（特徴チェック未入力のため推定不可）'}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 4. 発生原因の分析（現時点）
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 ${causeAnalysis}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 5. 初期対応内容
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 ・当該ロット（${incident.lotNumber}）の出荷停止・隔離措置を実施
 ・品質管理部門への即時報告
@@ -188,19 +203,19 @@ ${causeAnalysis}
 ・FoodEye システムへの事案登録完了
 ・お客様または社内関係者への一次報告
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 6. 是正処置・再発防止策
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 【是正処置】
-${incident.correctiveAction || '（未入力）'}
+${getCorrective(incident)}
 
 【再発防止策】
-${incident.preventiveMeasure || '（未入力）'}
+${getPreventive(incident)}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 7. 備考・注意事項
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 ・本報告書は FoodEye AI 支援システムにより自動生成されました
 ・上記の内容は事実確認後に適宜修正・補足してください
@@ -208,9 +223,9 @@ ${incident.preventiveMeasure || '（未入力）'}
 ・本報告書の AI 推定結果は「一次判定・仮説」であり、
   法的・学術的な確定診断ではありません
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
                                                             以上
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 生成日時：${nowStr()}
 システム：FoodEye v1.0 | 食品異物事故管理・特定支援システム
@@ -258,9 +273,9 @@ export function generateSensoryReport(evaluation: SensoryEvaluation): string {
     ? `承認済み（承認者：${evaluation.approvedBy}　承認日時：${new Date(evaluation.approvedAt).toLocaleString('ja-JP')}）`
     : '未承認（最終承認者による確認待ち）'
 
-  return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  return `────────────────────────────────
 【官能検査報告書】
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 件　名：${evaluation.productName}（ロット：${evaluation.lotNumber}）官能検査結果報告
 
@@ -269,18 +284,18 @@ export function generateSensoryReport(evaluation: SensoryEvaluation): string {
 承認者：${evaluation.approverName || '（未設定）'}
 承認状況：${approvalStatus}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 1. 検査概要
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 製　品　名：${evaluation.productName}
 ロット番号：${evaluation.lotNumber}
 検査日時　：${new Date(evaluation.date).toLocaleString('ja-JP')}
 検 査 担 当：${evaluation.inspectorName}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 2. 官能評価結果
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 【総合サマリー】
   外観　：${APPEARANCE_EVAL_LABELS[evaluation.appearance]}${evaluation.appearanceGrade ? `（グレード：${APPEARANCE_GRADE_LABELS[evaluation.appearanceGrade]}）` : ''}
@@ -289,9 +304,9 @@ export function generateSensoryReport(evaluation: SensoryEvaluation): string {
   食感　：${TEXTURE_EVAL_LABELS[evaluation.texture]}
 ${detailSection}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 3. 総合判定
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 　　判定結果：${judgementEmoji} ${judgementLabel}
 
@@ -300,15 +315,15 @@ ${evaluation.judgementMethod.length > 0
   ? evaluation.judgementMethod.map((m) => `  ・${m}`).join('\n')
   : '  （未選択）'}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 4. 検査コメント・特記事項
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 ${evaluation.comment || '（特記事項なし）'}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 5. 判定に基づく対応
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 ${evaluation.judgement === 'pass'
   ? '本ロットは官能検査の基準を満たしています。\n通常の出荷・流通工程を継続してください。'
@@ -316,17 +331,17 @@ ${evaluation.judgement === 'pass'
   ? '本ロットに注意を要する事項が確認されました。\n最終承認者による確認を行い、追加検査または条件付き出荷の判断を実施してください。\n当該ロットの管理強化（温度・保管条件等）を推奨します。'
   : '本ロットは官能検査の基準を満たしていません。\n出荷停止・隔離措置を実施し、原因究明および廃棄・再処理の判断を行ってください。\n品質管理部門への即時報告が必要です。'}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 6. 備考・注意事項
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 ・本報告書は FoodEye 官能検査システムにより自動生成されました
 ・官能検査結果は主観的評価を含む場合があり、客観的分析の補完として活用してください
 ・最終判断は最終承認者の確認・署名をもって確定となります
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
                                                             以上
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────
 
 生成日時：${nowStr()}
 システム：FoodEye v1.0 | 食品品質管理・官能検査支援システム
@@ -388,7 +403,7 @@ export function reportToWordHTML(title: string, content: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/\n/g, '<br/>')
-    .replace(/━+/g, '<hr style="border:1px solid #ccc"/>')
+    .replace(/─+/g, '<hr style="border:1px solid #ccc"/>')
 
   return `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office"

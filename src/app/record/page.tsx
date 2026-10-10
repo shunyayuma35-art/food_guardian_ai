@@ -11,11 +11,13 @@ import { compressImage } from '@/lib/compressImage'
 import { parseQRCode, formatLocalDate } from '@/lib/utils'
 import {
   createEmptyFeatures,
+  hasAnyFeature,
   DISCOVERY_PROCESS_LABELS,
   CLAIM_ROUTE_LABELS,
   type DiscoveryProcess,
   type OccurrenceType,
   type ClaimRoute,
+  type EstimationResult,
 } from '@/lib/types'
 import Navigation from '@/components/Navigation'
 import QRScanner from '@/components/QRScanner'
@@ -212,6 +214,7 @@ export default function RecordPage() {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
+          productName,
           comment,
           discoveryProcess,
           aiResult: aiQuickResult ? {
@@ -276,7 +279,22 @@ export default function RecordPage() {
         uploadPhotos(user.uid, microscopePhotos),
         uploadPhotos(user.uid, claimPhotos),
       ])
-      const estimations = estimateForeignMaterial(features, discoveryProcess)
+      const ruleEstimations = estimateForeignMaterial(features, discoveryProcess)
+      // 特徴チェックに意味のあるデータがある場合のみ rule-based を採用
+      const hasFeatureData = hasAnyFeature(features) ||
+        features.magnetTest.sticks || features.magnetTest.noStick || features.magnetTest.partialStick
+      // AI即時判定（画像解析）を第1候補として保存
+      const aiVisionEst: EstimationResult | null = aiQuickResult ? {
+        category: aiQuickResult.category,
+        probability: 95,
+        basis: ['AI画像解析（Gemini Vision）'],
+        urgency: aiQuickResult.urgency,
+        source: 'ai_vision',
+      } : null
+      const estimations: EstimationResult[] = [
+        ...(aiVisionEst ? [aiVisionEst] : []),
+        ...(hasFeatureData ? ruleEstimations.map(e => ({ ...e, source: 'rule_based' })) : []),
+      ]
       const id = await createIncident({
         productName, lotNumber, manufacturingDate, expiryDate,
         lineNumber, factory, operator,
