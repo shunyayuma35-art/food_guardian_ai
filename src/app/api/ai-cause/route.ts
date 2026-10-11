@@ -18,6 +18,9 @@ function buildPrompt(inc: Record<string, unknown>, lang: string): string {
   // 異物の心当たり（コメント欄）
   const hint = String(inc.comment ?? '').trim()
   const productName = String(inc.productName ?? '')
+  // ヒント項目（ForeignMatterHints）から「該当」項目を文字列化
+  const hintsObj = (inc.hints ?? {}) as Record<string, string>
+  const hintsYes = Object.entries(hintsObj).filter(([, v]) => v === 'yes').map(([k]) => k).join(', ')
 
   if (isEn) {
     const productHint = buildProductHintEn(productName)
@@ -36,6 +39,7 @@ Incident Data:
 - Discovery Process: ${inc.discoveryProcess ?? '-'}
 - Top Estimation (PRIMARY): ${estLabelEn}
 - Suspicion / Situation Notes: ${hint || '(none)'}
+- Observed Features (hints): ${hintsYes || '(none)'}
 - Factory: ${inc.factory ?? '-'}, Line: ${inc.lineNumber ?? '-'}
 - Corrective Action (recorded): ${inc.correctiveAction ?? '-'}
 
@@ -77,6 +81,7 @@ ${productHint}
 - 発見工程: ${inc.discoveryProcess ?? '-'}
 - 第1候補推定（最優先）: ${estLabel}
 - 異物の心当たり・状況コメント: ${hint || '（なし）'}
+- 現場の観察結果（ヒント）: ${hintsYes || '（なし）'}
 - 工場: ${inc.factory ?? '-'}、ライン: ${inc.lineNumber ?? '-'}
 - 是正処置（登録済み）: ${inc.correctiveAction ?? '-'}
 

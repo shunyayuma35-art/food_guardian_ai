@@ -8,6 +8,7 @@ import {
   TASTE_EVAL_LABELS,
   TEXTURE_EVAL_LABELS,
   APPEARANCE_GRADE_LABELS,
+  calcRecallLevel,
 } from './types'
 
 function today(): string {
@@ -121,6 +122,33 @@ function getPreventive(incident: Incident): string {
 function getStatusLabel(incident: Incident): string {
   if (incident.pdcaStatus === 'done') return '対応完了'
   return INCIDENT_STATUS_LABELS[incident.status]
+}
+
+const RECALL_Q_LABELS: Record<string, string> = {
+  q1_hazardous: '危険物に当たるか',
+  q2_sharpHard: '硬い・鋭利な形状か',
+  q3_healthClaim: '健康被害の申し出があるか',
+  q4_multipleInLot: '同ロット複数件か',
+  q5_processOrigin: '製造工程由来の可能性があるか',
+  q6_inMarket: '市場に流通しているか',
+}
+const RECALL_ANS_LABELS: Record<string, string> = { yes: 'はい', no: 'いいえ', unknown: '不明' }
+const RECALL_LEVEL_LABELS: Record<string, string> = {
+  recall: '🔴 回収の検討が必要',
+  consult: '🟡 保健所への相談を推奨',
+  internal: '🟢 社内対応で可の可能性',
+}
+
+function buildRecallSection(incident: Incident): string {
+  const ra = incident.recallAssessment
+  if (!ra) return '（回収要否の回答なし）'
+  const lines = Object.entries(RECALL_Q_LABELS).map(([k, label]) => {
+    const ans = ra[k as keyof typeof ra]
+    return `  ${label}：${ans ? RECALL_ANS_LABELS[ans] ?? '－' : '未回答'}`
+  })
+  const allAnswered = Object.values(ra).every(v => v !== null)
+  const level = allAnswered ? RECALL_LEVEL_LABELS[calcRecallLevel(ra)] ?? '' : '（未回答あり）'
+  return `${lines.join('\n')}\n\n  【判定】${level}${ra.q6_inMarket === 'yes' ? '\n  ※自主回収の届出（食品衛生法）の確認を推奨します。' : ''}`
 }
 
 function generateCauseAnalysis(incident: Incident): string {
@@ -245,7 +273,15 @@ ${topEsts.length > 0
 ${causeAnalysis}
 
 ────────────────────────────────
-5. 初期対応内容
+5. 回収要否の判断材料
+────────────────────────────────
+
+${buildRecallSection(incident)}
+
+  ※これは判断材料です。最終判断は責任者および保健所に相談してください。
+
+────────────────────────────────
+6. 初期対応内容
 ────────────────────────────────
 
 ・当該ロット（${incident.lotNumber}）の出荷停止・隔離措置を実施
@@ -255,7 +291,7 @@ ${causeAnalysis}
 ・お客様または社内関係者への一次報告
 
 ────────────────────────────────
-6. 是正処置・再発防止策
+7. 是正処置・再発防止策
 ────────────────────────────────
 
 【是正処置】
@@ -265,7 +301,7 @@ ${getCorrective(incident)}
 ${getPreventive(incident)}
 
 ────────────────────────────────
-7. 備考・注意事項
+8. 備考・注意事項
 ────────────────────────────────
 
 ・本報告書は FoodEye AI 支援システムにより自動生成されました

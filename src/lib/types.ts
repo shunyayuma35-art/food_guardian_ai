@@ -228,6 +228,10 @@ export interface Incident {
   // 是正処置・再発防止の直接編集
   actionsUpdatedBy?: string
   actionsUpdatedAt?: string
+  // 回収要否の判断材料
+  recallAssessment?: RecallAssessment
+  // 異物特徴ヒント（簡易チップ入力）
+  hints?: ForeignMatterHints
 }
 
 export type PdcaStatus = 'planned' | 'doing' | 'checking' | 'done'
@@ -497,4 +501,66 @@ export interface SensoryEvaluation {
   createdAt: string
   updatedAt: string
   createdBy: string
+}
+
+// ── 回収要否の判断材料 ────────────────────────────────────────────────
+export type TriAnswer = 'yes' | 'no' | 'unknown'
+
+export interface RecallAssessment {
+  q1_hazardous: TriAnswer | null     // 危険物（ガラス・金属・硬質プラスチックなど）
+  q2_sharpHard: TriAnswer | null     // 硬い・鋭利な形状
+  q3_healthClaim: TriAnswer | null   // 健康被害の申し出
+  q4_multipleInLot: TriAnswer | null // 同ロット複数件
+  q5_processOrigin: TriAnswer | null // 製造工程由来の可能性
+  q6_inMarket: TriAnswer | null      // 市場に流通しているか
+}
+
+export type RecallLevel = 'recall' | 'consult' | 'internal'
+
+export function calcRecallLevel(a: RecallAssessment): RecallLevel {
+  if (a.q1_hazardous === 'yes' || a.q3_healthClaim === 'yes' || (a.q2_sharpHard === 'yes' && a.q5_processOrigin === 'yes')) return 'recall'
+  const unknownCount = [a.q1_hazardous, a.q2_sharpHard, a.q3_healthClaim, a.q4_multipleInLot, a.q5_processOrigin, a.q6_inMarket].filter(v => v === 'unknown').length
+  if (a.q4_multipleInLot === 'yes' || a.q5_processOrigin === 'yes' || unknownCount >= 2) return 'consult'
+  return 'internal'
+}
+
+// ── 異物特徴ヒント（簡易チップ入力） ─────────────────────────────────
+export type HintAnswer = 'yes' | 'no' | 'unknown'
+
+export interface ForeignMatterHints {
+  // 形状
+  shapeGranular?: HintAnswer
+  shapeFibrous?: HintAnswer
+  shapeThinFilm?: HintAnswer
+  shapeSolid?: HintAnswer
+  shapePowder?: HintAnswer
+  // 素材の推測
+  matStraw?: HintAnswer
+  matWood?: HintAnswer
+  matPaper?: HintAnswer
+  matPaint?: HintAnswer
+  matRubber?: HintAnswer
+  matCrustacean?: HintAnswer
+  matBoneShell?: HintAnswer
+  matGrain?: HintAnswer
+  // 色
+  colorWhite?: HintAnswer
+  colorTransparent?: HintAnswer
+  colorBlack?: HintAnswer
+  colorBrown?: HintAnswer
+  colorRed?: HintAnswer
+  colorBlue?: HintAnswer
+  colorGreen?: HintAnswer
+  colorMetal?: HintAnswer
+  colorOther?: HintAnswer
+  // 糸の種類（繊維状のときのみ表示）
+  threadHair?: HintAnswer
+  threadSynthetic?: HintAnswer
+  threadCotton?: HintAnswer
+  threadGlove?: HintAnswer
+  threadVinyl?: HintAnswer
+  // 硬さ
+  hardnessHard?: HintAnswer
+  hardnessSoft?: HintAnswer
+  hardnessElastic?: HintAnswer
 }

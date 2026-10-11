@@ -8,13 +8,14 @@ import { getIncident, updateIncident, deleteIncident, createReport } from '@/lib
 import {
   DISCOVERY_PROCESS_LABELS, INCIDENT_STATUS_LABELS, CLAIM_ROUTE_LABELS, OCCURRENCE_TYPE_LABELS,
   PDCA_STATUS_LABELS, PDCA_STATUS_COLORS,
-  type IncidentStatus, type PdcaStatus,
+  type IncidentStatus, type PdcaStatus, type RecallAssessment,
 } from '@/lib/types'
 import { generateIncidentCode, formatDate, formatDateTime } from '@/lib/utils'
 import { generateIncidentReport, incidentToCSV } from '@/lib/report-generator'
 import { generateIncidentDocx } from '@/lib/docx-generator'
 import Navigation from '@/components/Navigation'
 import AutoResizeTextarea from '@/components/AutoResizeTextarea'
+import RecallAssessmentCard from '@/components/RecallAssessmentCard'
 import toast from 'react-hot-toast'
 import type { Incident } from '@/lib/types'
 
@@ -61,6 +62,11 @@ export default function IncidentDetailPage() {
   const [draftLoading, setDraftLoading] = useState(false)
   const [regenEnLoading, setRegenEnLoading] = useState(false)
   const [showRuleBased, setShowRuleBased] = useState(false)
+  const [recallAssessment, setRecallAssessment] = useState<RecallAssessment>({
+    q1_hazardous: null, q2_sharpHard: null, q3_healthClaim: null,
+    q4_multipleInLot: null, q5_processOrigin: null, q6_inMarket: null,
+  })
+  const [savingRecall, setSavingRecall] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
@@ -101,6 +107,16 @@ export default function IncidentDetailPage() {
             data.editedPreventive ?? data.aiPreventiveRaw ?? data.preventiveMeasure ?? ''
           )
           setActionsUpdatedAt(data.actionsUpdatedAt ?? data.causeVerifiedAt ?? '')
+          // 回収要否の回答を復元
+          if (data.recallAssessment) setRecallAssessment(data.recallAssessment)
+          // Q1の初期値をAI判定から自動設定
+          else if (!data.recallAssessment) {
+            const topCat = data.estimations?.[0]?.category ?? ''
+            const isHazardous = /金属|ガラス|硬質プラスチック|プラスチック|ゴム/.test(topCat)
+            const isSafe = /植物|野菜|毛髪|毛|繊維|草|葉|種|木|皮|殻|穀|米|藁/.test(topCat)
+            if (isHazardous) setRecallAssessment(prev => ({ ...prev, q1_hazardous: 'yes' }))
+            else if (isSafe) setRecallAssessment(prev => ({ ...prev, q1_hazardous: 'no' }))
+          }
         }
       })
       .catch(() => toast.error(t('toast.fetchFailed') || 'データの取得に失敗しました'))
@@ -313,6 +329,20 @@ export default function IncidentDetailPage() {
       toast.error(t('toast.saveFailed'))
     } finally {
       setSavingPdca(false)
+    }
+  }
+
+  async function handleSaveRecall() {
+    if (!incident) return
+    setSavingRecall(true)
+    try {
+      await updateIncident(incident.id, { recallAssessment })
+      setIncident(prev => prev ? { ...prev, recallAssessment } : prev)
+      toast.success(t('recall.saved'))
+    } catch {
+      toast.error(t('toast.saveFailed') || '保存に失敗しました')
+    } finally {
+      setSavingRecall(false)
     }
   }
 
@@ -712,6 +742,14 @@ export default function IncidentDetailPage() {
             </div>
           </div>
         )}
+
+        {/* 回収要否の判断材料 */}
+        <RecallAssessmentCard
+          value={recallAssessment}
+          onChange={setRecallAssessment}
+          onSave={handleSaveRecall}
+          saving={savingRecall}
+        />
 
         {/* 是正処置・再発防止 直接編集 */}
         <div className="card p-4 no-print">

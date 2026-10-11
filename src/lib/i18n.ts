@@ -421,6 +421,23 @@ export type TranslationKey =
   | 'insp.feLabel' | 'insp.susLabel' | 'insp.detectConfirm'
   // ai-chat
   | 'aichat.dropHere'
+  // 回収要否の判断材料
+  | 'recall.title' | 'recall.disclaimer' | 'recall.save' | 'recall.saved'
+  | 'recall.q1' | 'recall.q2' | 'recall.q3' | 'recall.q4' | 'recall.q5' | 'recall.q6'
+  | 'recall.yes' | 'recall.no' | 'recall.unknown'
+  | 'recall.level.recall' | 'recall.level.consult' | 'recall.level.internal'
+  | 'recall.marketWarning' | 'recall.reportLabel'
+  // 異物特徴ヒント
+  | 'hints.title' | 'hints.subtitle'
+  | 'hints.shape' | 'hints.material' | 'hints.color' | 'hints.thread' | 'hints.hardness'
+  | 'hints.yes' | 'hints.no' | 'hints.unknown'
+  | 'hints.shapeGranular' | 'hints.shapeFibrous' | 'hints.shapeThinFilm' | 'hints.shapeSolid' | 'hints.shapePowder'
+  | 'hints.matStraw' | 'hints.matWood' | 'hints.matPaper' | 'hints.matPaint' | 'hints.matRubber'
+  | 'hints.matCrustacean' | 'hints.matBoneShell' | 'hints.matGrain'
+  | 'hints.colorWhite' | 'hints.colorTransparent' | 'hints.colorBlack' | 'hints.colorBrown'
+  | 'hints.colorRed' | 'hints.colorBlue' | 'hints.colorGreen' | 'hints.colorMetal' | 'hints.colorOther'
+  | 'hints.threadHair' | 'hints.threadSynthetic' | 'hints.threadCotton' | 'hints.threadGlove' | 'hints.threadVinyl'
+  | 'hints.hardnessHard' | 'hints.hardnessSoft' | 'hints.hardnessElastic'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -1190,6 +1207,66 @@ const ja: Dict = {
   'insp.detectConfirm': '検出確認',
   // ai-chat
   'aichat.dropHere': 'ここにドロップ',
+  // 回収要否の判断材料
+  'recall.title': '⚖️ 回収要否の判断材料',
+  'recall.disclaimer': 'これは判断材料です。最終判断は責任者および保健所に相談してください。',
+  'recall.save': '回答を保存する',
+  'recall.saved': '回収要否の回答を保存しました',
+  'recall.q1': '危険物に当たるか（ガラス・金属・硬質プラスチック・衛生害虫・変色・異臭など）',
+  'recall.q2': '硬い・鋭利な形状か',
+  'recall.q3': '健康被害（けが・体調不良）の申し出があるか',
+  'recall.q4': '同じロットで複数件見つかっているか',
+  'recall.q5': '製造工程由来の可能性があるか（設備の破損など）',
+  'recall.q6': '市場に流通しているか（出荷済み・店頭にある）',
+  'recall.yes': 'はい',
+  'recall.no': 'いいえ',
+  'recall.unknown': '不明',
+  'recall.level.recall': '🔴 回収の検討が必要',
+  'recall.level.consult': '🟡 保健所への相談を推奨',
+  'recall.level.internal': '🟢 社内対応で可の可能性',
+  'recall.marketWarning': '「流通している」が「はい」のため、自主回収の届出（食品衛生法 第58条、2021年6月〜義務化）の確認を推奨します。',
+  'recall.reportLabel': '回収要否の判断材料',
+  // 異物特徴ヒント
+  'hints.title': '🔍 異物の特徴ヒント',
+  'hints.subtitle': '該当するものをタップ（複数選択可）',
+  'hints.shape': '形状',
+  'hints.material': '素材の推測',
+  'hints.color': '色',
+  'hints.thread': '糸の種類',
+  'hints.hardness': '硬さ',
+  'hints.yes': '該当',
+  'hints.no': 'なし',
+  'hints.unknown': '不明',
+  'hints.shapeGranular': '粒状',
+  'hints.shapeFibrous': '糸・繊維状',
+  'hints.shapeThinFilm': '薄片・フィルム状',
+  'hints.shapeSolid': '塊・固形物',
+  'hints.shapePowder': '粉状',
+  'hints.matStraw': 'わら・植物片',
+  'hints.matWood': '木片',
+  'hints.matPaper': '紙',
+  'hints.matPaint': '塗膜片（ペンキ）',
+  'hints.matRubber': '樹脂・ゴム',
+  'hints.matCrustacean': '甲殻類（オキアミ・エビの殻）',
+  'hints.matBoneShell': '骨・貝殻',
+  'hints.matGrain': '米・穀物',
+  'hints.colorWhite': '白',
+  'hints.colorTransparent': '透明',
+  'hints.colorBlack': '黒',
+  'hints.colorBrown': '茶',
+  'hints.colorRed': '赤',
+  'hints.colorBlue': '青',
+  'hints.colorGreen': '緑',
+  'hints.colorMetal': '金属色',
+  'hints.colorOther': 'その他',
+  'hints.threadHair': '毛髪',
+  'hints.threadSynthetic': '化学繊維',
+  'hints.threadCotton': '綿',
+  'hints.threadGlove': '軍手の繊維',
+  'hints.threadVinyl': 'ビニールひも',
+  'hints.hardnessHard': '硬い',
+  'hints.hardnessSoft': '柔らかい',
+  'hints.hardnessElastic': '弾力がある',
   // forensic enhancer error texts
   'forensic.errorRateLimit': '上限超過',
   'forensic.errorRateLimitMsg': '今月の無料解析上限（3回）に達しました。@hapifoodlab までご連絡ください。',
@@ -2021,6 +2098,66 @@ const en: Dict = {
   'insp.detectConfirm': 'Detection Check',
   // ai-chat
   'aichat.dropHere': 'Drop here',
+  // recall assessment
+  'recall.title': '⚖️ Recall Assessment',
+  'recall.disclaimer': 'This is reference material only. Final decisions should be made in consultation with management and the health authority.',
+  'recall.save': 'Save Answers',
+  'recall.saved': 'Recall assessment saved',
+  'recall.q1': 'Is it a hazardous material? (glass, metal, hard plastic, pest, discoloration, off-odor, etc.)',
+  'recall.q2': 'Is it hard or sharp-edged?',
+  'recall.q3': 'Has a health complaint been reported? (injury, illness)',
+  'recall.q4': 'Have multiple incidents been found in the same lot?',
+  'recall.q5': 'Could it have originated from the manufacturing process? (broken equipment, etc.)',
+  'recall.q6': 'Is the product in the market? (shipped or on shelves)',
+  'recall.yes': 'Yes',
+  'recall.no': 'No',
+  'recall.unknown': 'Unknown',
+  'recall.level.recall': '🔴 Recall consideration required',
+  'recall.level.consult': '🟡 Consult health authority recommended',
+  'recall.level.internal': '🟢 Internal response may suffice',
+  'recall.marketWarning': '"In market" is Yes — voluntary recall notification (Food Sanitation Act, mandatory since June 2021) review is recommended.',
+  'recall.reportLabel': 'Recall Assessment',
+  // foreign matter hints
+  'hints.title': '🔍 Foreign Matter Hints',
+  'hints.subtitle': 'Tap items that match (multiple OK)',
+  'hints.shape': 'Shape',
+  'hints.material': 'Material (estimate)',
+  'hints.color': 'Color',
+  'hints.thread': 'Thread Type',
+  'hints.hardness': 'Hardness',
+  'hints.yes': 'Yes',
+  'hints.no': 'No',
+  'hints.unknown': 'Unknown',
+  'hints.shapeGranular': 'Granular',
+  'hints.shapeFibrous': 'Fiber/Thread',
+  'hints.shapeThinFilm': 'Thin film/flake',
+  'hints.shapeSolid': 'Lump/solid',
+  'hints.shapePowder': 'Powder',
+  'hints.matStraw': 'Straw/plant fragment',
+  'hints.matWood': 'Wood',
+  'hints.matPaper': 'Paper',
+  'hints.matPaint': 'Paint chip',
+  'hints.matRubber': 'Resin/rubber',
+  'hints.matCrustacean': 'Crustacean (krill, shrimp shell)',
+  'hints.matBoneShell': 'Bone/shell',
+  'hints.matGrain': 'Rice/grain',
+  'hints.colorWhite': 'White',
+  'hints.colorTransparent': 'Transparent',
+  'hints.colorBlack': 'Black',
+  'hints.colorBrown': 'Brown',
+  'hints.colorRed': 'Red',
+  'hints.colorBlue': 'Blue',
+  'hints.colorGreen': 'Green',
+  'hints.colorMetal': 'Metallic',
+  'hints.colorOther': 'Other',
+  'hints.threadHair': 'Hair',
+  'hints.threadSynthetic': 'Synthetic fiber',
+  'hints.threadCotton': 'Cotton',
+  'hints.threadGlove': 'Work glove fiber',
+  'hints.threadVinyl': 'Vinyl string',
+  'hints.hardnessHard': 'Hard',
+  'hints.hardnessSoft': 'Soft',
+  'hints.hardnessElastic': 'Elastic',
   // forensic enhancer error texts
   'forensic.errorRateLimit': 'Rate Limit Reached',
   'forensic.errorRateLimitMsg': 'Monthly free analysis limit (3×) reached. Please contact @hapifoodlab.',

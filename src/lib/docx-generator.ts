@@ -7,7 +7,7 @@ import {
   AlignmentType,
 } from 'docx'
 import type { Incident } from './types'
-import { DISCOVERY_PROCESS_LABELS } from './types'
+import { DISCOVERY_PROCESS_LABELS, calcRecallLevel } from './types'
 
 function today(): string {
   return new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tokyo' })
@@ -89,6 +89,39 @@ function bold(text: string): Paragraph {
 
 function multiLine(text: string): Paragraph[] {
   return text.split('\n').map((line) => body(line))
+}
+
+const RECALL_Q_LABELS_DOCX: Record<string, string> = {
+  q1_hazardous: '危険物に当たるか',
+  q2_sharpHard: '硬い・鋭利な形状か',
+  q3_healthClaim: '健康被害の申し出があるか',
+  q4_multipleInLot: '同ロット複数件か',
+  q5_processOrigin: '製造工程由来の可能性があるか',
+  q6_inMarket: '市場に流通しているか',
+}
+const RECALL_ANS_DOCX: Record<string, string> = { yes: 'はい', no: 'いいえ', unknown: '不明' }
+const RECALL_LEVEL_DOCX: Record<string, string> = {
+  recall: '🔴 回収の検討が必要',
+  consult: '🟡 保健所への相談を推奨',
+  internal: '🟢 社内対応で可の可能性',
+}
+
+function buildRecallDocx(incident: Incident): Paragraph[] {
+  const ra = incident.recallAssessment
+  if (!ra) return [body('（回収要否の回答なし）')]
+  const lines = Object.entries(RECALL_Q_LABELS_DOCX).map(([k, label]) => {
+    const ans = ra[k as keyof typeof ra]
+    return body(`${label}：${ans ? RECALL_ANS_DOCX[ans] ?? '－' : '未回答'}`)
+  })
+  const allAnswered = Object.values(ra).every(v => v !== null)
+  const level = allAnswered ? RECALL_LEVEL_DOCX[calcRecallLevel(ra)] ?? '' : '（未回答あり）'
+  return [
+    ...lines,
+    body(''),
+    bold(`【判定】${level}`),
+    ...(ra.q6_inMarket === 'yes' ? [body('※自主回収の届出（食品衛生法）の確認を推奨します。')] : []),
+    body('※これは判断材料です。最終判断は責任者および保健所に相談してください。'),
+  ]
 }
 
 function buildCauseAnalysisDocx(incident: Incident): Paragraph[] {
@@ -178,7 +211,11 @@ export async function generateIncidentDocx(incident: Incident): Promise<Blob> {
     ...buildCauseAnalysisDocx(incident),
     divider(),
 
-    heading('5. 是正処置・再発防止策'),
+    heading('5. 回収要否の判断材料'),
+    ...buildRecallDocx(incident),
+    divider(),
+
+    heading('6. 是正処置・再発防止策'),
     bold('【是正処置】'),
     ...multiLine(corrective),
     body(''),
@@ -186,7 +223,7 @@ export async function generateIncidentDocx(incident: Incident): Promise<Blob> {
     ...multiLine(preventive),
     divider(),
 
-    heading('6. 初期対応内容'),
+    heading('7. 初期対応内容'),
     body(`・当該ロット（${incident.lotNumber}）の出荷停止・隔離措置を実施`),
     body('・品質管理部門への即時報告'),
     body('・異物の保管・写真記録の実施'),
@@ -194,7 +231,7 @@ export async function generateIncidentDocx(incident: Incident): Promise<Blob> {
     body('・お客様または社内関係者への一次報告'),
     divider(),
 
-    heading('7. 備考・注意事項'),
+    heading('8. 備考・注意事項'),
     body('・本報告書は FoodEye AI 支援システムにより自動生成されました'),
     body('・上記の内容は事実確認後に適宜修正・補足してください'),
     body('・確定的な異物分析には外部専門機関による鑑定が必要です'),

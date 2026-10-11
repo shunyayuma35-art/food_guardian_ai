@@ -19,11 +19,13 @@ import {
   type OccurrenceType,
   type ClaimRoute,
   type EstimationResult,
+  type ForeignMatterHints,
 } from '@/lib/types'
 import Navigation from '@/components/Navigation'
 import QRScanner from '@/components/QRScanner'
 import PhotoUpload from '@/components/PhotoUpload'
 import FeatureChecklistComponent from '@/components/FeatureChecklist'
+import ForeignMatterHintsInput from '@/components/ForeignMatterHintsInput'
 import UsageGuide from '@/components/UsageGuide'
 import DateInput from '@/components/DateInput'
 import ForensicEnhancer from '@/components/ForensicEnhancer'
@@ -66,6 +68,7 @@ export default function RecordPage() {
   const [photos, setPhotos] = useState<File[]>([])
   const [microscopePhotos, setMicroscopePhotos] = useState<File[]>([])
   const [features, setFeatures] = useState(createEmptyFeatures())
+  const [hints, setHints] = useState<ForeignMatterHints>({})
 
   interface AiQuickResult {
     name: string
@@ -214,6 +217,12 @@ export default function RecordPage() {
       addKeys(features.magnetTest, 'magnetTest')
       addKeys(features.weight, 'weight')
 
+      // ヒントサマリーを構築
+      const hintLines: string[] = []
+      for (const [k, v] of Object.entries(hints)) {
+        if (v === 'yes') hintLines.push(k)
+      }
+
       const res = await fetch('/api/ai-draft', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -229,6 +238,7 @@ export default function RecordPage() {
             action: aiQuickResult.action,
           } : null,
           featuresSummary: checked.join(', '),
+          hintsSummary: hintLines.length > 0 ? hintLines.join(', ') : undefined,
           lang: getStoredLang(),
         }),
       })
@@ -317,6 +327,7 @@ export default function RecordPage() {
         status: 'open',
         createdBy: user.uid,
         occurrenceType,
+        ...(Object.keys(hints).length > 0 ? { hints } : {}),
         ...(occurrenceType === 'external' ? {
           claimSource, claimDate, claimContent, claimRoute,
           claimPhotos: claimPhotoURLs,
@@ -676,11 +687,12 @@ export default function RecordPage() {
 
         {/* ━━ Step 2: 異物特徴 ━━ */}
         {step === 2 && (
-          <div>
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-4 mb-5">
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-4">
               <p className="text-orange-600 text-xs font-bold">💡 {t('record.featureHint')}</p>
               <p className="text-gray-500 text-xs mt-1 leading-relaxed">{t('record.featureSubhint')}</p>
             </div>
+            <ForeignMatterHintsInput value={hints} onChange={setHints} />
             <FeatureChecklistComponent value={features} onChange={setFeatures} />
           </div>
         )}

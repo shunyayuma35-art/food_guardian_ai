@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { imageBase64, mediaType, userHint, structured, lang, productName, situationComment } = body;
+    const { imageBase64, mediaType, userHint, structured, lang, productName, situationComment, hintsSummary } = body;
 
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return NextResponse.json({ error: '画像データが無効です。' }, { status: 400 });
@@ -173,6 +173,7 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
     const productHintParts: string[] = []
     if (productName) productHintParts.push(isEn ? `Product: ${productName}` : `製品名：${productName}`)
     if (situationComment) productHintParts.push(isEn ? `Situation: ${situationComment}` : `状況：${situationComment}`)
+    if (hintsSummary) productHintParts.push(isEn ? `Observed features: ${hintsSummary}` : `現場の観察結果：${hintsSummary}`)
     if (userHint) productHintParts.push(isEn ? `User info: ${userHint}` : `ユーザー提供情報：${userHint}`)
     const contextHint = productHintParts.join('\n')
 
