@@ -194,15 +194,15 @@ export default function InspectionDetailPage() {
           <p className="section-title">{t('insp.basicInfo')}</p>
           <dl className="space-y-2">
             {[
-              ['機器名', record.deviceName],
-              ['ライン番号', record.lineNumber],
-              ['工場名', record.factory],
-              ['製品名', record.productName],
-              ['ロット番号', record.lotNumber],
-              ['検査日', record.inspectionDate],
-              ['担当者', record.inspector],
-            ].filter(([, v]) => v).map(([label, value]) => (
-              <div key={label} className="flex gap-3">
+              { k: 'deviceName',   label: t('insp.deviceName'),  value: record.deviceName },
+              { k: 'lineNumber',   label: t('record.lineNo'),     value: record.lineNumber },
+              { k: 'factory',      label: t('record.factory'),    value: record.factory },
+              { k: 'productName',  label: t('insp.productName'),  value: record.productName },
+              { k: 'lotNumber',    label: t('record.lotNo'),      value: record.lotNumber },
+              { k: 'date',         label: t('insp.date'),         value: record.inspectionDate },
+              { k: 'inspector',    label: t('insp.inspector'),    value: record.inspector },
+            ].filter(({ value }) => value).map(({ k, label, value }) => (
+              <div key={k} className="flex gap-3">
                 <dt className="text-xs text-gray-400 font-semibold w-24 shrink-0">{label}</dt>
                 <dd className="text-sm text-gray-800 font-medium">{value}</dd>
               </div>
@@ -217,11 +217,11 @@ export default function InspectionDetailPage() {
             {isMetal ? (
               <div className="grid grid-cols-3 gap-3 text-center">
                 {[
-                  ['Fe（鉄）', record.sensitivity.fe],
-                  ['SUS（ｽﾃﾝ）', record.sensitivity.sus],
-                  ['Non-Fe', record.sensitivity.nonFe],
-                ].filter(([, v]) => v).map(([label, value]) => (
-                  <div key={label} className="bg-teal-50 rounded-xl p-3">
+                  { k: 'fe',    label: t('insp.feLabel'),  value: record.sensitivity.fe },
+                  { k: 'sus',   label: t('insp.susLabel'), value: record.sensitivity.sus },
+                  { k: 'nonFe', label: 'Non-Fe',           value: record.sensitivity.nonFe },
+                ].filter(({ value }) => value).map(({ k, label, value }) => (
+                  <div key={k} className="bg-teal-50 rounded-xl p-3">
                     <p className="text-[10px] text-gray-500 font-semibold">{label}</p>
                     <p className="text-sm font-extrabold text-teal-700 mt-1">{value}</p>
                   </div>
@@ -247,12 +247,12 @@ export default function InspectionDetailPage() {
           <div className="space-y-1.5">
             {isMetal ? (
               <>
-                <CheckRow label="Fe（鉄）" value={record.startCheck.fePassed} />
-                <CheckRow label="SUS（ｽﾃﾝ）" value={record.startCheck.susPassed} />
+                <CheckRow label={t('insp.feLabel')} value={record.startCheck.fePassed} />
+                <CheckRow label={t('insp.susLabel')} value={record.startCheck.susPassed} />
                 <CheckRow label="Non-Fe" value={record.startCheck.nonFePassed} />
               </>
             ) : (
-              <CheckRow label="検出確認" value={record.startCheck.fePassed} />
+              <CheckRow label={t('insp.detectConfirm')} value={record.startCheck.fePassed} />
             )}
           </div>
           {record.startCheck.note && (
@@ -274,12 +274,12 @@ export default function InspectionDetailPage() {
           <div className="space-y-1.5">
             {isMetal ? (
               <>
-                <CheckRow label="Fe（鉄）" value={record.endCheck.fePassed} />
-                <CheckRow label="SUS（ｽﾃﾝ）" value={record.endCheck.susPassed} />
+                <CheckRow label={t('insp.feLabel')} value={record.endCheck.fePassed} />
+                <CheckRow label={t('insp.susLabel')} value={record.endCheck.susPassed} />
                 <CheckRow label="Non-Fe" value={record.endCheck.nonFePassed} />
               </>
             ) : (
-              <CheckRow label="検出確認" value={record.endCheck.fePassed} />
+              <CheckRow label={t('insp.detectConfirm')} value={record.endCheck.fePassed} />
             )}
           </div>
           {record.endCheck.note && (

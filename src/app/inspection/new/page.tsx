@@ -178,16 +178,16 @@ export default function InspectionNewPage() {
           title={t('guide.insp')}
           color="teal"
           steps={[
-            { icon: '🔧', title: t('insp.deviceType'), desc: '「金属探知機」か「X線検査機」を選択します。選んだ種類によって入力項目が変わります。' },
-            { icon: '⚙️', title: t('insp.sensitivity'), desc: 'その日の検出感度設定値を記録します。' },
-            { icon: '📦', title: t('insp.productInfo'), desc: '検査した製品名・ロット番号・検査日・担当者を入力します。' },
-            { icon: '🟢', title: t('insp.startCheck'), desc: '始業前に実施したテストピース確認の結果をOK/NGで記録します。' },
-            { icon: '🔴', title: t('insp.endCheck'), desc: '終業時のテストピース確認結果を同様に入力します。' },
-            { icon: '📋', title: t('insp.overallResult'), desc: '排除件数・是正処置を入力し保存ボタンを押します。' },
+            { icon: '🔧', title: t('insp.deviceType'), desc: t('insp.new.step1.desc') },
+            { icon: '⚙️', title: t('insp.sensitivity'), desc: t('insp.new.step2.desc') },
+            { icon: '📦', title: t('insp.productInfo'), desc: t('insp.new.step3.desc') },
+            { icon: '🟢', title: t('insp.startCheck'), desc: t('insp.new.step4.desc') },
+            { icon: '🔴', title: t('insp.endCheck'), desc: t('insp.new.step5.desc') },
+            { icon: '📋', title: t('insp.overallResult'), desc: t('insp.new.step6.desc') },
           ]}
           tips={[
-            'テストピース確認でNGが出た場合は「総合判定：異常」または「調整後OK」を選択し、是正処置を必ず記入してください',
-            '記録は保存後にCSV出力・印刷ができます（審査・監査の証拠書類として使用可能）',
+            t('insp.new.tip1'),
+            t('insp.new.tip2'),
           ]}
         />
 
@@ -197,8 +197,8 @@ export default function InspectionNewPage() {
           <div className="grid grid-cols-2 gap-3">
             {(['metal_detector', 'xray'] as DeviceType[]).map((type) => {
               const cfg = {
-                metal_detector: { icon: '🧲', desc: '金属異物を検出' },
-                xray: { icon: '☢️', desc: '骨・石・ガラス等も検出' },
+                metal_detector: { icon: '🧲', desc: t('insp.metalDesc') },
+                xray: { icon: '☢️', desc: t('insp.xrayDesc') },
               }[type]
               return (
                 <button
@@ -250,12 +250,12 @@ export default function InspectionNewPage() {
           {isMetal ? (
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="label">Fe（鉄）</label>
+                <label className="label">{t('insp.feLabel')}</label>
                 <input value={feSens} onChange={(e) => setFeSens(e.target.value)}
                   className="input-field text-sm" placeholder="φ1.5mm" />
               </div>
               <div>
-                <label className="label">SUS（ｽﾃﾝ）</label>
+                <label className="label">{t('insp.susLabel')}</label>
                 <input value={susSens} onChange={(e) => setSusSens(e.target.value)}
                   className="input-field text-sm" placeholder="φ2.0mm" />
               </div>

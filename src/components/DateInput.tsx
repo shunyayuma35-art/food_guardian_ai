@@ -38,8 +38,7 @@ export default function DateInput({
   type = 'date',
   warnIfBeforeDate,
 }: DateInputProps) {
-  const { lang } = useLang()
-  const isJa = lang !== 'en'
+  const { t } = useLang()
   const [focused, setFocused] = useState(false)
 
   const inputValue = type === 'datetime-local' ? toDatetimeLocal(value) : (value ?? '')
@@ -54,8 +53,8 @@ export default function DateInput({
   const showWarn = !!warnIfBeforeDate && !!dateValue && dateValue < warnIfBeforeDate
 
   const overlayText = type === 'datetime-local'
-    ? (isJa ? '年 / 月 / 日  時 : 分' : 'YYYY / MM / DD  HH : MM')
-    : (isJa ? '年 / 月 / 日' : 'YYYY / MM / DD')
+    ? t('date.overlayDatetime')
+    : t('date.overlayDate')
 
   return (
     <div className="space-y-1">
@@ -81,7 +80,7 @@ export default function DateInput({
       </div>
       {showWarn && (
         <p className="text-[10px] text-amber-600 font-semibold">
-          ⚠️ {isJa ? '製造日より前の日付です' : 'Date is before manufacturing date'}
+          ⚠️ {t('date.warnBefore')}
         </p>
       )}
     </div>

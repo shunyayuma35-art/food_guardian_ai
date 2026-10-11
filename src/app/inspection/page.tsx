@@ -78,12 +78,12 @@ export default function InspectionListPage() {
           title={t('guide.inspList')}
           color="teal"
           steps={[
-            { icon: '➕', title: `「＋ ${t('common.new')}」で検査記録を登録`, desc: '右上の「＋ 新規」ボタンから、金属探知機・X線検査機の記録を登録します。' },
-            { icon: '🔍', title: 'フィルターで絞り込む', desc: '機種・結果・日付で絞り込みができます。' },
-            { icon: '📋', title: 'カードをタップして詳細・出力', desc: '各カードをタップすると詳細画面が開きます。' },
+            { icon: '➕', title: t('insp.guide.step1.title'), desc: t('insp.guide.step1.desc') },
+            { icon: '🔍', title: t('insp.guide.step2.title'), desc: t('insp.guide.step2.desc') },
+            { icon: '📋', title: t('insp.guide.step3.title'), desc: t('insp.guide.step3.desc') },
           ]}
           tips={[
-            '上部の統計カードで今日の検査件数・異常件数・累計排除件数を確認できます',
+            t('insp.guide.tip1'),
           ]}
         />
 

@@ -884,7 +884,7 @@ export default function AiChatPage() {
         <div className="absolute inset-0 z-50 bg-orange-500/20 border-4 border-dashed border-orange-400 flex items-center justify-center pointer-events-none">
           <div className="bg-white rounded-2xl px-8 py-6 shadow-2xl flex flex-col items-center gap-2">
             <span className="text-4xl">📷</span>
-            <span className="text-base font-bold text-orange-600">ここにドロップ</span>
+            <span className="text-base font-bold text-orange-600">{t('aichat.dropHere')}</span>
           </div>
         </div>
       )}

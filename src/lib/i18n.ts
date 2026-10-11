@@ -406,6 +406,21 @@ export type TranslationKey =
   | 'qr.sharePanel.step1' | 'qr.sharePanel.step2' | 'qr.sharePanel.step3' | 'qr.sharePanel.step4'
   // qr scanner
   | 'qr.scanner.hint' | 'qr.scanner.cameraFail' | 'qr.scanner.loading' | 'qr.scanner.supported'
+  // date input
+  | 'date.overlayDate' | 'date.overlayDatetime' | 'date.warnBefore'
+  // inspection list guide
+  | 'insp.guide.step1.title' | 'insp.guide.step1.desc'
+  | 'insp.guide.step2.title' | 'insp.guide.step2.desc'
+  | 'insp.guide.step3.title' | 'insp.guide.step3.desc'
+  | 'insp.guide.tip1'
+  // inspection new guide
+  | 'insp.new.step1.desc' | 'insp.new.step2.desc' | 'insp.new.step3.desc'
+  | 'insp.new.step4.desc' | 'insp.new.step5.desc' | 'insp.new.step6.desc'
+  | 'insp.new.tip1' | 'insp.new.tip2'
+  | 'insp.metalDesc' | 'insp.xrayDesc'
+  | 'insp.feLabel' | 'insp.susLabel' | 'insp.detectConfirm'
+  // ai-chat
+  | 'aichat.dropHere'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -1145,6 +1160,34 @@ const ja: Dict = {
   'demoLogin.footer': 'このシステムはデモ・試用版です',
   // home
   'home.demoUser': 'デモユーザー',
+  // date input
+  'date.overlayDate': '年 / 月 / 日',
+  'date.overlayDatetime': '年 / 月 / 日  時 : 分',
+  'date.warnBefore': '製造日より前の日付です',
+  // inspection list guide
+  'insp.guide.step1.title': '「＋ 新規」で検査記録を登録',
+  'insp.guide.step1.desc': '右上の「＋ 新規」ボタンから、金属探知機・X線検査機の記録を登録します。',
+  'insp.guide.step2.title': 'フィルターで絞り込む',
+  'insp.guide.step2.desc': '機種・結果・日付で絞り込みができます。',
+  'insp.guide.step3.title': 'カードをタップして詳細・出力',
+  'insp.guide.step3.desc': '各カードをタップすると詳細画面が開きます。',
+  'insp.guide.tip1': '上部の統計カードで今日の検査件数・異常件数・累計排除件数を確認できます',
+  // inspection new guide
+  'insp.new.step1.desc': '「金属探知機」か「X線検査機」を選択します。選んだ種類によって入力項目が変わります。',
+  'insp.new.step2.desc': 'その日の検出感度設定値を記録します。',
+  'insp.new.step3.desc': '検査した製品名・ロット番号・検査日・担当者を入力します。',
+  'insp.new.step4.desc': '始業前に実施したテストピース確認の結果をOK/NGで記録します。',
+  'insp.new.step5.desc': '終業時のテストピース確認結果を同様に入力します。',
+  'insp.new.step6.desc': '排除件数・是正処置を入力し保存ボタンを押します。',
+  'insp.new.tip1': 'テストピース確認でNGが出た場合は「総合判定：異常」または「調整後OK」を選択し、是正処置を必ず記入してください',
+  'insp.new.tip2': '記録は保存後にCSV出力・印刷ができます（審査・監査の証拠書類として使用可能）',
+  'insp.metalDesc': '金属異物を検出',
+  'insp.xrayDesc': '骨・石・ガラス等も検出',
+  'insp.feLabel': 'Fe（鉄）',
+  'insp.susLabel': 'SUS（ｽﾃﾝ）',
+  'insp.detectConfirm': '検出確認',
+  // ai-chat
+  'aichat.dropHere': 'ここにドロップ',
   // forensic enhancer error texts
   'forensic.errorRateLimit': '上限超過',
   'forensic.errorRateLimitMsg': '今月の無料解析上限（3回）に達しました。@hapifoodlab までご連絡ください。',
@@ -1946,6 +1989,34 @@ const en: Dict = {
   'demoLogin.footer': 'This is a demo / trial version',
   // home
   'home.demoUser': 'Demo User',
+  // date input
+  'date.overlayDate': 'YYYY / MM / DD',
+  'date.overlayDatetime': 'YYYY / MM / DD  HH : MM',
+  'date.warnBefore': 'Date is before manufacturing date',
+  // inspection list guide
+  'insp.guide.step1.title': 'Register via "+ New"',
+  'insp.guide.step1.desc': 'Tap the "+ New" button to register metal detector or X-ray inspection records.',
+  'insp.guide.step2.title': 'Filter records',
+  'insp.guide.step2.desc': 'Filter by device type, result, or date.',
+  'insp.guide.step3.title': 'Tap a card for details & export',
+  'insp.guide.step3.desc': 'Tap any card to open its detail screen.',
+  'insp.guide.tip1': 'The stats cards at the top show today\'s inspection count, abnormal count, and total rejects.',
+  // inspection new guide
+  'insp.new.step1.desc': 'Choose "Metal Detector" or "X-Ray." Input fields change based on your selection.',
+  'insp.new.step2.desc': 'Record the detection sensitivity settings for the day.',
+  'insp.new.step3.desc': 'Enter the product name, lot number, inspection date, and inspector.',
+  'insp.new.step4.desc': 'Record OK/NG results for the start-of-shift test piece check.',
+  'insp.new.step5.desc': 'Enter the end-of-shift test piece check results in the same way.',
+  'insp.new.step6.desc': 'Enter reject count and corrective action, then press Save.',
+  'insp.new.tip1': 'If a test piece check shows NG, select "Abnormal" or "Adjusted OK" and fill in the corrective action.',
+  'insp.new.tip2': 'After saving, records can be exported as CSV or printed (usable as audit evidence).',
+  'insp.metalDesc': 'Detects metal foreign matter',
+  'insp.xrayDesc': 'Also detects bone, stone, glass, etc.',
+  'insp.feLabel': 'Fe (Iron)',
+  'insp.susLabel': 'SUS (Stainless)',
+  'insp.detectConfirm': 'Detection Check',
+  // ai-chat
+  'aichat.dropHere': 'Drop here',
   // forensic enhancer error texts
   'forensic.errorRateLimit': 'Rate Limit Reached',
   'forensic.errorRateLimitMsg': 'Monthly free analysis limit (3×) reached. Please contact @hapifoodlab.',
