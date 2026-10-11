@@ -12,6 +12,7 @@ import toast from 'react-hot-toast'
 import { compressImage, compressDataUrl } from '@/lib/compressImage'
 import { encodeAiTitle, AI_CHAT_LOC_MARKER } from '@/lib/ai-label'
 import { formatLocalDate } from '@/lib/utils'
+import { DISCOVERY_PROCESS_LABELS, DISCOVERY_PROCESS_LABELS_EN } from '@/lib/types'
 
 interface AnalysisResult {
   urgency: 'high' | 'medium' | 'low'
@@ -762,8 +763,36 @@ export default function AiChatPage() {
       return;
     }
 
+    // 発見工程の英語コードをラベルに置換
+    const procLabels = isEn ? DISCOVERY_PROCESS_LABELS_EN : DISCOVERY_PROCESS_LABELS
+    for (const [code, label] of Object.entries(procLabels)) {
+      resultContent = resultContent.replace(new RegExp(code, 'g'), label)
+    }
+
     setSaving(true);
     try {
+      // 画像があればSupabase Storageにアップロード（PCでも閲覧できるように）
+      let uploadedImageUrl: string | null = null
+      if (imageBase64 && mimeType) {
+        try {
+          const byteStr = atob(imageBase64)
+          const bytes = new Uint8Array(byteStr.length)
+          for (let i = 0; i < byteStr.length; i++) bytes[i] = byteStr.charCodeAt(i)
+          const blob = new Blob([bytes], { type: mimeType })
+          const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg'
+          const file = new File([blob], `photo_${Date.now()}.${ext}`, { type: mimeType })
+          const fd = new FormData()
+          fd.append('file', file)
+          const upRes = await fetch('/api/upload', { method: 'POST', body: fd })
+          if (upRes.ok) {
+            const { url } = await upRes.json()
+            uploadedImageUrl = url ?? null
+          }
+        } catch {
+          // 非致命的：画像なしで保存続行
+        }
+      }
+
       const res = await fetch('/api/claude-save', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -772,6 +801,7 @@ export default function AiChatPage() {
           location: AI_CHAT_LOC_MARKER,
           description: resultContent,
           status: 'open',
+          image_url: uploadedImageUrl,
           lang,
         }),
       });
@@ -782,7 +812,7 @@ export default function AiChatPage() {
     } finally {
       setSaving(false);
     }
-  }, [messages]);
+  }, [messages, imageBase64, mimeType]);
 
   const resetChat = useCallback(() => {
     chatHistoryRef.current = []

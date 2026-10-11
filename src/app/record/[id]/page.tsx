@@ -60,6 +60,7 @@ export default function IncidentDetailPage() {
   const [actionsUpdatedAt, setActionsUpdatedAt] = useState('')
   const [draftLoading, setDraftLoading] = useState(false)
   const [regenEnLoading, setRegenEnLoading] = useState(false)
+  const [showRuleBased, setShowRuleBased] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
@@ -436,7 +437,15 @@ export default function IncidentDetailPage() {
         </div>
 
         {/* AI推定結果 */}
-        {incident.estimations && incident.estimations.length > 0 && (
+        {incident.estimations && incident.estimations.length > 0 && (() => {
+          const topIsHighConfidenceAi = incident.estimations[0]?.source === 'ai_vision' && incident.estimations[0]?.urgency === 'high'
+          const mainEsts = topIsHighConfidenceAi
+            ? incident.estimations.filter(e => e.source === 'ai_vision')
+            : incident.estimations
+          const ruleEsts = topIsHighConfidenceAi
+            ? incident.estimations.filter(e => e.source !== 'ai_vision')
+            : []
+          return (
           <div className="card p-4">
             <p className="section-title">{t('detail.aiEstTitle')}</p>
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 mb-4">
@@ -445,7 +454,7 @@ export default function IncidentDetailPage() {
               </p>
             </div>
             <div className="space-y-4">
-              {incident.estimations.map((est, i) => {
+              {mainEsts.map((est, i) => {
                 const displayName = isEn ? (est.nameEn ?? est.name ?? est.category) : (est.name ?? est.category)
                 const displayRoutes = isEn ? (est.routeEn ?? est.route) : est.route
                 const displayAction = isEn ? (est.actionEn ?? est.action) : est.action
@@ -511,8 +520,44 @@ export default function IncidentDetailPage() {
                 )
               })}
             </div>
+            {/* ルールベース候補（AI高信頼度時は折りたたみ） */}
+            {ruleEsts.length > 0 && (
+              <div className="mt-3 border-t border-gray-100 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRuleBased(v => !v)}
+                  className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <span>{showRuleBased ? '▾' : '▸'}</span>
+                  <span>{isEn ? `Reference: feature-based estimates (${ruleEsts.length})` : `参考: 特徴チェックからの推定 (${ruleEsts.length}件)`}</span>
+                </button>
+                {showRuleBased && (
+                  <div className="mt-2 space-y-3 opacity-70">
+                    {ruleEsts.map((est, j) => {
+                      const displayName = isEn ? (est.nameEn ?? est.name ?? est.category) : (est.name ?? est.category)
+                      return (
+                        <div key={j} className="bg-gray-50 rounded-xl p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-500 font-semibold">{displayName}</span>
+                            <span className="text-xs text-gray-400 font-bold">{est.probability}%</span>
+                          </div>
+                          {est.basis.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {est.basis.map((b, k) => (
+                                <span key={k} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{b}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
+          )
+        })()}
 
         {/* 外部クレーム情報 */}
         {incident.occurrenceType === 'external' && (

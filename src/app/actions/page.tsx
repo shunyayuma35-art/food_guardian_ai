@@ -5,9 +5,20 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
 import { listIncidents } from '@/lib/firestore'
-import { PDCA_STATUS_COLORS, PDCA_STATUS_LABELS, type PdcaStatus } from '@/lib/types'
+import { PDCA_STATUS_COLORS, PDCA_STATUS_LABELS, type PdcaStatus, type DiscoveryProcess, type IncidentStatus } from '@/lib/types'
 import Navigation from '@/components/Navigation'
-import type { Incident } from '@/lib/types'
+import type { Incident, FeatureChecklist } from '@/lib/types'
+import { parseAiTitle } from '@/lib/ai-label'
+
+type AiIncident = {
+  id: number
+  created_at: string
+  title: string
+  description: string
+  status: string
+  image_url: string | null
+  lang: string | null
+}
 
 const PDCA_ALL = ['planned', 'doing', 'checking', 'done'] as PdcaStatus[]
 
@@ -58,6 +69,7 @@ export default function ActionsPage() {
   const isEn = lang === 'en'
   const router = useRouter()
   const [incidents, setIncidents] = useState<Incident[]>([])
+  const [aiIncidents, setAiIncidents] = useState<AiIncident[]>([])
   const [fetching, setFetching] = useState(true)
   const [filterPdca, setFilterPdca] = useState<PdcaStatus | 'all'>('all')
   const [filterCategory, setFilterCategory] = useState('')
@@ -76,18 +88,59 @@ export default function ActionsPage() {
       .finally(() => setFetching(false))
   }, [user])
 
+  useEffect(() => {
+    fetch('/api/incidents')
+      .then(r => r.json())
+      .then(data => setAiIncidents(Array.isArray(data) ? data : []))
+      .catch(() => {})
+  }, [])
+
+  function aiToIncident(ai: AiIncident): Incident {
+    return {
+      id: `ai-${ai.id}`,
+      productName: parseAiTitle(ai.title, lang) || ai.title,
+      lotNumber: '',
+      manufacturingDate: '',
+      expiryDate: '',
+      lineNumber: '',
+      factory: '',
+      operator: '',
+      discoveryDate: ai.created_at,
+      discoveryProcess: 'after_packaging' as DiscoveryProcess,
+      photos: ai.image_url ? [ai.image_url] : [],
+      microscopePhotos: [],
+      comment: ai.description,
+      features: {} as FeatureChecklist,
+      estimations: [],
+      correctiveAction: '',
+      preventiveMeasure: '',
+      status: (ai.status === 'resolved' ? 'closed' : ai.status === 'open' ? 'open' : 'investigating') as IncidentStatus,
+      createdAt: ai.created_at,
+      updatedAt: ai.created_at,
+      createdBy: '',
+    }
+  }
+
+  // Firebase + Supabase AI の統合
+  const allIncidents = useMemo(() => {
+    const aiConverted = aiIncidents.map(ai => aiToIncident(ai))
+    const merged = [...incidents, ...aiConverted]
+    return merged.sort((a, b) => (b.discoveryDate ?? '').localeCompare(a.discoveryDate ?? ''))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incidents, aiIncidents, lang])
+
   // 異物カテゴリの選択肢
   const categories = useMemo(() => {
     const cats = new Set<string>()
-    incidents.forEach(inc => {
+    allIncidents.forEach(inc => {
       if (inc.estimations?.[0]?.category) cats.add(inc.estimations[0].category)
     })
     return Array.from(cats).sort()
-  }, [incidents])
+  }, [allIncidents])
 
   // フィルタ適用
   const filtered = useMemo(() => {
-    return incidents.filter(inc => {
+    return allIncidents.filter(inc => {
       if (filterPdca !== 'all' && inc.pdcaStatus !== filterPdca) return false
       if (filterCategory && inc.estimations?.[0]?.category !== filterCategory) return false
       const d = inc.discoveryDate ? new Date(inc.discoveryDate).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }) : ''
@@ -95,20 +148,20 @@ export default function ActionsPage() {
       if (filterDateTo && d > filterDateTo) return false
       return true
     })
-  }, [incidents, filterPdca, filterCategory, filterDateFrom, filterDateTo])
+  }, [allIncidents, filterPdca, filterCategory, filterDateFrom, filterDateTo])
 
   // 同種異物の過去件数
   const categoryCount = useMemo(() => {
     const map = new Map<string, number>()
-    incidents.forEach(inc => {
+    allIncidents.forEach(inc => {
       const cat = inc.estimations?.[0]?.category
       if (cat) map.set(cat, (map.get(cat) ?? 0) + 1)
     })
     return map
-  }, [incidents])
+  }, [allIncidents])
 
   function handleCSV() {
-    const csv = toCSV(filtered, isEn)
+    const csv = toCSV(filtered.filter(inc => !inc.id.startsWith('ai-')), isEn)
     const bom = '﻿'
     const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -137,7 +190,7 @@ export default function ActionsPage() {
             <h1 className="text-base font-extrabold text-gray-800">
               {t('actions.title')}
             </h1>
-            <p className="text-[11px] text-gray-400 text-center">{filtered.length} / {incidents.length}</p>
+            <p className="text-[11px] text-gray-400 text-center">{filtered.length} / {allIncidents.length}</p>
           </div>
           <button
             onClick={handleCSV}
@@ -214,17 +267,21 @@ export default function ActionsPage() {
               const updatedBy = inc.actionsUpdatedBy ?? inc.causeVerifiedBy ?? ''
               const updatedAt = inc.actionsUpdatedAt ?? inc.causeVerifiedAt ?? ''
 
+              const isAiRecord = inc.id.startsWith('ai-')
               return (
                 <button
                   key={inc.id}
                   type="button"
-                  onClick={() => router.push(`/record/${inc.id}`)}
+                  onClick={() => isAiRecord ? router.push('/list') : router.push(`/record/${inc.id}`)}
                   className="w-full text-left card p-4 hover:shadow-md transition-all active:scale-[0.99]"
                 >
                   {/* ヘッダー行 */}
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1">
-                      <p className="font-bold text-gray-800 text-sm leading-snug">{inc.productName}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-bold text-gray-800 text-sm leading-snug">{inc.productName}</p>
+                        {isAiRecord && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 border border-blue-200 shrink-0">AI</span>}
+                      </div>
                       <p className="text-[11px] text-gray-400">{inc.discoveryDate ? new Date(inc.discoveryDate).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }) : ''}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">

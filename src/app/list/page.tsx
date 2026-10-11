@@ -14,6 +14,12 @@ function fixLegacyText(text: string | null | undefined): string {
     .replace(/Claude Search/gi, 'AI Search')
 }
 
+function replaceProcessCodes(text: string, useEn: boolean): string {
+  const labels = useEn ? DISCOVERY_PROCESS_LABELS_EN : DISCOVERY_PROCESS_LABELS
+  return Object.entries(labels).reduce((t, [code, label]) =>
+    t.replace(new RegExp(code, 'g'), label), text)
+}
+
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
@@ -23,6 +29,7 @@ import PhotoImg from '@/components/PhotoImg'
 import UsageGuide from '@/components/UsageGuide'
 import toast from 'react-hot-toast'
 import type { IncidentStatus } from '@/lib/types'
+import { DISCOVERY_PROCESS_LABELS, DISCOVERY_PROCESS_LABELS_EN } from '@/lib/types'
 
 type AiIncident = {
   id: number
@@ -94,6 +101,8 @@ export default function ListPage() {
       })
       if (!res.ok) throw new Error('status update failed')
       setAiIncidents(prev => prev.map(i => i.id === id ? { ...i, status: next } : i))
+      const label = AI_STATUS_LABELS[next] ?? next
+      toast.success(isEn ? `Status: ${label}` : `ステータス: ${label}`)
     } catch {
       toast.error(isEn ? 'Failed to update status' : '状態の更新に失敗しました')
     }
@@ -625,7 +634,7 @@ export default function ListPage() {
                   {inc.location && (
                     <p className="text-xs text-gray-500 mb-1">📍 {parseAiLocation(inc.location, lang)}</p>
                   )}
-                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{fixLegacyText(inc.description)?.replace(/\*\*/g, '')}</p>
+                  <p className="text-xs text-gray-600 leading-relaxed line-clamp-3">{replaceProcessCodes(fixLegacyText(inc.description)?.replace(/\*\*/g, '') ?? '', isEn)}</p>
 
                   {/* アーカイブ情報 */}
                   {inc.archived_at && (
