@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { Incident } from '@/lib/types'
-import { DISCOVERY_PROCESS_LABELS, INCIDENT_STATUS_LABELS } from '@/lib/types'
+import { DISCOVERY_PROCESS_LABELS, DISCOVERY_PROCESS_LABELS_EN, INCIDENT_STATUS_LABELS } from '@/lib/types'
 import { generateIncidentCode, formatDateTime } from '@/lib/utils'
 import { useLang } from '@/context/LanguageContext'
 
@@ -66,7 +66,11 @@ export default function IncidentCard({ incident }: Props) {
               {isEn ? 'Factory: ' : '工場: '}<span className="text-gray-700 font-medium">{incident.factory}</span>
             </span>
           )}
-          <span className="text-gray-500">{DISCOVERY_PROCESS_LABELS[incident.discoveryProcess]}</span>
+          {incident.discoveryProcess && (
+            <span className="text-gray-500">
+              {(isEn ? DISCOVERY_PROCESS_LABELS_EN : DISCOVERY_PROCESS_LABELS)[incident.discoveryProcess] ?? incident.discoveryProcess}
+            </span>
+          )}
         </div>
 
         {topEst && (

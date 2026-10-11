@@ -44,10 +44,12 @@ export async function enhanceImage(
   const p: EnhanceParams = { ...DEFAULT_PARAMS, ...params }
   const img = await loadImage(source)
 
-  // Step 1: Draw at zoom scale with high-quality smoothing
+  // Step 1: Draw at zoom scale, but cap base size at 1024px to avoid main-thread freeze
+  const MAX_BASE = 1024
+  const baseScale = Math.min(1, MAX_BASE / Math.max(img.naturalWidth, img.naturalHeight))
   const canvas = document.createElement('canvas')
-  const w = Math.round(img.naturalWidth * p.zoom)
-  const h = Math.round(img.naturalHeight * p.zoom)
+  const w = Math.round(img.naturalWidth * baseScale * p.zoom)
+  const h = Math.round(img.naturalHeight * baseScale * p.zoom)
   canvas.width = w
   canvas.height = h
 

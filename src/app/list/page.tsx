@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
 import Navigation from '@/components/Navigation'
+import PhotoImg from '@/components/PhotoImg'
 import UsageGuide from '@/components/UsageGuide'
 import toast from 'react-hot-toast'
 import type { IncidentStatus } from '@/lib/types'
@@ -642,8 +643,7 @@ export default function ListPage() {
                       className="mt-3 w-full aspect-video rounded-xl overflow-hidden bg-gray-100 border border-gray-200 hover:opacity-80 transition-opacity"
                       onClick={() => setLightboxPhoto(inc.image_url!)}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={inc.image_url} alt={t('list.photoAlt')} className="w-full h-full object-cover" />
+                        <PhotoImg src={inc.image_url} alt={t('list.photoAlt')} className="w-full h-full object-cover" placeholder="" />
                     </button>
                   ) : (
                     <button

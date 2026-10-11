@@ -35,6 +35,15 @@ export const DISCOVERY_PROCESS_LABELS: Record<DiscoveryProcess, string> = {
   before_shipment: '出荷前',
 }
 
+export const DISCOVERY_PROCESS_LABELS_EN: Record<DiscoveryProcess, string> = {
+  raw_material_receipt: 'Raw Material Receipt',
+  before_heating: 'Before Heating',
+  after_heating: 'After Heating',
+  before_packaging: 'Before Packaging',
+  after_packaging: 'After Packaging',
+  before_shipment: 'Before Shipment',
+}
+
 // ── 異物特徴チェック ────────────────────────────────────────────
 
 export interface TextureFeatures {

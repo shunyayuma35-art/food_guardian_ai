@@ -124,12 +124,23 @@ function getStatusLabel(incident: Incident): string {
 }
 
 function generateCauseAnalysis(incident: Incident): string {
+  // AI原因分析結果がある場合は優先して使用
+  const aiCause = incident.editedCause || incident.aiCauseRaw
+  if (aiCause) return aiCause
+
   const top = incident.estimations[0]
   const isAiVision = top?.source === 'ai_vision'
   const process = incident.discoveryProcess
 
+  // 異物カテゴリ系統を判定して適切な工程別メッセージを選ぶ
+  const catName = top?.category ?? ''
+  const isVegetable = /野菜|植物|草|種|木|葉|茎|殻|もみ|籾|米|穀物|藁|麦|豆/.test(catName)
+  const isMetal = /金属|鉄|ステンレス|SUS|鋼|銅|アルミ|ボルト|ナット|刃|針|ワイヤ/.test(catName)
+
   const processMap: Record<string, string> = {
-    after_packaging: '包装工程後に発見。包装材（フィルム・パッキン・ラベル等）の混入、または包装機器の磨耗・破損部品の可能性が高い。',
+    after_packaging: isVegetable
+      ? '包装工程後に発見。原料由来の植物片が包装後まで残留した可能性がある。原料洗浄・選別工程の強化を優先的に検討すること。'
+      : '包装工程後に発見。包装材（フィルム・パッキン・ラベル等）の混入、または包装機器の磨耗・破損部品の可能性が高い。',
     before_packaging: '包装前工程での発見。製造ライン上の設備（ベルト・ゴムパッキン・金属部品等）または前工程からの持ち込みが疑われる。',
     after_heating: '加熱工程後の発見。炭化物や加熱による樹脂・ゴム部品の劣化・脱落が疑われる。フライヤー・オーブン・熱板等の点検が推奨される。',
     before_heating: '加熱前の原材料または前処理工程からの混入が疑われる。原料受入検査の強化と前処理工程の異物管理の見直しが必要。',
@@ -152,12 +163,18 @@ function generateCauseAnalysis(incident: Incident): string {
 
   const processPart = processMap[process] ?? '製造工程全般の異物管理見直しが必要。'
   const catPart = top
-    ? (categoryMap[top.category] ?? `${top.category}に関連する設備・資材の点検を実施すること。`)
+    ? (categoryMap[catName] ?? (
+        isMetal
+          ? `${catName}の混入が疑われる。金属探知機・X線検査機の感度確認と、当該設備の金属部品点検を実施すること。`
+          : isVegetable
+            ? `${catName}の混入が疑われる。原料由来の可能性が高く、受入検査と洗浄・選別工程の強化が推奨される。`
+            : `${catName}に関連する設備・資材の点検を実施すること。`
+      ))
     : '特徴データが不足しているため、現時点では詳細な分析が困難です。異物を保管の上、専門機関への依頼を検討してください。'
 
   const sourceLabel = isAiVision ? 'AI画像解析結果' : 'AI推定第1候補'
   return top
-    ? `${sourceLabel}「${top.category}」（可能性 ${top.probability}%）に基づく分析：
+    ? `${sourceLabel}「${catName}」（可能性 ${top.probability}%）に基づく分析：
 
 【工程別分析】
 ${processPart}

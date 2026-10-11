@@ -303,8 +303,10 @@ export default function IncidentDetailPage() {
     if (!incident) return
     setSavingPdca(true)
     try {
-      await updateIncident(incident.id, { pdcaStatus, pdcaDeadline: pdcaDeadline || undefined, pdcaNotes: pdcaNotes || undefined })
-      setIncident({ ...incident, pdcaStatus, pdcaDeadline: pdcaDeadline || undefined, pdcaNotes: pdcaNotes || undefined })
+      const statusUpdate: Record<string, unknown> = { pdcaStatus, pdcaDeadline: pdcaDeadline || undefined, pdcaNotes: pdcaNotes || undefined }
+      if (pdcaStatus === 'done') statusUpdate.status = 'closed'
+      await updateIncident(incident.id, statusUpdate as Parameters<typeof updateIncident>[1])
+      setIncident({ ...incident, pdcaStatus, pdcaDeadline: pdcaDeadline || undefined, pdcaNotes: pdcaNotes || undefined, ...(pdcaStatus === 'done' ? { status: 'closed' as const } : {}) })
       toast.success(t('toast.pdcaSaved'))
     } catch {
       toast.error(t('toast.saveFailed'))

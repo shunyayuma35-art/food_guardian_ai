@@ -14,6 +14,7 @@ import {
 } from '@/lib/types'
 import Navigation from '@/components/Navigation'
 import IncidentCard from '@/components/IncidentCard'
+import PhotoImg from '@/components/PhotoImg'
 import FoodEyeLogo from '@/components/FoodEyeLogo'
 import UsageGuide from '@/components/UsageGuide'
 import LanguageSelector from '@/components/LanguageSelector'
@@ -780,12 +781,7 @@ export default function DashboardPage() {
                 <Link key={inc.id} href="/list">
                   <div className="card p-4 active:scale-[0.99] transition-all hover:shadow-md cursor-pointer">
                     <div className="flex items-start gap-3">
-                      {inc.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={inc.image_url} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 bg-orange-50" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center text-2xl shrink-0">🔍</div>
-                      )}
+                      <PhotoImg src={inc.image_url} className="w-12 h-12 rounded-xl object-cover shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-gray-800 truncate">{parseAiTitle(inc.title, lang) || '—'}</p>
                         {inc.location && <p className="text-xs text-gray-500 truncate mt-0.5">{parseAiLocation(inc.location, lang)}</p>}

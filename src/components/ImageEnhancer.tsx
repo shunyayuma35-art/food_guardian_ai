@@ -13,6 +13,7 @@ export default function ImageEnhancer({ imageDataUrl, onEnhanced }: Props) {
   const [params, setParams] = useState<EnhanceParams>(DEFAULT_PARAMS)
   const [enhanced, setEnhanced] = useState<string | null>(null)
   const [processing, setProcessing] = useState(false)
+  const [dragging, setDragging] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { t } = useLang()
 
@@ -55,8 +56,12 @@ export default function ImageEnhancer({ imageDataUrl, onEnhanced }: Props) {
   const handleChange = (key: keyof EnhanceParams, value: number) => {
     const next = { ...params, [key]: value }
     setParams(next)
+    // CSS filter preview is instant; canvas process only on pointer up
+  }
+
+  const handleCommit = (next: EnhanceParams) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => process(next), 150)
+    debounceRef.current = setTimeout(() => process(next), 80)
   }
 
   const handleDownload = () => {
@@ -101,6 +106,9 @@ export default function ImageEnhancer({ imageDataUrl, onEnhanced }: Props) {
               className={`w-full max-h-32 object-contain rounded-xl bg-gray-50 transition-opacity ${
                 processing ? 'opacity-50' : 'opacity-100'
               }`}
+              style={dragging ? {
+                filter: `brightness(${params.brightness}) contrast(${params.contrast})`,
+              } : {}}
             />
           ) : (
             <div className="w-full max-h-32 h-24 rounded-xl bg-gray-100 flex items-center justify-center">
@@ -122,6 +130,13 @@ export default function ImageEnhancer({ imageDataUrl, onEnhanced }: Props) {
               step={step}
               value={params[key]}
               onChange={(e) => handleChange(key, parseFloat(e.target.value))}
+              onPointerDown={() => setDragging(true)}
+              onPointerUp={(e) => {
+                setDragging(false)
+                const next = { ...params, [key]: parseFloat((e.target as HTMLInputElement).value) }
+                setParams(next)
+                handleCommit(next)
+              }}
               className="flex-1 accent-orange-500 h-1"
             />
             <span className="text-[10px] text-gray-400 w-8 text-right tabular-nums">
