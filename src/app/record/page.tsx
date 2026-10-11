@@ -125,7 +125,7 @@ export default function RecordPage() {
         const res = await fetch('/api/analyze-foreign-matter', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, mediaType, structured: true, lang: getStoredLang() }),
+          body: JSON.stringify({ imageBase64: base64, mediaType, structured: true, lang: getStoredLang(), productName: productName || undefined, situationComment: comment || undefined }),
         })
         if (cancelled) return
         if (res.status === 429) return
@@ -661,7 +661,7 @@ export default function RecordPage() {
 
             {/* 鑑識画像解析 – 異物写真がある場合に表示 */}
             {photos.length > 0 && (
-              <ForensicEnhancer file={photos[0]} />
+              <ForensicEnhancer file={photos[0]} productName={productName || undefined} situationComment={comment || undefined} />
             )}
 
             <div className="border-t border-orange-100" />
@@ -669,7 +669,7 @@ export default function RecordPage() {
 
             {/* 顕微鏡写真の鑑識解析 */}
             {microscopePhotos.length > 0 && (
-              <ForensicEnhancer file={microscopePhotos[0]} />
+              <ForensicEnhancer file={microscopePhotos[0]} productName={productName || undefined} situationComment={comment || undefined} />
             )}
           </div>
         )}

@@ -13,11 +13,45 @@ import {
 function today(): string {
   return new Date().toLocaleDateString('ja-JP', {
     year: 'numeric', month: 'long', day: 'numeric',
+    timeZone: 'Asia/Tokyo',
   })
 }
 
 function nowStr(): string {
-  return new Date().toLocaleString('ja-JP')
+  return new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
+}
+
+/** ISO/UTC → JST日時文字列 例: "2026/10/11 00:52" */
+function fmtDatetime(raw: string | undefined): string {
+  if (!raw) return '不明'
+  try {
+    return new Date(raw).toLocaleString('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+      hour12: false,
+    })
+  } catch {
+    return raw
+  }
+}
+
+/** 日付文字列 → "YYYY/MM/DD"（Tを含む場合はJST日付） */
+function fmtDate(raw: string | undefined): string {
+  if (!raw) return '不明'
+  if (!raw.includes('T')) {
+    const [y, m, d] = raw.split('-')
+    if (y && m && d) return `${y}/${m}/${d}`
+    return raw
+  }
+  try {
+    return new Date(raw).toLocaleDateString('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    })
+  } catch {
+    return raw
+  }
 }
 
 function buildFeatureSummary(features: FeatureChecklist): string {
@@ -156,13 +190,13 @@ export function generateIncidentReport(incident: Incident): string {
 1. 発生概要
 ────────────────────────────────
 
-発生日時　：${incident.discoveryDate}
+発生日時　：${fmtDatetime(incident.discoveryDate)}
 発見場所　：${incident.factory}（${incident.lineNumber} ライン）
 発見工程　：${processLabel}
 製　品　名：${incident.productName}
 ロット番号：${incident.lotNumber}
-製　造　日：${incident.manufacturingDate || '不明'}
-賞 味 期 限：${incident.expiryDate || '不明'}
+製　造　日：${fmtDate(incident.manufacturingDate)}
+賞 味 期 限：${fmtDate(incident.expiryDate)}
 担　当　者：${incident.operator}
 
 ────────────────────────────────
@@ -270,7 +304,7 @@ export function generateSensoryReport(evaluation: SensoryEvaluation): string {
   })()
 
   const approvalStatus = evaluation.approvedAt
-    ? `承認済み（承認者：${evaluation.approvedBy}　承認日時：${new Date(evaluation.approvedAt).toLocaleString('ja-JP')}）`
+    ? `承認済み（承認者：${evaluation.approvedBy}　承認日時：${fmtDatetime(evaluation.approvedAt)}）`
     : '未承認（最終承認者による確認待ち）'
 
   return `────────────────────────────────
@@ -290,7 +324,7 @@ export function generateSensoryReport(evaluation: SensoryEvaluation): string {
 
 製　品　名：${evaluation.productName}
 ロット番号：${evaluation.lotNumber}
-検査日時　：${new Date(evaluation.date).toLocaleString('ja-JP')}
+検査日時　：${fmtDatetime(evaluation.date)}
 検 査 担 当：${evaluation.inspectorName}
 
 ────────────────────────────────
@@ -356,19 +390,19 @@ export function incidentToCSV(incident: Incident): string {
     ['項目', '内容'],
     ['製品名', incident.productName],
     ['ロット番号', incident.lotNumber],
-    ['製造日', incident.manufacturingDate],
-    ['賞味期限', incident.expiryDate],
+    ['製造日', fmtDate(incident.manufacturingDate)],
+    ['賞味期限', fmtDate(incident.expiryDate)],
     ['工場', incident.factory],
     ['ライン', incident.lineNumber],
     ['担当者', incident.operator],
-    ['発見日', incident.discoveryDate],
+    ['発見日時', fmtDatetime(incident.discoveryDate)],
     ['発見工程', DISCOVERY_PROCESS_LABELS[incident.discoveryProcess]],
     ['ステータス', INCIDENT_STATUS_LABELS[incident.status]],
     ['AI推定第1位', top ? `${top.category}（${top.probability}%）` : '（なし）'],
     ['是正処置', incident.correctiveAction],
     ['再発防止策', incident.preventiveMeasure],
     ['コメント', incident.comment],
-    ['登録日時', incident.createdAt],
+    ['登録日時', fmtDatetime(incident.createdAt)],
   ]
   return '﻿' + rows.map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')
 }

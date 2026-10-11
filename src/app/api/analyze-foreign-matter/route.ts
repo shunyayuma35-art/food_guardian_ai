@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { imageBase64, mediaType, userHint, structured, lang } = body;
+    const { imageBase64, mediaType, userHint, structured, lang, productName, situationComment } = body;
 
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return NextResponse.json({ error: '画像データが無効です。' }, { status: 400 });
@@ -170,11 +170,17 @@ ${FOREIGN_MATTER_DB}
 y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜1.0の比率）。異物を余裕を持って囲む。見えない場合は{"y":0.3,"x":0.3,"h":0.4,"w":0.4}を使用。
 [SIZE]...[/SIZE]${langInst}`
 
+    const productHintParts: string[] = []
+    if (productName) productHintParts.push(isEn ? `Product: ${productName}` : `製品名：${productName}`)
+    if (situationComment) productHintParts.push(isEn ? `Situation: ${situationComment}` : `状況：${situationComment}`)
+    if (userHint) productHintParts.push(isEn ? `User info: ${userHint}` : `ユーザー提供情報：${userHint}`)
+    const contextHint = productHintParts.join('\n')
+
     const userText = structured
-      ? `この異物を分析してJSON形式で回答してください。nameとnameEn・routeとrouteEn・actionとactionEnを必ず両方含めること。${userHint ? `ユーザー提供情報：${userHint}` : ''}`
+      ? `この異物を分析してJSON形式で回答してください。nameとnameEn・routeとrouteEn・actionとactionEnを必ず両方含めること。${contextHint ? `\n\n${contextHint}` : ''}`
       : isEn
-        ? `Identify the foreign matter. Must include type, material, contamination route, and urgency.${userHint ? `\n\nUser info: ${userHint}` : ''}`
-        : `異物を特定してください。種類・材質・経路・緊急度を必ず含めてください。${userHint ? `\n\nユーザー提供情報：${userHint}` : ''}`
+        ? `Identify the foreign matter. Must include type, material, contamination route, and urgency.${contextHint ? `\n\n${contextHint}` : ''}`
+        : `異物を特定してください。種類・材質・経路・緊急度を必ず含めてください。${contextHint ? `\n\n${contextHint}` : ''}`
 
     // maxTokens: 2048 — thinking モデル(gemini-3.8-flash)は thinking + output の合計で消費するため大きめに設定
     const aiResult = await Promise.race([

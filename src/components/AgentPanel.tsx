@@ -566,11 +566,18 @@ function ReportTextArea({
   onCopy: () => void
 }) {
   const { t } = useLang()
+  const [editing, setEditing] = useState(false)
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{label}</p>
         <div className="flex gap-1.5">
+          <button
+            onClick={() => setEditing(e => !e)}
+            className={`text-[10px] px-2.5 py-1 rounded-lg active:scale-95 transition-all font-medium ${editing ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}
+          >
+            {editing ? t('agent.previewBtn') : t('agent.editBtn')}
+          </button>
           <button
             onClick={onCopy}
             className="text-[10px] px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg active:scale-95 transition-all font-medium"
@@ -585,12 +592,18 @@ function ReportTextArea({
           </button>
         </div>
       </div>
-      <textarea
-        value={text}
-        onChange={e => onTextChange(e.target.value)}
-        className="w-full text-xs p-3.5 rounded-2xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-400/40 resize-none leading-relaxed"
-        rows={10}
-      />
+      {editing ? (
+        <textarea
+          value={text}
+          onChange={e => onTextChange(e.target.value)}
+          className="w-full text-xs p-3.5 rounded-2xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-400/40 resize-none leading-relaxed"
+          rows={10}
+        />
+      ) : (
+        <div className="w-full p-3.5 rounded-2xl border border-gray-200 bg-gray-50 min-h-[10rem]">
+          <MarkdownProse text={text} />
+        </div>
+      )}
     </div>
   )
 }

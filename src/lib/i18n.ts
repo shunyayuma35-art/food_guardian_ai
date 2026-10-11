@@ -327,7 +327,7 @@ export type TranslationKey =
   | 'agent.rejected' | 'agent.error' | 'agent.retry'
   | 'agent.recallTitle' | 'agent.recallDisclaimer'
   | 'agent.showMore' | 'agent.showLess'
-  | 'agent.copyDone' | 'agent.copyBtn' | 'agent.printBtn'
+  | 'agent.copyDone' | 'agent.copyBtn' | 'agent.printBtn' | 'agent.editBtn' | 'agent.previewBtn'
   // report detail page
   | 'report.toolbar.saving' | 'report.toolbar.save' | 'report.toolbar.cancel'
   | 'report.toolbar.edit' | 'report.toolbar.share' | 'report.toolbar.copy'
@@ -1031,6 +1031,8 @@ const ja: Dict = {
   'agent.copyDone': '✅ コピー完了',
   'agent.copyBtn': '📋 コピー',
   'agent.printBtn': '🖨️ 印刷',
+  'agent.editBtn': '✏️ 編集',
+  'agent.previewBtn': '👁️ プレビュー',
   // report detail page
   'report.toolbar.saving': '保存中...',
   'report.toolbar.save': '✅ 保存',
@@ -1860,6 +1862,8 @@ const en: Dict = {
   'agent.copyDone': '✅ Copied',
   'agent.copyBtn': '📋 Copy',
   'agent.printBtn': '🖨️ Print',
+  'agent.editBtn': '✏️ Edit',
+  'agent.previewBtn': '👁️ Preview',
   // report detail page
   'report.toolbar.saving': 'Saving...',
   'report.toolbar.save': '✅ Save',

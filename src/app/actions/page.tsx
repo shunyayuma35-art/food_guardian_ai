@@ -38,7 +38,7 @@ function toCSV(rows: Incident[], isEn: boolean): string {
         : ''
     const updatedBy = inc.actionsUpdatedBy ?? inc.causeVerifiedBy ?? ''
     const cols = [
-      inc.discoveryDate?.slice(0, 10) ?? '',
+      inc.discoveryDate ? new Date(inc.discoveryDate).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }) : '',
       inc.productName ?? '',
       inc.estimations?.[0]?.category ?? '',
       summarize(getBestCorrective(inc), 60),
@@ -90,7 +90,7 @@ export default function ActionsPage() {
     return incidents.filter(inc => {
       if (filterPdca !== 'all' && inc.pdcaStatus !== filterPdca) return false
       if (filterCategory && inc.estimations?.[0]?.category !== filterCategory) return false
-      const d = inc.discoveryDate?.slice(0, 10) ?? ''
+      const d = inc.discoveryDate ? new Date(inc.discoveryDate).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }) : ''
       if (filterDateFrom && d < filterDateFrom) return false
       if (filterDateTo && d > filterDateTo) return false
       return true
@@ -225,7 +225,7 @@ export default function ActionsPage() {
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1">
                       <p className="font-bold text-gray-800 text-sm leading-snug">{inc.productName}</p>
-                      <p className="text-[11px] text-gray-400">{inc.discoveryDate?.slice(0, 10)}</p>
+                      <p className="text-[11px] text-gray-400">{inc.discoveryDate ? new Date(inc.discoveryDate).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }) : ''}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {inc.pdcaStatus && (

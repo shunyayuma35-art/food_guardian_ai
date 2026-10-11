@@ -125,6 +125,9 @@ function buildProductHintJa(productName: string): string {
   if (/野菜|サラダ|葉/.test(name)) {
     hints.push('・野菜系製品です。植物茎・種・土の残留を検討してください。')
   }
+  if (/おにぎり|ご飯|米|弁当|ライス|おこわ|炊飯|白米|玄米/.test(name)) {
+    hints.push('・米・ご飯系製品です。白色・半透明・硬い小粒状の異物は炊飯不良米・乾燥米粒・おこげ・籾殻（もみがら）の可能性を優先的に検討してください。')
+  }
 
   return hints.length ? hints.join('\n') : ''
 }
@@ -142,6 +145,9 @@ function buildProductHintEn(productName: string): string {
   }
   if (/beef|cattle/.test(name)) {
     hints.push('- Beef product. Consider feed residues (straw, hay, grain) as likely origin for plant-based foreign matter.')
+  }
+  if (/rice|onigiri|bento|cooked rice/.test(name)) {
+    hints.push('- Rice/cooked-rice product. For white/translucent/hard small particles, prioritize: poorly-cooked rice grains, dried rice kernels, burnt rice (okoge), or unhulled rice (momigara).')
   }
 
   return hints.length ? hints.join('\n') : ''

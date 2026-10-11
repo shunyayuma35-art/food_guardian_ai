@@ -10,11 +10,38 @@ import type { Incident } from './types'
 import { DISCOVERY_PROCESS_LABELS } from './types'
 
 function today(): string {
-  return new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })
+  return new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tokyo' })
 }
 
 function nowStr(): string {
-  return new Date().toLocaleString('ja-JP')
+  return new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
+}
+
+function fmtDatetime(raw: string | undefined): string {
+  if (!raw) return '不明'
+  try {
+    return new Date(raw).toLocaleString('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+      hour12: false,
+    })
+  } catch { return raw }
+}
+
+function fmtDate(raw: string | undefined): string {
+  if (!raw) return '不明'
+  if (!raw.includes('T')) {
+    const [y, m, d] = raw.split('-')
+    if (y && m && d) return `${y}/${m}/${d}`
+    return raw
+  }
+  try {
+    return new Date(raw).toLocaleDateString('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    })
+  } catch { return raw }
 }
 
 function getCorrective(incident: Incident): string {
@@ -88,13 +115,13 @@ export async function generateIncidentDocx(incident: Incident): Promise<Blob> {
     divider(),
 
     heading('1. 発生概要'),
-    labelValue('発生日時　：', incident.discoveryDate),
+    labelValue('発生日時　：', fmtDatetime(incident.discoveryDate)),
     labelValue('発見場所　：', `${incident.factory}（${incident.lineNumber} ライン）`),
     labelValue('発見工程　：', processLabel),
     labelValue('製　品　名：', incident.productName),
     labelValue('ロット番号：', incident.lotNumber),
-    labelValue('製　造　日：', incident.manufacturingDate || '不明'),
-    labelValue('賞味期限　：', incident.expiryDate || '不明'),
+    labelValue('製　造　日：', fmtDate(incident.manufacturingDate)),
+    labelValue('賞味期限　：', fmtDate(incident.expiryDate)),
     labelValue('担　当　者：', incident.operator),
     divider(),
 

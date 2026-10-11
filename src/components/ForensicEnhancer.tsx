@@ -8,6 +8,8 @@ import { useLang } from '@/context/LanguageContext'
 interface Props {
   file?: File | null
   dataUrl?: string | null
+  productName?: string
+  situationComment?: string
 }
 
 interface AiForensicResult {
@@ -167,7 +169,7 @@ function playBeep() {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ForensicEnhancer({ file, dataUrl }: Props) {
+export default function ForensicEnhancer({ file, dataUrl, productName, situationComment }: Props) {
   const { t } = useLang()
 
   const LAYERS = [
@@ -308,6 +310,8 @@ export default function ForensicEnhancer({ file, dataUrl }: Props) {
           mediaType: 'image/jpeg',
           structured: true,
           userHint: userHint.trim() || undefined,
+          productName: productName || undefined,
+          situationComment: situationComment || undefined,
         }),
       })
       const data = await res.json()
