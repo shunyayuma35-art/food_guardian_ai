@@ -16,6 +16,7 @@ import { generateIncidentDocx } from '@/lib/docx-generator'
 import Navigation from '@/components/Navigation'
 import AutoResizeTextarea from '@/components/AutoResizeTextarea'
 import RecallAssessmentCard from '@/components/RecallAssessmentCard'
+import PhotoImg from '@/components/PhotoImg'
 import toast from 'react-hot-toast'
 import type { Incident } from '@/lib/types'
 
@@ -686,8 +687,7 @@ export default function IncidentDetailPage() {
                   {incident.photos.map((src, i) => (
                     <button key={i} type="button" onClick={() => setLightboxPhoto(src)}
                       className="aspect-square rounded-xl overflow-hidden bg-orange-50 hover:opacity-80 transition-opacity border border-orange-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt="" className="w-full h-full object-cover" />
+                      <PhotoImg src={src} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -700,8 +700,7 @@ export default function IncidentDetailPage() {
                   {incident.microscopePhotos.map((src, i) => (
                     <button key={i} type="button" onClick={() => setLightboxPhoto(src)}
                       className="aspect-square rounded-xl overflow-hidden bg-orange-50 hover:opacity-80 transition-opacity border border-orange-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt="" className="w-full h-full object-cover" />
+                      <PhotoImg src={src} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>

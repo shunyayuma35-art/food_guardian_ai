@@ -279,6 +279,19 @@ export default function RecordPage() {
     toast.success('📱 ' + t('toast.qrRead'))
   }, [])
 
+  async function uploadFileToSupabase(file: File): Promise<string | null> {
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      if (!res.ok) return null
+      const json = await res.json() as { url?: string }
+      return json.url ?? null
+    } catch {
+      return null
+    }
+  }
+
   async function handleSubmit() {
     if (!user) return
     if (!lotNumber.trim() && !productName.trim()) {
@@ -334,6 +347,13 @@ export default function RecordPage() {
         } : {}),
       })
 
+      // 写真をSupabase Storageへアップロード（クロスデバイス共有用）
+      let supabaseImageUrl: string | null = null
+      if (photos[0]) {
+        supabaseImageUrl = await uploadFileToSupabase(photos[0])
+        if (!supabaseImageUrl) toast('写真のクラウド保存に失敗しました（登録は継続）', { icon: '⚠️' })
+      }
+
       // Supabase にも保存して事故一覧・ホーム統計に反映
       const lang = getStoredLang()
       const isEn = lang === 'en'
@@ -354,7 +374,7 @@ export default function RecordPage() {
           location: supabaseLoc,
           description: supabaseDesc,
           status: 'open',
-          image_url: photoURLs[0] ?? null,
+          image_url: supabaseImageUrl,
           lang,
         }),
       }).catch(() => { /* 一覧連携失敗は致命的でないため無視 */ })
