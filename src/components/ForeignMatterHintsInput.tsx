@@ -27,6 +27,7 @@ const MATERIAL_ITEMS: HintItem[] = [
   { key: 'matStraw', label: 'hints.matStraw' },
   { key: 'matWood', label: 'hints.matWood' },
   { key: 'matPaper', label: 'hints.matPaper' },
+  { key: 'matCookingSheet', label: 'hints.matCookingSheet' },
   { key: 'matPaint', label: 'hints.matPaint' },
   { key: 'matRubber', label: 'hints.matRubber' },
   { key: 'matCrustacean', label: 'hints.matCrustacean' },

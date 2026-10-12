@@ -133,6 +133,9 @@ function buildProductHintJa(productName: string): string {
   if (/おにぎり|ご飯|米|弁当|ライス|おこわ|炊飯|白米|玄米/.test(name)) {
     hints.push('・米・ご飯系製品です。白色・半透明・硬い小粒状の異物は炊飯不良米・乾燥米粒・おこげ・籾殻（もみがら）の可能性を優先的に検討してください。')
   }
+  if (/ハンバーグ|グラタン|焼き菓子|クッキー|スコーン|マフィン|ケーキ|パン|ピザ|キッシュ|ラザニア|ロースト|天板|オーブン|焼成/.test(name)) {
+    hints.push('・オーブン・天板を使用する焼成製品です。白色・半透明・薄いシート状の異物が発見された場合は、クッキングシート（オーブンシート・シリコン加工紙）またはパラフィン紙の切れ端の混入を最優先で検討してください。骨片・金属片と誤判定しないよう注意が必要です。')
+  }
 
   return hints.length ? hints.join('\n') : ''
 }
@@ -153,6 +156,9 @@ function buildProductHintEn(productName: string): string {
   }
   if (/rice|onigiri|bento|cooked rice/.test(name)) {
     hints.push('- Rice/cooked-rice product. For white/translucent/hard small particles, prioritize: poorly-cooked rice grains, dried rice kernels, burnt rice (okoge), or unhulled rice (momigara).')
+  }
+  if (/hamburg|hamburger|gratin|baked|cookie|scone|muffin|cake|bread|pizza|quiche|lasagna|roast|oven|bake/.test(name)) {
+    hints.push('- This is an oven-baked product using a baking sheet or tray. For white/translucent/thin sheet-like foreign matter, FIRST consider: cooking sheet (silicone-coated oven paper) fragment, paraffin paper, or parchment paper. Do not misidentify as bone or metal.')
   }
 
   return hints.length ? hints.join('\n') : ''

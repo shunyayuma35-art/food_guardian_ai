@@ -432,7 +432,7 @@ export type TranslationKey =
   | 'hints.shape' | 'hints.material' | 'hints.color' | 'hints.thread' | 'hints.hardness'
   | 'hints.yes' | 'hints.no' | 'hints.unknown'
   | 'hints.shapeGranular' | 'hints.shapeFibrous' | 'hints.shapeThinFilm' | 'hints.shapeSolid' | 'hints.shapePowder'
-  | 'hints.matStraw' | 'hints.matWood' | 'hints.matPaper' | 'hints.matPaint' | 'hints.matRubber'
+  | 'hints.matStraw' | 'hints.matWood' | 'hints.matPaper' | 'hints.matCookingSheet' | 'hints.matPaint' | 'hints.matRubber'
   | 'hints.matCrustacean' | 'hints.matBoneShell' | 'hints.matGrain'
   | 'hints.colorWhite' | 'hints.colorTransparent' | 'hints.colorBlack' | 'hints.colorBrown'
   | 'hints.colorRed' | 'hints.colorBlue' | 'hints.colorGreen' | 'hints.colorMetal' | 'hints.colorOther'
@@ -1245,6 +1245,7 @@ const ja: Dict = {
   'hints.matStraw': 'わら・植物片',
   'hints.matWood': '木片',
   'hints.matPaper': '紙',
+  'hints.matCookingSheet': 'クッキングシート・耐熱紙',
   'hints.matPaint': '塗膜片（ペンキ）',
   'hints.matRubber': '樹脂・ゴム',
   'hints.matCrustacean': '甲殻類（オキアミ・エビの殻）',
@@ -2136,6 +2137,7 @@ const en: Dict = {
   'hints.matStraw': 'Straw/plant fragment',
   'hints.matWood': 'Wood',
   'hints.matPaper': 'Paper',
+  'hints.matCookingSheet': 'Cooking sheet/parchment',
   'hints.matPaint': 'Paint chip',
   'hints.matRubber': 'Resin/rubber',
   'hints.matCrustacean': 'Crustacean (krill, shrimp shell)',

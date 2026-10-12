@@ -179,10 +179,23 @@ export default function IncidentDetailPage() {
         reader.onerror = reject
         reader.readAsDataURL(blob)
       })
+      const hintsYes = incident.hints
+        ? Object.entries(incident.hints).filter(([, v]) => v === 'yes').map(([k]) => k).join(', ')
+        : undefined
+      const prevEst = incident.estimations?.[0]
+      const prevContext = prevEst ? `前回の即時判定: ${prevEst.name ?? prevEst.category}（${prevEst.source === 'ai_vision' ? 'AI画像解析' : 'ルールベース'}）` : undefined
       const res = await fetch('/api/analyze-foreign-matter', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ imageBase64: base64, mediaType: blob.type || 'image/jpeg', structured: true }),
+        body: JSON.stringify({
+          imageBase64: base64,
+          mediaType: blob.type || 'image/jpeg',
+          structured: true,
+          productName: incident.productName || undefined,
+          situationComment: incident.comment || undefined,
+          hintsSummary: hintsYes || undefined,
+          userHint: prevContext,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'regen failed')
@@ -469,13 +482,20 @@ export default function IncidentDetailPage() {
 
         {/* AI推定結果 */}
         {incident.estimations && incident.estimations.length > 0 && (() => {
-          const topIsHighConfidenceAi = incident.estimations[0]?.source === 'ai_vision' && incident.estimations[0]?.urgency === 'high'
+          const aiVisionEst = incident.estimations[0]?.source === 'ai_vision' ? incident.estimations[0] : null
+          const topIsHighConfidenceAi = !!aiVisionEst && aiVisionEst.urgency === 'high'
+          const aiIsNonMetal = !!aiVisionEst && !/金属|ステンレス|SUS|鉄|アルミ|銅|ガラス|glass|metal/i.test(aiVisionEst.category)
+          const isMetalCandidate = (cat: string) => /金属|ステンレス|SUS|鉄|アルミ|銅|鋼/.test(cat)
           const mainEsts = topIsHighConfidenceAi
             ? incident.estimations.filter(e => e.source === 'ai_vision')
-            : incident.estimations
+            : aiIsNonMetal
+              ? incident.estimations.filter(e => e.source === 'ai_vision' || !isMetalCandidate(e.category))
+              : incident.estimations
           const ruleEsts = topIsHighConfidenceAi
             ? incident.estimations.filter(e => e.source !== 'ai_vision')
-            : []
+            : aiIsNonMetal
+              ? incident.estimations.filter(e => e.source !== 'ai_vision' && isMetalCandidate(e.category))
+              : []
           return (
           <div className="card p-4">
             <p className="section-title">{t('detail.aiEstTitle')}</p>

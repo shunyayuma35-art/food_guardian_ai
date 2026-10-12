@@ -96,7 +96,7 @@ ${FOREIGN_MATTER_DB}
 {
   "name": "異物名（日本語）（例：イエバエ、ステンレス片、青いプラスチック）",
   "nameEn": "Foreign matter name in English (e.g.: housefly, stainless steel fragment, blue plastic piece)",
-  "category": "虫類|金属類|プラスチック類|植物由来|繊維類|その他",
+  "category": "虫類|金属類|プラスチック類|植物由来|繊維類|紙・シート類|その他",
   "confidence": "高|中|低",
   "urgency": "high|medium|low",
   "size_estimate": "推定サイズ（例：約5mm、1cm程度）",
@@ -121,6 +121,11 @@ ${FOREIGN_MATTER_DB}
 
 For insects: identify species from body shape, color, wings, antennae, and leg count.
 For metals: consider magnetic reaction (magnetic = iron/steel, non-magnetic = SUS/Al/Cu).
+
+IMPORTANT PRIORITY RULES:
+- For thin / film-like / sheet-like foreign matter: do NOT put bone or metal fragments as the top candidate. Prioritize cooking sheet (oven sheet), packaging film, or paraffin paper.
+- For baked/oven products (hamburger steak, baked goods, bread, gratin, pizza, etc.) with white/translucent/thin sheet-like foreign matter: put cooking sheet (silicone oven paper) as the PRIMARY candidate.
+- When product name, user hint, or observed features are provided, treat them as the highest-priority clue and do not judge solely from the image appearance.
 
 Response format:
 Line 1 (required): Estimated foreign matter: [name] (Confidence: High/Medium/Low)
@@ -148,6 +153,11 @@ ${FOREIGN_MATTER_DB}
 
 上記データベースを参照し、虫類は体型・色・翅・触角・脚の本数から種類を推定すること。
 金属は磁石反応（つく＝鉄/鋼、つかない＝SUS/Al/Cu）を考慮すること。
+
+【重要優先ルール】
+- 薄い・膜状・シート状の異物（薄片・フィルム状）の場合：骨片・金属片を第1候補にしないこと。クッキングシート・包装フィルム・パラフィン紙を優先的に評価すること。
+- 焼成工程がある製品（ハンバーグ・焼き菓子・パン・グラタン・ピザ等）で白色・半透明・薄いシート状の異物が見つかった場合：まずクッキングシート（オーブンシート）・パラフィン紙の混入を第1候補とすること。
+- 提供された「製品名」「心当たり」「ヒント」がある場合はそれを最優先の手がかりとして使用し、画像の印象だけで骨や金属と判断しないこと。
 
 回答形式：
 1行目（必須）：推定される異物：〇〇（信頼度：高/中/低）

@@ -538,6 +538,7 @@ export interface ForeignMatterHints {
   matStraw?: HintAnswer
   matWood?: HintAnswer
   matPaper?: HintAnswer
+  matCookingSheet?: HintAnswer
   matPaint?: HintAnswer
   matRubber?: HintAnswer
   matCrustacean?: HintAnswer
