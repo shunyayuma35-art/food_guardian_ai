@@ -719,8 +719,8 @@ const ja: Dict = {
   'record.aiDraft.append': '追記する',
   'record.aiDraft.overwriteMsg': '入力済みの内容があります。どうしますか？',
   // detail page
-  'detail.corrective': '是正処置',
-  'detail.preventive': '再発防止策',
+  'detail.corrective': '① 修正',
+  'detail.preventive': '③ 是正処置',
   'detail.actionsCard': '🔧 CAPA（修正・是正処置・検証計画）',
   'detail.aiDraftReplace': '🤖 AIで下書き（置き換え）',
   'detail.aiDraftAppend': '🤖 AI下書き（追記）',
@@ -1635,8 +1635,8 @@ const en: Dict = {
   'record.aiDraft.append': 'Append',
   'record.aiDraft.overwriteMsg': 'Fields already have content. What would you like to do?',
   // detail page
-  'detail.corrective': 'Corrective Action',
-  'detail.preventive': 'Preventive Measure',
+  'detail.corrective': '① Correction',
+  'detail.preventive': '③ Corrective Action',
   'detail.actionsCard': '🔧 CAPA (Correction / Corrective Action / Verification)',
   'detail.aiDraftReplace': '🤖 AI Draft (Replace)',
   'detail.aiDraftAppend': '🤖 AI Draft (Append)',

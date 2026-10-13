@@ -23,6 +23,40 @@ import type { Incident } from '@/lib/types'
 const URGENCY_CLASS = { high: 'badge-high', medium: 'badge-medium', low: 'badge-low' }
 const URGENCY_BAR = { high: 'bg-red-400', medium: 'bg-orange-400', low: 'bg-yellow-400' }
 
+function parseVerification(text: string): { what: string; when: string; who: string; criteria: string } {
+  const result = { what: '', when: '', who: '', criteria: '' }
+  if (!text) return result
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim()
+    if (/^(?:確認内容|What)[：: ]/i.test(trimmed)) result.what = trimmed.replace(/^[^：:]+[：: ]\s*/, '').trim()
+    else if (/^(?:時期|Timing)[：: ]/i.test(trimmed)) result.when = trimmed.replace(/^[^：:]+[：: ]\s*/, '').trim()
+    else if (/^(?:担当者|Responsible)[：: ]/i.test(trimmed)) result.who = trimmed.replace(/^[^：:]+[：: ]\s*/, '').trim()
+    else if (/^(?:判定基準|Acceptance)[：: ]/i.test(trimmed)) result.criteria = trimmed.replace(/^[^：:]+[：: ]\s*/, '').trim()
+  }
+  return result
+}
+
+function serializeVerification(what: string, when: string, who: string, criteria: string): string {
+  return [
+    what && `確認内容: ${what}`,
+    when && `時期・頻度: ${when}`,
+    who && `担当者: ${who}`,
+    criteria && `判定基準: ${criteria}`,
+  ].filter(Boolean).join('\n')
+}
+
+function mapCategoryToConfirmed(aiCategory: string): string {
+  if (!aiCategory) return ''
+  if (/金属/.test(aiCategory)) return '金属'
+  if (/プラスチック|樹脂|ビニール|ゴム/.test(aiCategory)) return '樹脂・プラスチック'
+  if (/紙|シート|フィルム|包|クッキング/.test(aiCategory)) return '紙・シート類'
+  if (/植物|野菜|穀物|草|葉|茎|種|米|木|根|芽/.test(aiCategory)) return '植物'
+  if (/骨|貝殻|殻/.test(aiCategory)) return '骨・貝殻'
+  if (/毛髪|繊維|毛|ひも/.test(aiCategory)) return '毛髪・繊維'
+  if (/虫/.test(aiCategory)) return '虫'
+  return 'その他'
+}
+
 export default function IncidentDetailPage() {
   const { user, loading } = useAuth()
   const { t, lang } = useLang()
@@ -57,7 +91,11 @@ export default function IncidentDetailPage() {
   // CAPA 直接編集
   const [editCorrective, setEditCorrective] = useState('')
   const [editPreventive, setEditPreventive] = useState('')
-  const [editVerification, setEditVerification] = useState('')
+  // ④ 有効性の検証計画（4項目）
+  const [verifyWhat, setVerifyWhat] = useState('')
+  const [verifyWhen, setVerifyWhen] = useState('')
+  const [verifyWho, setVerifyWho] = useState('')
+  const [verifyCriteria, setVerifyCriteria] = useState('')
   const [actionsEditor, setActionsEditor] = useState('')
   const [savingActions, setSavingActions] = useState(false)
   const [actionsUpdatedAt, setActionsUpdatedAt] = useState('')
@@ -117,11 +155,17 @@ export default function IncidentDetailPage() {
           setEditPreventive(
             data.editedPreventive ?? data.aiPreventiveRaw ?? data.preventiveMeasure ?? ''
           )
-          setEditVerification(data.editedVerification ?? '')
+          // ④ 検証計画を4フィールドに分解
+          const vText = data.editedVerification ?? ''
+          const vParsed = parseVerification(vText)
+          setVerifyWhat(vParsed.what)
+          setVerifyWhen(vParsed.when)
+          setVerifyWho(vParsed.who)
+          setVerifyCriteria(vParsed.criteria)
           setActionsUpdatedAt(data.actionsUpdatedAt ?? data.causeVerifiedAt ?? '')
-          // 正解の登録フィールドを復元
-          setConfirmedName(data.confirmedName ?? data.estimations?.[0]?.category ?? '')
-          setConfirmedCategory(data.confirmedCategory ?? '')
+          // 正解の登録フィールドを復元（AIの第1候補の名前を初期値にする）
+          setConfirmedName(data.confirmedName ?? data.estimations?.[0]?.name ?? data.estimations?.[0]?.category ?? '')
+          setConfirmedCategory(data.confirmedCategory ?? mapCategoryToConfirmed(data.estimations?.[0]?.category ?? ''))
           setConfirmedMethod(data.confirmedMethod ?? '')
           setConfirmedBy2(data.confirmedBy ?? '')
           setConfirmedNote(data.confirmedNote ?? '')
@@ -155,10 +199,13 @@ export default function IncidentDetailPage() {
           productName: incident.productName,
           comment: incident.comment,
           discoveryProcess: incident.discoveryProcess,
+          discoveryDate: incident.discoveryDate,
           aiResult: topEst ? {
-            name: topEst.category,
+            name: topEst.name ?? topEst.category,
             category: topEst.category,
             urgency: topEst.urgency,
+            route: topEst.route,
+            action: topEst.action,
           } : null,
           lang,
         }),
@@ -167,15 +214,31 @@ export default function IncidentDetailPage() {
       if (!res.ok) throw new Error(data.error ?? 'AI error')
       const corrDraft = Array.isArray(data.corrective) ? data.corrective.join('\n') : (data.corrective ?? '')
       const prevDraft = Array.isArray(data.preventive) ? data.preventive.join('\n') : (data.preventive ?? '')
-      const verifDraft = typeof data.verification === 'string' ? data.verification : ''
+      // structured verification
+      const verifObj: { what?: string; when?: string; who?: string; criteria?: string } | null =
+        typeof data.verification === 'object' && data.verification !== null
+          ? (data.verification as { what?: string; when?: string; who?: string; criteria?: string })
+          : typeof data.verification === 'string'
+            ? parseVerification(data.verification as string)
+            : null
       if (mode === 'replace') {
         setEditCorrective(corrDraft)
         setEditPreventive(prevDraft)
-        if (verifDraft) setEditVerification(verifDraft)
+        if (verifObj) {
+          setVerifyWhat(verifObj.what ?? '')
+          setVerifyWhen(verifObj.when ?? '')
+          setVerifyWho(verifObj.who ?? '')
+          setVerifyCriteria(verifObj.criteria ?? '')
+        }
       } else {
         setEditCorrective(prev => prev ? `${prev}\n\n${corrDraft}` : corrDraft)
         setEditPreventive(prev => prev ? `${prev}\n\n${prevDraft}` : prevDraft)
-        if (verifDraft) setEditVerification(prev => prev ? `${prev}\n\n${verifDraft}` : verifDraft)
+        if (verifObj) {
+          setVerifyWhat(prev => (prev && verifObj.what) ? `${prev}\n${verifObj.what}` : verifObj.what ?? prev)
+          setVerifyWhen(prev => (prev && verifObj.when) ? `${prev}\n${verifObj.when}` : verifObj.when ?? prev)
+          setVerifyWho(prev => (prev && verifObj.who) ? `${prev}\n${verifObj.who}` : verifObj.who ?? prev)
+          setVerifyCriteria(prev => (prev && verifObj.criteria) ? `${prev}\n${verifObj.criteria}` : verifObj.criteria ?? prev)
+        }
       }
       toast.success(t('toast.aiDraftCreated') || (lang === 'en' ? 'AI draft created ✅' : 'AI下書きを作成しました ✅'))
     } catch (err: unknown) {
@@ -253,10 +316,11 @@ export default function IncidentDetailPage() {
     setSavingActions(true)
     try {
       const now = new Date().toISOString()
+      const editedVerification = serializeVerification(verifyWhat, verifyWhen, verifyWho, verifyCriteria)
       await updateIncident(incident.id, {
         editedCorrective: editCorrective,
         editedPreventive: editPreventive,
-        editedVerification: editVerification,
+        editedVerification,
         actionsUpdatedBy: actionsEditor,
         actionsUpdatedAt: now,
       })
@@ -265,7 +329,7 @@ export default function IncidentDetailPage() {
         ...prev,
         editedCorrective: editCorrective,
         editedPreventive: editPreventive,
-        editedVerification: editVerification,
+        editedVerification,
         actionsUpdatedBy: actionsEditor,
         actionsUpdatedAt: now,
       } : prev)
@@ -890,6 +954,35 @@ export default function IncidentDetailPage() {
           </div>
 
           <div className="space-y-3">
+            {/* ② 原因 */}
+            {(incident.editedCause || incident.aiCauseRaw) ? (
+              <div>
+                <label className="text-xs font-bold text-gray-600 mb-1 block">
+                  {isEn ? '② Root Cause (4M: Man / Machine / Material / Method)' : '② 原因（4M：人・機械・材料・方法）'}
+                </label>
+                <div className="bg-violet-50 border border-violet-100 rounded-xl px-3 py-2 text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">
+                  {incident.editedCause ?? incident.aiCauseRaw}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCausePanel(true)}
+                  className="text-[10px] text-purple-500 hover:text-purple-700 mt-1"
+                >
+                  {isEn ? '✏️ Edit in AI Root Cause Analysis ↓' : '✏️ 下の原因分析カードで編集 ↓'}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleGenerateCause}
+                disabled={causeLoading}
+                className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-xl bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {causeLoading
+                  ? <><span className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />{isEn ? 'Analyzing...' : '分析中...'}</>
+                  : <>🧠 {isEn ? 'AI Root Cause Analysis (② Cause)' : 'AIで原因を作成（② 原因）'}</>}
+              </button>
+            )}
             <div>
               <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.correctiveLabel')}</label>
               <AutoResizeTextarea
@@ -906,18 +999,52 @@ export default function IncidentDetailPage() {
                 value={editPreventive}
                 onChange={e => setEditPreventive(e.target.value)}
                 className="input-field text-sm"
-                placeholder={isEn ? 'e.g. Revise SOP (Responsible: QA, Target: 2026-11)...' : '例: 洗浄手順の見直し（担当: 品質管理部 期限: 2026-11）...'}
+                placeholder={isEn ? 'e.g. Revise SOP (Responsible: QA, Target: 2026/11/01)...' : '例: 洗浄手順の見直し（担当: 品質管理部 期限: 2026/11/01）...'}
               />
             </div>
+            {/* ④ 有効性の検証計画（4項目） */}
             <div>
-              <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.verificationLabel')}</label>
-              <p className="text-[10px] text-gray-400 mb-1">{isEn ? 'What / When & Frequency / Who / Acceptance criteria' : '確認内容・時期と頻度・担当者・判定基準'}</p>
-              <AutoResizeTextarea
-                value={editVerification}
-                onChange={e => setEditVerification(e.target.value)}
-                className="input-field text-sm"
-                placeholder={isEn ? 'e.g. Confirm no recurrence for 3 months (monthly audit by QA, 0 incidents = pass)' : '例: 3か月間の再発なし確認（品質管理部が月次監査、0件＝合格）'}
-              />
+              <label className="text-xs font-bold text-gray-600 mb-2 block">{t('detail.verificationLabel')}</label>
+              <div className="space-y-2 bg-green-50 border border-green-100 rounded-xl p-3">
+                <div>
+                  <p className="text-[10px] text-gray-500 font-semibold mb-1">{isEn ? '🔍 What to confirm' : '🔍 確認内容（何を確認するか）'}</p>
+                  <AutoResizeTextarea
+                    value={verifyWhat}
+                    onChange={e => setVerifyWhat(e.target.value)}
+                    className="input-field text-sm bg-white"
+                    placeholder={isEn ? 'e.g. No recurrence of same foreign matter type' : '例: 同種異物の再発がないこと'}
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-500 font-semibold mb-1">{isEn ? '📅 Timing / Frequency' : '📅 時期・頻度'}</p>
+                  <input
+                    value={verifyWhen}
+                    onChange={e => setVerifyWhen(e.target.value)}
+                    className="input-field text-sm bg-white"
+                    placeholder={isEn ? 'e.g. Weekly for 1 month after implementation' : '例: 実施後1か月間、毎週'}
+                    style={{ fontSize: '16px' }}
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-500 font-semibold mb-1">{isEn ? '👤 Responsible person' : '👤 担当者'}</p>
+                  <input
+                    value={verifyWho}
+                    onChange={e => setVerifyWho(e.target.value)}
+                    className="input-field text-sm bg-white"
+                    placeholder={isEn ? 'e.g. QA Department' : '例: 品質管理部'}
+                    style={{ fontSize: '16px' }}
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-500 font-semibold mb-1">{isEn ? '✅ Acceptance criteria' : '✅ 判定基準'}</p>
+                  <AutoResizeTextarea
+                    value={verifyCriteria}
+                    onChange={e => setVerifyCriteria(e.target.value)}
+                    className="input-field text-sm bg-white"
+                    placeholder={isEn ? 'e.g. 0 incidents of same type for 3 months' : '例: 同種異物の発生0件、点検記録の記入漏れ0件'}
+                  />
+                </div>
+              </div>
             </div>
             <div>
               <label className="label">{t('detail.editorName')} <span className="text-red-400">*</span></label>
