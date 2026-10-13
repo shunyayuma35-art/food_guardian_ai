@@ -19,6 +19,7 @@ import RecallAssessmentCard from '@/components/RecallAssessmentCard'
 import PhotoImg from '@/components/PhotoImg'
 import toast from 'react-hot-toast'
 import type { Incident } from '@/lib/types'
+import { FM_CATEGORIES, FM_CATEGORY_MAP, mapAiCategoryToFM, HIGH_URGENCY_NAMES } from '@/lib/foreign-matter-categories'
 
 const URGENCY_CLASS = { high: 'badge-high', medium: 'badge-medium', low: 'badge-low' }
 const URGENCY_BAR = { high: 'bg-red-400', medium: 'bg-orange-400', low: 'bg-yellow-400' }
@@ -45,17 +46,6 @@ function serializeVerification(what: string, when: string, who: string, criteria
   ].filter(Boolean).join('\n')
 }
 
-function mapCategoryToConfirmed(aiCategory: string): string {
-  if (!aiCategory) return ''
-  if (/金属/.test(aiCategory)) return '金属'
-  if (/プラスチック|樹脂|ビニール|ゴム/.test(aiCategory)) return '樹脂・プラスチック'
-  if (/紙|シート|フィルム|包|クッキング/.test(aiCategory)) return '紙・シート類'
-  if (/植物|野菜|穀物|草|葉|茎|種|米|木|根|芽/.test(aiCategory)) return '植物'
-  if (/骨|貝殻|殻/.test(aiCategory)) return '骨・貝殻'
-  if (/毛髪|繊維|毛|ひも/.test(aiCategory)) return '毛髪・繊維'
-  if (/虫/.test(aiCategory)) return '虫'
-  return 'その他'
-}
 
 export default function IncidentDetailPage() {
   const { user, loading } = useAuth()
@@ -111,11 +101,14 @@ export default function IncidentDetailPage() {
   // 正解の登録
   const [confirmedName, setConfirmedName] = useState('')
   const [confirmedCategory, setConfirmedCategory] = useState('')
+  const [confirmedSubcategory, setConfirmedSubcategory] = useState('')
   const [confirmedMethod, setConfirmedMethod] = useState('')
   const [confirmedBy2, setConfirmedBy2] = useState('')
   const [confirmedNote, setConfirmedNote] = useState('')
   const [aiMatch, setAiMatch] = useState<'match' | 'partial' | 'mismatch' | ''>('')
   const [savingConfirmed, setSavingConfirmed] = useState(false)
+  // PDCA AIアクション提案
+  const [pdcaActionLoading, setPdcaActionLoading] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
@@ -165,7 +158,9 @@ export default function IncidentDetailPage() {
           setActionsUpdatedAt(data.actionsUpdatedAt ?? data.causeVerifiedAt ?? '')
           // 正解の登録フィールドを復元（AIの第1候補の名前を初期値にする）
           setConfirmedName(data.confirmedName ?? data.estimations?.[0]?.name ?? data.estimations?.[0]?.category ?? '')
-          setConfirmedCategory(data.confirmedCategory ?? mapCategoryToConfirmed(data.estimations?.[0]?.category ?? ''))
+          const aiMapped = mapAiCategoryToFM(data.estimations?.[0]?.category ?? '')
+          setConfirmedCategory(data.confirmedCategory ?? aiMapped.main)
+          setConfirmedSubcategory(data.confirmedSubcategory ?? aiMapped.sub)
           setConfirmedMethod(data.confirmedMethod ?? '')
           setConfirmedBy2(data.confirmedBy ?? '')
           setConfirmedNote(data.confirmedNote ?? '')
@@ -174,10 +169,14 @@ export default function IncidentDetailPage() {
           if (data.recallAssessment) setRecallAssessment(data.recallAssessment)
           // Q1の初期値をAI判定から自動設定
           else if (!data.recallAssessment) {
-            const topCat = data.estimations?.[0]?.category ?? ''
-            const isHazardous = /金属|ガラス|硬質プラスチック|プラスチック|ゴム/.test(topCat)
-            const isSafe = /植物|野菜|毛髪|毛|繊維|草|葉|種|木|皮|殻|穀|米|藁/.test(topCat)
-            if (isHazardous) setRecallAssessment(prev => ({ ...prev, q1_hazardous: 'yes' }))
+            const topEst0 = data.estimations?.[0]
+            const topCat = topEst0?.category ?? ''
+            const topName = topEst0?.name ?? ''
+            const isHighUrgency = topEst0?.urgency === 'high'
+              || HIGH_URGENCY_NAMES.has(topCat)
+              || HIGH_URGENCY_NAMES.has(topName)
+            const isSafe = /植物|野菜|毛髪|毛|繊維|草|葉|種|木|皮|穀|米|藁/.test(topCat)
+            if (isHighUrgency) setRecallAssessment(prev => ({ ...prev, q1_hazardous: 'yes' }))
             else if (isSafe) setRecallAssessment(prev => ({ ...prev, q1_hazardous: 'no' }))
           }
         }
@@ -438,6 +437,42 @@ export default function IncidentDetailPage() {
     }
   }
 
+  async function handleAiPdcaAction() {
+    if (!incident) return
+    setPdcaActionLoading(true)
+    try {
+      const res = await fetch('/api/ai-pdca-action', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          pdcaStatus,
+          pdcaDeadline,
+          productName: incident.productName,
+          editedCorrective: editCorrective,
+          editedCause: incident.editedCause ?? incident.aiCauseRaw ?? '',
+          editedPreventive: editPreventive,
+          verifyWhat,
+          verifyWhen,
+          verifyWho,
+          verifyCriteria,
+          lang: typeof window !== 'undefined' ? (localStorage.getItem('foodeye_lang') ?? 'ja') : 'ja',
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'AI error')
+      const suggestion = data.suggestion ?? ''
+      setPdcaNotes(prev => prev
+        ? `${prev}\n\n--- AIの提案 ---\n${suggestion}`
+        : `--- AIの提案 ---\n${suggestion}`
+      )
+      toast.success(isEn ? 'AI suggestion generated ✅' : 'AIの提案を追記しました ✅')
+    } catch {
+      toast.error(isEn ? 'AI suggestion failed' : 'AI提案の生成に失敗しました')
+    } finally {
+      setPdcaActionLoading(false)
+    }
+  }
+
   async function handleSaveRecall() {
     if (!incident) return
     setSavingRecall(true)
@@ -468,6 +503,7 @@ export default function IncidentDetailPage() {
       const updates = {
         confirmedName: confirmedName.trim(),
         confirmedCategory,
+        confirmedSubcategory,
         confirmedMethod,
         confirmedBy: confirmedBy2.trim(),
         confirmedNote,
@@ -485,6 +521,7 @@ export default function IncidentDetailPage() {
             category: incident.estimations?.[0]?.category ?? '',
             confirmed_name: confirmedName.trim(),
             confirmed_category: confirmedCategory,
+            confirmed_subcategory: confirmedSubcategory,
             hints: incident.hints
               ? Object.entries(incident.hints).filter(([, v]) => v === 'yes').map(([k]) => k).join(', ')
               : '',
@@ -1098,6 +1135,19 @@ export default function IncidentDetailPage() {
               <AutoResizeTextarea value={pdcaNotes} onChange={(e) => setPdcaNotes(e.target.value)}
                 className="input-field"
                 placeholder="例: 2026-06-01 山田が原因調査実施。2026-06-10 全ライン点検予定。" />
+              <button
+                type="button"
+                onClick={handleAiPdcaAction}
+                disabled={pdcaActionLoading}
+                className="mt-1.5 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {pdcaActionLoading
+                  ? <><span className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />{isEn ? 'Generating...' : '生成中...'}</>
+                  : <>🤖 {isEn ? 'AI: Suggest Next Actions' : '次のアクションをAIで提案'}</>}
+              </button>
+              <p className="text-[10px] text-gray-400 mt-1">
+                {isEn ? 'AI suggestion only. Edit to match your actual situation before saving.' : 'AIの提案です。現場の状況に合わせて編集してください。'}
+              </p>
             </div>
           </div>
           <button onClick={handleSavePdca} disabled={savingPdca}
@@ -1129,37 +1179,53 @@ export default function IncidentDetailPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            {/* 大分類 */}
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1 block">{isEn ? 'Category (main)' : '大分類'}</label>
+              <select
+                value={confirmedCategory}
+                onChange={e => { setConfirmedCategory(e.target.value); setConfirmedSubcategory('') }}
+                className="input-field text-sm"
+                style={{ fontSize: '16px' }}
+              >
+                <option value="">{isEn ? '(select)' : '(選択)'}</option>
+                {FM_CATEGORIES.map(c => (
+                  <option key={c.name} value={c.name}>{isEn ? c.nameEn : c.name}</option>
+                ))}
+              </select>
+            </div>
+            {/* 小分類（大分類が選ばれていて subcategoryがある場合のみ表示） */}
+            {confirmedCategory && (FM_CATEGORY_MAP.get(confirmedCategory)?.subs.length ?? 0) > 0 && (
               <div>
-                <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.confirmedCategory')}</label>
+                <label className="text-xs font-bold text-gray-600 mb-1 block">{isEn ? 'Category (sub)' : '小分類'}</label>
                 <select
-                  value={confirmedCategory}
-                  onChange={e => setConfirmedCategory(e.target.value)}
+                  value={confirmedSubcategory}
+                  onChange={e => setConfirmedSubcategory(e.target.value)}
                   className="input-field text-sm"
                   style={{ fontSize: '16px' }}
                 >
-                  <option value="">{isEn ? '(select)' : '(選択)'}</option>
-                  {(isEn
-                    ? ['Metal', 'Resin/Plastic', 'Paper/Sheet', 'Plant', 'Bone/Shell', 'Hair/Fiber', 'Insect', 'Other']
-                    : ['金属', '樹脂・プラスチック', '紙・シート類', '植物', '骨・貝殻', '毛髪・繊維', '虫', 'その他']
-                  ).map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="">{isEn ? '(not specified)' : '（未選択）'}</option>
+                  {FM_CATEGORY_MAP.get(confirmedCategory)!.subs.map(s => (
+                    <option key={s.name} value={s.name}>{isEn ? s.nameEn : s.name}</option>
+                  ))}
                 </select>
               </div>
-              <div>
-                <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.confirmedMethod')}</label>
-                <select
-                  value={confirmedMethod}
-                  onChange={e => setConfirmedMethod(e.target.value)}
-                  className="input-field text-sm"
-                  style={{ fontSize: '16px' }}
-                >
-                  <option value="">{isEn ? '(select)' : '(選択)'}</option>
-                  {(isEn
-                    ? ['Visual', 'Physical match', 'FT-IR/analysis', 'External lab', 'Other']
-                    : ['目視', '現物照合', 'FT-IR等の分析', '外部機関', 'その他']
-                  ).map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
+            )}
+            {/* 確認方法 */}
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.confirmedMethod')}</label>
+              <select
+                value={confirmedMethod}
+                onChange={e => setConfirmedMethod(e.target.value)}
+                className="input-field text-sm"
+                style={{ fontSize: '16px' }}
+              >
+                <option value="">{isEn ? '(select)' : '(選択)'}</option>
+                {(isEn
+                  ? ['Visual', 'Physical match', 'FT-IR/analysis', 'External lab', 'Other']
+                  : ['目視', '現物照合', 'FT-IR等の分析', '外部機関', 'その他']
+                ).map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
             </div>
 
             <div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { callAI, type MediaType } from '@/lib/ai-provider';
 import { FOREIGN_MATTER_DB } from '@/lib/foreign-matter-db';
 import { findSimilarCases } from '@/lib/confirmed-cases';
+import { buildCategoryListForPrompt, HIGH_URGENCY_NAMES } from '@/lib/foreign-matter-categories';
 
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -93,18 +94,24 @@ export async function POST(req: NextRequest) {
 
     const isEn = lang === 'en'
     const langInst = buildLangInstruction(lang as string | undefined)
+    const catList = buildCategoryListForPrompt(isEn ? 'en' : 'ja')
+    const highUrgencyList = [...HIGH_URGENCY_NAMES].slice(0, 20).join('、')
 
     const systemPrompt = structured
       ? `食品工場の異物特定専門家として画像を分析し、以下のJSONのみを返してください（説明文・前置き一切不要）。
 
 ${FOREIGN_MATTER_DB}
 
+【異物カテゴリ一覧（大分類）】
+${catList}
+
 上記データベースを参照し、以下のJSON形式のみで回答してください。日本語と英語の両方を必ず返すこと：
+urgency は "${highUrgencyList}" など健康被害リスクが高いものはhigh、それ以外は特徴に基づき判断。
 
 {
   "name": "異物名（日本語）（例：イエバエ、ステンレス片、青いプラスチック）",
   "nameEn": "Foreign matter name in English (e.g.: housefly, stainless steel fragment, blue plastic piece)",
-  "category": "虫類|金属類|プラスチック類|植物由来|繊維類|紙・シート類|その他",
+  "category": "大分類名（上記カテゴリ一覧から選択）",
   "confidence": "高|中|低",
   "urgency": "high|medium|low",
   "size_estimate": "推定サイズ（例：約5mm、1cm程度）",
@@ -193,6 +200,23 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
     if (situationComment) productHintParts.push(isEn ? `Situation: ${situationComment}` : `状況：${situationComment}`)
     if (hintsSummary) productHintParts.push(isEn ? `Observed features: ${hintsSummary}` : `現場の観察結果：${hintsSummary}`)
     if (userHint) productHintParts.push(isEn ? `User info: ${userHint}` : `ユーザー提供情報：${userHint}`)
+    // 製品名から必須候補を追加
+    if (productName) {
+      const pn = String(productName)
+      const mandatoryHints: string[] = []
+      if (/鶏|チキン|とり|唐揚げ|チキン|から揚げ|焼き鳥/i.test(pn))
+        mandatoryHints.push(isEn ? 'Chicken product: check for bone, cartilage, tendon fragments' : '鶏肉製品：骨・軟骨・筋が必須チェック候補')
+      if (/魚|フィッシュ|ツナ|サーモン|さばら|鮭|いわし|マグロ|まぐろ|さんま|アジ/i.test(pn))
+        mandatoryHints.push(isEn ? 'Fish product: check for fish bone, small fish, anisakis' : '魚介製品：魚骨・稚魚・アニサキスが必須チェック候補')
+      if (/貝|かい|ホタテ|アサリ|ハマグリ|カキ|エビ|海老|イカ|オキアミ/i.test(pn))
+        mandatoryHints.push(isEn ? 'Shellfish/seafood product: check for shell fragments, sand' : '貝・海老製品：貝殻の破片・砂が必須チェック候補')
+      if (/番重|ばんじゅう|バット/i.test(pn))
+        mandatoryHints.push(isEn ? 'Baking tray process: check for tray/basket fragments' : '番重工程：番重・かごの破片が必須チェック候補')
+      if (/焼成|オーブン|焼き|ベイク|グラタン|パン|ピザ|クッキー/i.test(pn))
+        mandatoryHints.push(isEn ? 'Baking process: check for carbonized deposits from oven/tray' : '焼成工程：炭化物（焼成機・天板由来）が必須チェック候補')
+      if (mandatoryHints.length > 0)
+        productHintParts.push(mandatoryHints.join('\n'))
+    }
     if (confirmedCases.length > 0) {
       const caseLines = confirmedCases.map(c =>
         isEn

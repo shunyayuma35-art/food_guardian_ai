@@ -6,6 +6,7 @@ export interface ConfirmedCase {
   category: string
   confirmed_name: string
   confirmed_category: string
+  confirmed_subcategory?: string
   confirmation_method: string
   confirmed_by: string
   note: string
@@ -67,7 +68,8 @@ export async function deleteCase(id: string): Promise<boolean> {
 export async function findSimilarCases(
   productName: string,
   category: string,
-  limit = 5
+  limit = 5,
+  subcategory?: string
 ): Promise<ConfirmedCase[]> {
   const all = await loadAllCases()
   if (all.length === 0) return []
@@ -75,7 +77,8 @@ export async function findSimilarCases(
   const scored = all.map(c => {
     let score = 0
     const pn = (c.product_name ?? '').toLowerCase()
-    if (nameLower && (pn.includes(nameLower) || nameLower.includes(pn))) score += 2
+    if (nameLower && (pn.includes(nameLower) || nameLower.includes(pn))) score += 3
+    if (subcategory && c.confirmed_subcategory === subcategory) score += 4
     if (category && c.confirmed_category === category) score += 2
     if (category && c.category === category) score += 1
     return { c, score }

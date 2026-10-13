@@ -23,6 +23,21 @@ function buildPrompt(inc: Record<string, unknown>, lang: string): string {
   const hintsObj = (inc.hints ?? {}) as Record<string, string>
   const hintsYes = Object.entries(hintsObj).filter(([, v]) => v === 'yes').map(([k]) => k).join(', ')
 
+  const catStr = String(est?.category ?? '')
+  const nameStr = String(est?.name ?? '')
+  const isInsectExternal = /外部侵入|イエバエ|ニクバエ|蚊|ユスリカ|ガガンボ|ガ類|アザミウマ|ヨコバイ/.test(catStr + nameStr)
+  const isInsectInternal = /内部発生|チョウバエ|オオチョウバエ|ショウジョウバエ|ノミバエ|キノコバエ/.test(catStr + nameStr)
+  const insectHintJa = isInsectExternal
+    ? '・外部侵入性の飛翔昆虫です。原因は開口部・出入り口・窓・換気口など外部と連絡する隙間からの侵入を優先的に検討してください。'
+    : isInsectInternal
+    ? '・内部発生性の飛翔昆虫（排水路系チョウバエ等）です。原因は排水溝・側溝・床排水口の有機物蓄積・スカム（バイオフィルム）を優先的に検討してください。開口部からの侵入は副次的な可能性です。'
+    : ''
+  const insectHintEn = isInsectExternal
+    ? '- This is an externally-invading flying insect. Prioritize entry points: doors, windows, vents, gaps in walls/screens.'
+    : isInsectInternal
+    ? '- This is an internally-breeding flying insect (drain fly type). Prioritize organic buildup in floor drains, gutters, scum in drainage channels as the breeding source.'
+    : ''
+
   if (isEn) {
     const productHint = buildProductHintEn(productName)
     return `You are a food safety expert. Analyze the following foreign matter incident and generate root cause hypotheses and corrective actions.
@@ -32,6 +47,7 @@ IMPORTANT RULES:
 - If the "Suspicion/Hint" field has content, treat it as the most important clue.
 - Do NOT suggest contamination routes that contradict the foreign matter type (e.g., no metal pathway for plant matter).
 - Write hypotheses consistent with the foreign matter type identified by AI.
+${insectHintEn}
 ${productHint}
 
 Incident Data:
@@ -74,6 +90,7 @@ Method: (hypothesis about process/procedure — must match the foreign matter ty
 - 「異物の心当たり」欄に入力がある場合は、それを最も重要な手がかりとして扱ってください。
 - 異物の種別と矛盾する混入経路は書かないでください（例: 植物片なのに金属設備の欠損を原因とするなど）。
 - AI画像解析が示す異物種別に整合する仮説を立てること。
+${insectHintJa}
 ${productHint}
 
 事故データ:

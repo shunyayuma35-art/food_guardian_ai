@@ -236,6 +236,7 @@ export interface Incident {
   // 正解の登録
   confirmedName?: string
   confirmedCategory?: string
+  confirmedSubcategory?: string
   confirmedMethod?: string
   confirmedBy?: string
   confirmedNote?: string

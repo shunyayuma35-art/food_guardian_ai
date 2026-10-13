@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       category?: string
       confirmed_name: string
       confirmed_category?: string
+      confirmed_subcategory?: string
       confirmation_method?: string
       confirmed_by?: string
       note?: string
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
       category: body.category ?? '',
       confirmed_name: body.confirmed_name.trim(),
       confirmed_category: body.confirmed_category ?? '',
+      confirmed_subcategory: body.confirmed_subcategory ?? '',
       confirmation_method: body.confirmation_method ?? '',
       confirmed_by: body.confirmed_by ?? '',
       note: body.note ?? '',
