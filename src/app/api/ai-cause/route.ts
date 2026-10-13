@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callAI } from '@/lib/ai-provider'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 export const maxDuration = 60
 
@@ -175,8 +176,48 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const incident = body.incident as Record<string, unknown>
     const lang = (body.lang as string) ?? 'ja'
+    const isEn = lang === 'en'
 
-    const prompt = buildPrompt(incident, lang)
+    // 確定事例を取得（非同期・失敗しても続行）
+    type ConfirmedCase = { product_name: string; confirmed_name: string; confirmed_category: string; ai_match: string }
+    let confirmedCases: ConfirmedCase[] = []
+    try {
+      const db = getSupabaseAdmin()
+      const productName = String(incident.productName ?? '')
+      const topCategory = (Array.isArray(incident.estimations) && incident.estimations[0])
+        ? String(incident.estimations[0].category ?? '')
+        : ''
+      const { data } = await db
+        .from('incident_confirmations')
+        .select('product_name, confirmed_name, confirmed_category, ai_match')
+        .order('created_at', { ascending: false })
+        .limit(30)
+      if (data) {
+        const rows = data as ConfirmedCase[]
+        const nameLower = productName.toLowerCase()
+        confirmedCases = rows.filter(r => {
+          const pn = String(r.product_name ?? '').toLowerCase()
+          return (nameLower && (pn.includes(nameLower) || nameLower.includes(pn))) ||
+            (topCategory && String(r.confirmed_category ?? '') === topCategory)
+        }).slice(0, 5)
+        if (confirmedCases.length === 0) confirmedCases = rows.slice(0, 3)
+      }
+    } catch { /* ignore */ }
+
+    // 確定事例をプロンプトに追記
+    let confirmedCasesContext = ''
+    if (confirmedCases.length > 0) {
+      const caseLines = confirmedCases.map(c =>
+        isEn
+          ? `  - Product: ${c.product_name || '(unspecified)'}, Confirmed: ${c.confirmed_name}, Category: ${c.confirmed_category}, AI match: ${c.ai_match}`
+          : `  ・製品: ${c.product_name || '(不明)'}, 確定異物: ${c.confirmed_name}, カテゴリ: ${c.confirmed_category}, AI一致: ${c.ai_match}`
+      ).join('\n')
+      confirmedCasesContext = isEn
+        ? `\n\nPast confirmed cases (for reference — prioritize if features match):\n${caseLines}`
+        : `\n\n過去の確定事例（参考 — 特徴が一致する場合は優先度高）：\n${caseLines}`
+    }
+
+    const prompt = buildPrompt(incident, lang) + confirmedCasesContext
     const systemPrompt = lang === 'en'
       ? 'You are a food safety expert. Respond only in the specified format. Always align hypotheses with the identified foreign matter type.'
       : 'あなたは食品安全の専門家です。指定された形式のみで回答してください。異物種別に整合した仮説を立てること。'
@@ -214,7 +255,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 500 })
     }
 
-    return NextResponse.json(parsed)
+    return NextResponse.json({
+      ...parsed,
+      ...(confirmedCases.length > 0 ? { confirmedCasesUsed: confirmedCases.length } : {}),
+    })
   } catch (err) {
     console.error('[POST /api/ai-cause]', err)
     return NextResponse.json({ error: 'AI analysis failed' }, { status: 500 })

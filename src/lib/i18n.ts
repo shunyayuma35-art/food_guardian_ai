@@ -438,6 +438,15 @@ export type TranslationKey =
   | 'hints.colorRed' | 'hints.colorBlue' | 'hints.colorGreen' | 'hints.colorMetal' | 'hints.colorOther'
   | 'hints.threadHair' | 'hints.threadSynthetic' | 'hints.threadCotton' | 'hints.threadGlove' | 'hints.threadVinyl'
   | 'hints.hardnessHard' | 'hints.hardnessSoft' | 'hints.hardnessElastic'
+  // 正解の登録（確定異物）
+  | 'detail.confirmedCard' | 'detail.confirmedBadge'
+  | 'detail.confirmedName' | 'detail.confirmedCategory' | 'detail.confirmedMethod'
+  | 'detail.confirmedBy' | 'detail.confirmedNote' | 'detail.aiMatchLabel'
+  | 'detail.saveConfirmed' | 'detail.confirmedRegistered'
+  | 'toast.confirmedSaved' | 'toast.confirmedFailed' | 'toast.confirmedNeedBy'
+  | 'confirm.aiMatch.match' | 'confirm.aiMatch.partial' | 'confirm.aiMatch.mismatch'
+  | 'report.aiAccuracy' | 'report.aiMatchCount' | 'report.aiPartialCount' | 'report.aiMismatchCount'
+  | 'report.noConfirmedCases' | 'confirm.usedCases'
 
 type Dict = Partial<Record<TranslationKey, string>>
 
@@ -1332,6 +1341,29 @@ const ja: Dict = {
   'qr.scanner.cameraFail': 'カメラへのアクセスに失敗しました。ブラウザの設定を確認してください。',
   'qr.scanner.loading': 'カメラを起動中...',
   'qr.scanner.supported': '※ GS1-128 / QRコード / JANコード対応',
+  // 正解の登録
+  'detail.confirmedCard': '✅ 正解を登録',
+  'detail.confirmedBadge': '確定',
+  'detail.confirmedName': '確定した異物名',
+  'detail.confirmedCategory': '確定カテゴリ',
+  'detail.confirmedMethod': '確定の方法',
+  'detail.confirmedBy': '確定者名（必須）',
+  'detail.confirmedNote': 'メモ',
+  'detail.aiMatchLabel': 'AI第1候補との一致',
+  'detail.saveConfirmed': '✅ 正解を登録する',
+  'detail.confirmedRegistered': '確定: ',
+  'toast.confirmedSaved': '正解を登録しました ✅',
+  'toast.confirmedFailed': '正解の登録に失敗しました',
+  'toast.confirmedNeedBy': '確定者名を入力してください',
+  'confirm.aiMatch.match': '一致',
+  'confirm.aiMatch.partial': '部分一致',
+  'confirm.aiMatch.mismatch': '不一致',
+  'report.aiAccuracy': 'AI判定の正解率',
+  'report.aiMatchCount': '一致',
+  'report.aiPartialCount': '部分一致',
+  'report.aiMismatchCount': '不一致',
+  'report.noConfirmedCases': '正解を登録すると表示されます',
+  'confirm.usedCases': '📚 過去の確定事例を参考にしました',
 }
 
 const en: Dict = {
@@ -2225,6 +2257,29 @@ const en: Dict = {
   'qr.scanner.cameraFail': 'Camera access failed. Please check your browser settings.',
   'qr.scanner.loading': 'Starting camera...',
   'qr.scanner.supported': '※ GS1-128 / QR Code / JAN Code supported',
+  // confirmed result registration
+  'detail.confirmedCard': '✅ Register Confirmed Result',
+  'detail.confirmedBadge': 'Confirmed',
+  'detail.confirmedName': 'Confirmed Foreign Matter Name',
+  'detail.confirmedCategory': 'Confirmed Category',
+  'detail.confirmedMethod': 'Confirmation Method',
+  'detail.confirmedBy': 'Confirmed By (required)',
+  'detail.confirmedNote': 'Note',
+  'detail.aiMatchLabel': 'AI Top Candidate Match',
+  'detail.saveConfirmed': '✅ Register',
+  'detail.confirmedRegistered': 'Confirmed: ',
+  'toast.confirmedSaved': 'Confirmed result registered ✅',
+  'toast.confirmedFailed': 'Failed to register confirmed result',
+  'toast.confirmedNeedBy': 'Please enter the confirmer name',
+  'confirm.aiMatch.match': 'Match',
+  'confirm.aiMatch.partial': 'Partial Match',
+  'confirm.aiMatch.mismatch': 'Mismatch',
+  'report.aiAccuracy': 'AI Accuracy',
+  'report.aiMatchCount': 'Match',
+  'report.aiPartialCount': 'Partial',
+  'report.aiMismatchCount': 'Mismatch',
+  'report.noConfirmedCases': 'Register confirmed results to see accuracy stats',
+  'confirm.usedCases': '📚 Used past confirmed cases',
 }
 
 const zh: Dict = {

@@ -27,7 +27,7 @@ function BarRow({ label, count, max, color }: { label: string; count: number; ma
 
 export default function MonthlyReportPage() {
   const { user, loading } = useAuth()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const router = useRouter()
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [inspections, setInspections] = useState<InspectionRecord[]>([])
@@ -100,6 +100,12 @@ export default function MonthlyReportPage() {
   }, [incidents, year, mode])
 
   const maxMonthly = Math.max(...monthlyTrend.map((m) => m.count), 1)
+
+  // AI正解率
+  const confirmedInc = useMemo(() => filteredInc.filter(i => i.confirmedName), [filteredInc])
+  const aiMatchCount = confirmedInc.filter(i => i.aiMatch === 'match').length
+  const aiPartialCount = confirmedInc.filter(i => i.aiMatch === 'partial').length
+  const aiMismatchCount = confirmedInc.filter(i => i.aiMatch === 'mismatch').length
 
   const inspPass = filteredInsp.filter((i) => i.result === 'pass').length
   const inspFail = filteredInsp.filter((i) => i.result === 'fail').length
@@ -275,6 +281,33 @@ export default function MonthlyReportPage() {
             <p className="text-xs text-gray-500 mt-2 text-right">
               {t('report.abnormalRate')}: {Math.round(((inspFail + inspAdj) / filteredInsp.length) * 100)}%
             </p>
+          )}
+        </div>
+
+        {/* AI判定の正解率 */}
+        <div className="card p-4">
+          <p className="section-title">🎯 {t('report.aiAccuracy')}</p>
+          {confirmedInc.length === 0 ? (
+            <p className="text-xs text-gray-400 text-center py-3">{t('report.noConfirmedCases')}</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                {[
+                  { value: aiMatchCount, label: t('report.aiMatchCount'), color: 'text-green-600', bg: 'bg-green-50' },
+                  { value: aiPartialCount, label: t('report.aiPartialCount'), color: 'text-yellow-600', bg: 'bg-yellow-50' },
+                  { value: aiMismatchCount, label: t('report.aiMismatchCount'), color: 'text-red-500', bg: 'bg-red-50' },
+                ].map(({ value, label, color, bg }) => (
+                  <div key={label} className={`${bg} rounded-2xl p-3 text-center`}>
+                    <p className={`text-2xl font-extrabold ${color}`}>{value}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{label}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 text-right">
+                {t('report.total')}: {confirmedInc.length}{lang === 'en' ? ' cases' : '件'}
+                {confirmedInc.length > 0 && ` / ${t('report.aiMatchCount')} ${Math.round((aiMatchCount / confirmedInc.length) * 100)}%`}
+              </p>
+            </>
           )}
         </div>
 

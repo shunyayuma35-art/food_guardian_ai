@@ -233,6 +233,14 @@ export interface Incident {
   recallAssessment?: RecallAssessment
   // 異物特徴ヒント（簡易チップ入力）
   hints?: ForeignMatterHints
+  // 正解の登録
+  confirmedName?: string
+  confirmedCategory?: string
+  confirmedMethod?: string
+  confirmedBy?: string
+  confirmedNote?: string
+  confirmedAt?: string
+  aiMatch?: 'match' | 'partial' | 'mismatch'
 }
 
 export type PdcaStatus = 'planned' | 'doing' | 'checking' | 'done'

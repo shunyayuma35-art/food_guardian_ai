@@ -128,6 +128,26 @@ function getStatusLabel(incident: Incident): string {
   return INCIDENT_STATUS_LABELS[incident.status]
 }
 
+function buildConfirmedSection(incident: Incident): string {
+  if (!incident.confirmedName) return ''
+  const AI_MATCH_LABELS: Record<string, string> = { match: '一致', partial: '部分一致', mismatch: '不一致' }
+  const lines = [
+    `────────────────────────────────`,
+    `3.5. 確定した異物（正解登録）`,
+    `────────────────────────────────`,
+    ``,
+    `確定した異物名　: ${incident.confirmedName}`,
+    incident.confirmedCategory ? `確定カテゴリ　　: ${incident.confirmedCategory}` : null,
+    incident.confirmedMethod ? `確定の方法　　　: ${incident.confirmedMethod}` : null,
+    incident.aiMatch ? `AI第1候補との一致: ${AI_MATCH_LABELS[incident.aiMatch] ?? incident.aiMatch}` : null,
+    incident.confirmedBy ? `確定者　　　　　: ${incident.confirmedBy}` : null,
+    incident.confirmedAt ? `確定日時　　　　: ${new Date(incident.confirmedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}` : null,
+    incident.confirmedNote ? `メモ　　　　　　: ${incident.confirmedNote}` : null,
+    ``,
+  ].filter(l => l !== null)
+  return lines.join('\n')
+}
+
 const RECALL_Q_LABELS: Record<string, string> = {
   q1_hazardous: '危険物に当たるか',
   q2_sharpHard: '硬い・鋭利な形状か',
@@ -270,7 +290,7 @@ ${topEsts.length > 0
     ).join('\n\n')
   : '  推定結果なし（特徴チェック未入力のため推定不可）'}
 
-────────────────────────────────
+${buildConfirmedSection(incident)}────────────────────────────────
 4. 発生原因の分析（現時点）
 ────────────────────────────────
 

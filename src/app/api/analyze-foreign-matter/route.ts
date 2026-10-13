@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callAI, type MediaType } from '@/lib/ai-provider';
 import { FOREIGN_MATTER_DB } from '@/lib/foreign-matter-db';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -59,6 +60,27 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { imageBase64, mediaType, userHint, structured, lang, productName, situationComment, hintsSummary } = body;
+
+    // 確定事例を取得（非同期・失敗しても続行）
+    type ConfirmedCase = { product_name: string; confirmed_name: string; confirmed_category: string; ai_match: string }
+    let confirmedCases: ConfirmedCase[] = []
+    try {
+      const db = getSupabaseAdmin()
+      const { data } = await db
+        .from('incident_confirmations')
+        .select('product_name, confirmed_name, confirmed_category, ai_match')
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (data && productName) {
+        const name = String(productName).toLowerCase()
+        confirmedCases = (data as ConfirmedCase[]).filter(r =>
+          String(r.product_name ?? '').toLowerCase().includes(name) ||
+          name.includes(String(r.product_name ?? '').toLowerCase())
+        ).slice(0, 5)
+      } else if (data) {
+        confirmedCases = (data as ConfirmedCase[]).slice(0, 5)
+      }
+    } catch { /* ignore */ }
 
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return NextResponse.json({ error: '画像データが無効です。' }, { status: 400 });
@@ -185,6 +207,18 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
     if (situationComment) productHintParts.push(isEn ? `Situation: ${situationComment}` : `状況：${situationComment}`)
     if (hintsSummary) productHintParts.push(isEn ? `Observed features: ${hintsSummary}` : `現場の観察結果：${hintsSummary}`)
     if (userHint) productHintParts.push(isEn ? `User info: ${userHint}` : `ユーザー提供情報：${userHint}`)
+    if (confirmedCases.length > 0) {
+      const caseLines = confirmedCases.map(c =>
+        isEn
+          ? `  - Product: ${c.product_name || '(unspecified)'}, Confirmed: ${c.confirmed_name}, Category: ${c.confirmed_category}`
+          : `  ・製品: ${c.product_name || '(不明)'}, 確定異物: ${c.confirmed_name}, カテゴリ: ${c.confirmed_category}`
+      ).join('\n')
+      productHintParts.push(
+        isEn
+          ? `Past confirmed cases (reference — use as clue if features match):\n${caseLines}`
+          : `過去の確定事例（参考 — 特徴が一致する場合は手がかりとして使用）：\n${caseLines}`
+      )
+    }
     const contextHint = productHintParts.join('\n')
 
     const userText = structured
@@ -252,6 +286,7 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
       ...(quickResult ? { quickResult } : {}),
       ...(bbox ? { bbox } : {}),
       ...(sizeEstimate ? { sizeEstimate } : {}),
+      ...(confirmedCases.length > 0 ? { confirmedCasesUsed: confirmedCases.length } : {}),
     })
     if (!HACKATHON_MODE) {
       finalRes.cookies.set(USAGE_COOKIE, `${usage.month}:${usage.count + 1}`, {

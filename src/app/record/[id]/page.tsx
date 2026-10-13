@@ -70,6 +70,15 @@ export default function IncidentDetailPage() {
   })
   const [savingRecall, setSavingRecall] = useState(false)
 
+  // 正解の登録
+  const [confirmedName, setConfirmedName] = useState('')
+  const [confirmedCategory, setConfirmedCategory] = useState('')
+  const [confirmedMethod, setConfirmedMethod] = useState('')
+  const [confirmedBy2, setConfirmedBy2] = useState('')
+  const [confirmedNote, setConfirmedNote] = useState('')
+  const [aiMatch, setAiMatch] = useState<'match' | 'partial' | 'mismatch' | ''>('')
+  const [savingConfirmed, setSavingConfirmed] = useState(false)
+
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
   }, [user, loading, router])
@@ -110,6 +119,13 @@ export default function IncidentDetailPage() {
           )
           setEditVerification(data.editedVerification ?? '')
           setActionsUpdatedAt(data.actionsUpdatedAt ?? data.causeVerifiedAt ?? '')
+          // 正解の登録フィールドを復元
+          setConfirmedName(data.confirmedName ?? data.estimations?.[0]?.category ?? '')
+          setConfirmedCategory(data.confirmedCategory ?? '')
+          setConfirmedMethod(data.confirmedMethod ?? '')
+          setConfirmedBy2(data.confirmedBy ?? '')
+          setConfirmedNote(data.confirmedNote ?? '')
+          setAiMatch(data.aiMatch ?? '')
           // 回収要否の回答を復元
           if (data.recallAssessment) setRecallAssessment(data.recallAssessment)
           // Q1の初期値をAI判定から自動設定
@@ -281,7 +297,12 @@ export default function IncidentDetailPage() {
       setPreventiveText(data.preventive ?? '')
       setVerifyText(data.verify ?? '')
       setShowCausePanel(true)
-      toast.success(t('toast.aiCauseGenerated'))
+      const usedCount = typeof data.confirmedCasesUsed === 'number' ? data.confirmedCasesUsed : 0
+      toast.success(
+        usedCount > 0
+          ? `${t('toast.aiCauseGenerated')} ${t('confirm.usedCases')}(${usedCount}件)`
+          : t('toast.aiCauseGenerated')
+      )
     } catch (err) {
       toast.error(t('toast.aiCauseFailed'))
       console.error(err)
@@ -364,6 +385,55 @@ export default function IncidentDetailPage() {
       toast.error(t('toast.saveFailed') || '保存に失敗しました')
     } finally {
       setSavingRecall(false)
+    }
+  }
+
+  async function handleSaveConfirmed() {
+    if (!incident) return
+    if (!confirmedBy2.trim()) {
+      toast.error(t('toast.confirmedNeedBy'))
+      return
+    }
+    if (!confirmedName.trim()) {
+      toast.error(isEn ? 'Please enter the confirmed foreign matter name' : '確定した異物名を入力してください')
+      return
+    }
+    setSavingConfirmed(true)
+    try {
+      const now = new Date().toISOString()
+      const updates = {
+        confirmedName: confirmedName.trim(),
+        confirmedCategory,
+        confirmedMethod,
+        confirmedBy: confirmedBy2.trim(),
+        confirmedNote,
+        aiMatch: (aiMatch || undefined) as 'match' | 'partial' | 'mismatch' | undefined,
+        confirmedAt: now,
+      }
+      await updateIncident(incident.id, updates)
+      // Supabase 確定事例テーブルにも保存
+      try {
+        await fetch('/api/incident-confirmations', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            product_name: incident.productName ?? '',
+            category: incident.estimations?.[0]?.category ?? '',
+            confirmed_name: confirmedName.trim(),
+            confirmed_category: confirmedCategory,
+            hints: incident.hints
+              ? Object.entries(incident.hints).filter(([, v]) => v === 'yes').map(([k]) => k).join(', ')
+              : '',
+            ai_match: aiMatch || '未評価',
+          }),
+        })
+      } catch { /* Supabase失敗は非致命的 */ }
+      setIncident(prev => prev ? { ...prev, ...updates } : prev)
+      toast.success(t('toast.confirmedSaved'))
+    } catch {
+      toast.error(t('toast.confirmedFailed'))
+    } finally {
+      setSavingConfirmed(false)
     }
   }
 
@@ -505,7 +575,14 @@ export default function IncidentDetailPage() {
               : []
           return (
           <div className="card p-4">
-            <p className="section-title">{t('detail.aiEstTitle')}</p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="section-title mb-0">{t('detail.aiEstTitle')}</p>
+              {incident.confirmedName && (
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-300 shrink-0">
+                  ✅ {t('detail.confirmedRegistered')}{incident.confirmedName}
+                </span>
+              )}
+            </div>
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 mb-4">
               <p className="text-yellow-700 text-xs font-medium">
                 {t('detail.aiEstDisclaimer')}
@@ -899,6 +976,115 @@ export default function IncidentDetailPage() {
           <button onClick={handleSavePdca} disabled={savingPdca}
             className="w-full py-3 bg-indigo-500 text-white font-bold text-sm rounded-2xl shadow-md shadow-indigo-200 disabled:opacity-50 hover:bg-indigo-600 transition-all">
             {savingPdca ? t('common.saving') : t('detail.savePdca')}
+          </button>
+        </div>
+
+        {/* ✅ 正解の登録 */}
+        <div className="card p-4 no-print" id="confirmed-card">
+          <div className="flex items-center justify-between mb-3">
+            <p className="section-title mb-0">{t('detail.confirmedCard')}</p>
+            {incident.confirmedAt && (
+              <span className="text-[10px] text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 font-semibold">
+                ✅ {incident.confirmedBy} {new Date(incident.confirmedAt).toLocaleDateString('ja-JP')}
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.confirmedName')} <span className="text-red-400">*</span></label>
+              <input
+                value={confirmedName}
+                onChange={e => setConfirmedName(e.target.value)}
+                className="input-field"
+                placeholder={isEn ? 'e.g. Cooking sheet fragment, bone chip...' : '例: クッキングシートの切れ端、鶏骨片...'}
+                style={{ fontSize: '16px' }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.confirmedCategory')}</label>
+                <select
+                  value={confirmedCategory}
+                  onChange={e => setConfirmedCategory(e.target.value)}
+                  className="input-field text-sm"
+                  style={{ fontSize: '16px' }}
+                >
+                  <option value="">{isEn ? '(select)' : '(選択)'}</option>
+                  {(isEn
+                    ? ['Metal', 'Resin/Plastic', 'Paper/Sheet', 'Plant', 'Bone/Shell', 'Hair/Fiber', 'Insect', 'Other']
+                    : ['金属', '樹脂・プラスチック', '紙・シート類', '植物', '骨・貝殻', '毛髪・繊維', '虫', 'その他']
+                  ).map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.confirmedMethod')}</label>
+                <select
+                  value={confirmedMethod}
+                  onChange={e => setConfirmedMethod(e.target.value)}
+                  className="input-field text-sm"
+                  style={{ fontSize: '16px' }}
+                >
+                  <option value="">{isEn ? '(select)' : '(選択)'}</option>
+                  {(isEn
+                    ? ['Visual', 'Physical match', 'FT-IR/analysis', 'External lab', 'Other']
+                    : ['目視', '現物照合', 'FT-IR等の分析', '外部機関', 'その他']
+                  ).map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.aiMatchLabel')}</label>
+              <div className="flex gap-2">
+                {(['match', 'partial', 'mismatch'] as const).map(v => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setAiMatch(prev => prev === v ? '' : v)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      aiMatch === v
+                        ? v === 'match' ? 'bg-green-500 text-white border-green-500'
+                          : v === 'partial' ? 'bg-yellow-400 text-white border-yellow-400'
+                          : 'bg-red-400 text-white border-red-400'
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                    }`}
+                  >
+                    {t(`confirm.aiMatch.${v}` as Parameters<typeof t>[0])}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.confirmedBy')} <span className="text-red-400">*</span></label>
+              <input
+                value={confirmedBy2}
+                onChange={e => setConfirmedBy2(e.target.value)}
+                className="input-field"
+                placeholder={isEn ? 'e.g. QA Dept. – Suzuki' : '例: 品質管理部 鈴木'}
+                style={{ fontSize: '16px' }}
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.confirmedNote')}</label>
+              <AutoResizeTextarea
+                value={confirmedNote}
+                onChange={e => setConfirmedNote(e.target.value)}
+                className="input-field text-sm"
+                placeholder={isEn ? 'Additional notes...' : '備考・補足情報...'}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleSaveConfirmed}
+            disabled={savingConfirmed || !confirmedBy2.trim() || !confirmedName.trim()}
+            className="w-full mt-3 py-3 bg-green-500 text-white font-bold text-sm rounded-2xl shadow-md shadow-green-200 disabled:opacity-50 hover:bg-green-600 transition-all active:scale-[0.98]"
+          >
+            {savingConfirmed ? t('common.saving') : t('detail.saveConfirmed')}
           </button>
         </div>
 

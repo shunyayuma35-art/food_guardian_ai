@@ -298,12 +298,19 @@ export default function ActionsPage() {
                     </div>
                   </div>
 
-                  {/* 異物種別 */}
-                  {category && (
-                    <span className="inline-block text-[11px] bg-orange-50 text-orange-600 border border-orange-200 rounded-full px-2 py-0.5 mb-2 font-semibold">
-                      {category}
-                    </span>
-                  )}
+                  {/* 異物種別 + 確定バッジ */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                    {category && (
+                      <span className="text-[11px] bg-orange-50 text-orange-600 border border-orange-200 rounded-full px-2 py-0.5 font-semibold">
+                        {category}
+                      </span>
+                    )}
+                    {inc.confirmedName && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                        ✅ {isEn ? 'Confirmed' : '確定'}: {inc.confirmedName}
+                      </span>
+                    )}
+                  </div>
 
                   {/* 是正・再発防止 */}
                   <div className="space-y-1">

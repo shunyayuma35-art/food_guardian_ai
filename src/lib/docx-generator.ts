@@ -62,6 +62,22 @@ function getStatusLabel(incident: Incident): string {
   return map[incident.status] ?? incident.status
 }
 
+function buildConfirmedDocx(incident: Incident): Paragraph[] {
+  if (!incident.confirmedName) return []
+  const AI_MATCH_LABELS: Record<string, string> = { match: '一致', partial: '部分一致', mismatch: '不一致' }
+  return [
+    divider(),
+    heading('3.5. 確定した異物（正解登録）'),
+    labelValue('確定した異物名：', incident.confirmedName),
+    ...(incident.confirmedCategory ? [labelValue('確定カテゴリ：', incident.confirmedCategory)] : []),
+    ...(incident.confirmedMethod ? [labelValue('確定の方法：', incident.confirmedMethod)] : []),
+    ...(incident.aiMatch ? [labelValue('AI第1候補との一致：', AI_MATCH_LABELS[incident.aiMatch] ?? incident.aiMatch)] : []),
+    ...(incident.confirmedBy ? [labelValue('確定者：', incident.confirmedBy)] : []),
+    ...(incident.confirmedAt ? [labelValue('確定日時：', new Date(incident.confirmedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }))] : []),
+    ...(incident.confirmedNote ? [labelValue('メモ：', incident.confirmedNote)] : []),
+  ]
+}
+
 function divider(): Paragraph {
   return new Paragraph({ thematicBreak: true })
 }
@@ -198,6 +214,8 @@ export async function generateIncidentDocx(incident: Incident): Promise<Blob> {
     body('【現場担当者コメント】'),
     body(incident.comment || '（記録なし）'),
     divider(),
+
+    ...buildConfirmedDocx(incident),
 
     heading('3. AI 一次推定結果（参考）'),
     body('※本推定は FoodEye AI システムによる一次判定です。'),
