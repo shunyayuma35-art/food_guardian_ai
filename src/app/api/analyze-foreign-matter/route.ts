@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callAI, type MediaType } from '@/lib/ai-provider';
 import { FOREIGN_MATTER_DB } from '@/lib/foreign-matter-db';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { findSimilarCases } from '@/lib/confirmed-cases';
 
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -65,21 +65,7 @@ export async function POST(req: NextRequest) {
     type ConfirmedCase = { product_name: string; confirmed_name: string; confirmed_category: string; ai_match: string }
     let confirmedCases: ConfirmedCase[] = []
     try {
-      const db = getSupabaseAdmin()
-      const { data } = await db
-        .from('incident_confirmations')
-        .select('product_name, confirmed_name, confirmed_category, ai_match')
-        .order('created_at', { ascending: false })
-        .limit(20)
-      if (data && productName) {
-        const name = String(productName).toLowerCase()
-        confirmedCases = (data as ConfirmedCase[]).filter(r =>
-          String(r.product_name ?? '').toLowerCase().includes(name) ||
-          name.includes(String(r.product_name ?? '').toLowerCase())
-        ).slice(0, 5)
-      } else if (data) {
-        confirmedCases = (data as ConfirmedCase[]).slice(0, 5)
-      }
+      confirmedCases = await findSimilarCases(String(productName ?? ''), '', 5)
     } catch { /* ignore */ }
 
     if (!imageBase64 || typeof imageBase64 !== 'string') {

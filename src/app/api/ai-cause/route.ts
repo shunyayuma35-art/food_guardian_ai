@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callAI } from '@/lib/ai-provider'
-import { getSupabaseAdmin } from '@/lib/supabase'
+import { findSimilarCases } from '@/lib/confirmed-cases'
 
 export const maxDuration = 60
 
@@ -182,26 +182,11 @@ export async function POST(req: NextRequest) {
     type ConfirmedCase = { product_name: string; confirmed_name: string; confirmed_category: string; ai_match: string }
     let confirmedCases: ConfirmedCase[] = []
     try {
-      const db = getSupabaseAdmin()
       const productName = String(incident.productName ?? '')
       const topCategory = (Array.isArray(incident.estimations) && incident.estimations[0])
         ? String(incident.estimations[0].category ?? '')
         : ''
-      const { data } = await db
-        .from('incident_confirmations')
-        .select('product_name, confirmed_name, confirmed_category, ai_match')
-        .order('created_at', { ascending: false })
-        .limit(30)
-      if (data) {
-        const rows = data as ConfirmedCase[]
-        const nameLower = productName.toLowerCase()
-        confirmedCases = rows.filter(r => {
-          const pn = String(r.product_name ?? '').toLowerCase()
-          return (nameLower && (pn.includes(nameLower) || nameLower.includes(pn))) ||
-            (topCategory && String(r.confirmed_category ?? '') === topCategory)
-        }).slice(0, 5)
-        if (confirmedCases.length === 0) confirmedCases = rows.slice(0, 3)
-      }
+      confirmedCases = await findSimilarCases(productName, topCategory, 5)
     } catch { /* ignore */ }
 
     // 確定事例をプロンプトに追記
