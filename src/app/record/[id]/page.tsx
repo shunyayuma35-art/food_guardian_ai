@@ -54,9 +54,10 @@ export default function IncidentDetailPage() {
   const [verifierName, setVerifierName] = useState('')
   const [savingCause, setSavingCause] = useState(false)
   const [causeVerifiedAt, setCauseVerifiedAt] = useState('')
-  // 是正処置・再発防止 直接編集
+  // CAPA 直接編集
   const [editCorrective, setEditCorrective] = useState('')
   const [editPreventive, setEditPreventive] = useState('')
+  const [editVerification, setEditVerification] = useState('')
   const [actionsEditor, setActionsEditor] = useState('')
   const [savingActions, setSavingActions] = useState(false)
   const [actionsUpdatedAt, setActionsUpdatedAt] = useState('')
@@ -107,6 +108,7 @@ export default function IncidentDetailPage() {
           setEditPreventive(
             data.editedPreventive ?? data.aiPreventiveRaw ?? data.preventiveMeasure ?? ''
           )
+          setEditVerification(data.editedVerification ?? '')
           setActionsUpdatedAt(data.actionsUpdatedAt ?? data.causeVerifiedAt ?? '')
           // 回収要否の回答を復元
           if (data.recallAssessment) setRecallAssessment(data.recallAssessment)
@@ -149,12 +151,15 @@ export default function IncidentDetailPage() {
       if (!res.ok) throw new Error(data.error ?? 'AI error')
       const corrDraft = Array.isArray(data.corrective) ? data.corrective.join('\n') : (data.corrective ?? '')
       const prevDraft = Array.isArray(data.preventive) ? data.preventive.join('\n') : (data.preventive ?? '')
+      const verifDraft = typeof data.verification === 'string' ? data.verification : ''
       if (mode === 'replace') {
         setEditCorrective(corrDraft)
         setEditPreventive(prevDraft)
+        if (verifDraft) setEditVerification(verifDraft)
       } else {
         setEditCorrective(prev => prev ? `${prev}\n\n${corrDraft}` : corrDraft)
         setEditPreventive(prev => prev ? `${prev}\n\n${prevDraft}` : prevDraft)
+        if (verifDraft) setEditVerification(prev => prev ? `${prev}\n\n${verifDraft}` : verifDraft)
       }
       toast.success(t('toast.aiDraftCreated') || (lang === 'en' ? 'AI draft created ✅' : 'AI下書きを作成しました ✅'))
     } catch (err: unknown) {
@@ -235,6 +240,7 @@ export default function IncidentDetailPage() {
       await updateIncident(incident.id, {
         editedCorrective: editCorrective,
         editedPreventive: editPreventive,
+        editedVerification: editVerification,
         actionsUpdatedBy: actionsEditor,
         actionsUpdatedAt: now,
       })
@@ -243,6 +249,7 @@ export default function IncidentDetailPage() {
         ...prev,
         editedCorrective: editCorrective,
         editedPreventive: editPreventive,
+        editedVerification: editVerification,
         actionsUpdatedBy: actionsEditor,
         actionsUpdatedAt: now,
       } : prev)
@@ -812,16 +819,27 @@ export default function IncidentDetailPage() {
                 value={editCorrective}
                 onChange={e => setEditCorrective(e.target.value)}
                 className="input-field text-sm"
-                placeholder="例: 当該ロットを隔離・出荷保留、現物を保管し品質管理部に報告..."
+                placeholder={isEn ? 'e.g. Quarantine lot, hold shipment, preserve physical evidence...' : '例: 当該ロットを隔離・出荷保留、現物を保管し品質管理部に報告...'}
               />
             </div>
             <div>
               <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.preventiveLabel')}</label>
+              <p className="text-[10px] text-gray-400 mb-1">{isEn ? 'Include: responsible person, target date per item' : '各項目に「担当者・期限」を記入'}</p>
               <AutoResizeTextarea
                 value={editPreventive}
                 onChange={e => setEditPreventive(e.target.value)}
                 className="input-field text-sm"
-                placeholder="例: 洗浄手順の見直し・教育実施・定期点検の強化..."
+                placeholder={isEn ? 'e.g. Revise SOP (Responsible: QA, Target: 2026-11)...' : '例: 洗浄手順の見直し（担当: 品質管理部 期限: 2026-11）...'}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1 block">{t('detail.verificationLabel')}</label>
+              <p className="text-[10px] text-gray-400 mb-1">{isEn ? 'What / When & Frequency / Who / Acceptance criteria' : '確認内容・時期と頻度・担当者・判定基準'}</p>
+              <AutoResizeTextarea
+                value={editVerification}
+                onChange={e => setEditVerification(e.target.value)}
+                className="input-field text-sm"
+                placeholder={isEn ? 'e.g. Confirm no recurrence for 3 months (monthly audit by QA, 0 incidents = pass)' : '例: 3か月間の再発なし確認（品質管理部が月次監査、0件＝合格）'}
               />
             </div>
             <div>

@@ -176,8 +176,8 @@ async function draftCapaReport(
   const isEn = lang === 'en'
 
   const system = isEn
-    ? 'You are a food safety specialist. Create a concise CAPA (Corrective and Preventive Action) report draft including CA and PA sections. Respond in English only.'
-    : '食品安全の専門家として、是正処置（CA）と予防処置（PA）を含む CAPA 報告書ドラフトを生成してください。日本語で簡潔に。'
+    ? 'You are a food safety specialist (ISO 22000 / HACCP). Create a CAPA report draft with 4 ISO-compliant sections: Correction (immediate product disposition), Root Cause (4M), Corrective Action (recurrence prevention plan with responsible/deadline), Verification of Effectiveness (what/when/who/criteria). Respond in English only.'
+    : 'あなたはISO 22000 / HACCPの専門家です。CAPA報告書を4区分で作成してください。①修正（今回の不適合品への処置）、②根本原因（4M）、③是正処置（再発防止の行動計画・担当・期限）、④有効性の検証計画（確認内容・時期・担当・判定基準）。日本語で簡潔に。'
 
   const userText = isEn
     ? `
@@ -188,10 +188,10 @@ Approved by: ${approvedBy}
 
 Please write a CAPA report draft with these sections:
 1. Incident Summary
-2. Root Cause Analysis
-3. Corrective Action (CA)
-4. Preventive Action (PA)
-5. Effectiveness Check Method
+2. Root Cause Analysis (4M: Man / Machine / Material / Method)
+3. ① Correction (immediate product disposition: quarantine, hold, segregation, disposal)
+4. ③ Corrective Action (root-cause-based recurrence prevention plan, include responsible person and target date per item)
+5. ④ Verification of Effectiveness (what to confirm / timing & frequency / responsible / acceptance criteria)
 `.trim()
     : `
 異物: ${foreignMatter}
@@ -201,10 +201,10 @@ Please write a CAPA report draft with these sections:
 
 CAPA 報告書ドラフトを以下の構成で作成してください:
 1. 事案概要
-2. 根本原因推定
-3. 是正処置（CA）
-4. 予防処置（PA）
-5. 効果確認方法
+2. 根本原因推定（4M: 人・機械・材料・方法）
+3. ① 修正（今回の不適合品への処置: 隔離・出荷保留・選別・廃棄など）
+4. ③ 是正処置（原因を除去する再発防止の行動計画、各項目に担当者と期限を記載）
+5. ④ 有効性の検証計画（確認内容・時期と頻度・担当者・判定基準）
 `.trim()
 
   return callAIText(system, userText)

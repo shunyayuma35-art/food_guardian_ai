@@ -52,6 +52,10 @@ function getPreventive(incident: Incident): string {
   return incident.editedPreventive || incident.aiPreventiveRaw || incident.preventiveMeasure || '（未入力）'
 }
 
+function getVerification(incident: Incident): string {
+  return incident.editedVerification || incident.editedVerify || incident.aiVerifyRaw || '（未入力）'
+}
+
 function getStatusLabel(incident: Incident): string {
   if (incident.pdcaStatus === 'done') return '対応完了'
   const map: Record<string, string> = { open: '未対応', investigating: '調査中', closed: '解決済み' }
@@ -215,12 +219,17 @@ export async function generateIncidentDocx(incident: Incident): Promise<Blob> {
     ...buildRecallDocx(incident),
     divider(),
 
-    heading('6. 是正処置・再発防止策'),
-    bold('【是正処置】'),
+    heading('6. CAPA（修正・是正処置・有効性の検証計画）'),
+    bold('【① 修正（今回の製品への処置）】'),
     ...multiLine(corrective),
     body(''),
-    bold('【再発防止策】'),
+    bold('【③ 是正処置（再発防止の行動計画）】'),
     ...multiLine(preventive),
+    body(''),
+    bold('【④ 有効性の検証計画】'),
+    ...multiLine(getVerification(incident)),
+    body(''),
+    body('検証結果：________________（記入日：________　記入者：________________）'),
     divider(),
 
     heading('7. 初期対応内容'),

@@ -23,8 +23,8 @@ function buildPrompt(body: DraftRequest): { system: string; userText: string } {
   const isEn = lang === 'en'
 
   if (isEn) {
-    const system = 'You are a food safety expert. Generate corrective actions and preventive measures based on the incident data. Align all content with the foreign matter type identified by AI. Respond ONLY in the specified JSON format, no other text.'
-    const userText = `Generate a draft for corrective actions and preventive measures based on the following foreign matter incident.
+    const system = 'You are a food safety expert (ISO 22000 / HACCP). Generate a CAPA draft with 4 strictly separated sections. "correction" = immediate product disposition (quarantine, hold, segregation). "corrective" = root-cause-based action plan to prevent recurrence. "verification" = effectiveness verification plan with: what to confirm, timing/frequency, responsible person, acceptance criteria. "hint" = short explanation. Do NOT mix correction and corrective action. Respond ONLY in JSON format, no other text.'
+    const userText = `Generate a CAPA draft for the following foreign matter incident.
 
 Product: ${productName || '-'}
 Discovery Process: ${discoveryProcess ?? '-'}
@@ -34,19 +34,20 @@ Suspected Routes: ${aiResult?.route?.join(', ') || '-'}
 AI Recommended Action: ${aiResult?.action || '-'}
 Checked Features: ${featuresSummary || '(none)'}
 
-IMPORTANT: All corrective/preventive items must be consistent with the AI-identified foreign matter type.
+IMPORTANT: All items must be consistent with the AI-identified foreign matter type. Corrective actions must address identified root causes.
 
 Respond in this EXACT JSON format (no other text):
 {
-  "corrective": ["item 1", "item 2", "item 3"],
-  "preventive": ["item 1", "item 2", "item 3"],
-  "hint": "2-3 line practical hint for the team explaining WHY these actions"
+  "corrective": ["Correction item 1 (product hold/quarantine/segregation/disposal)", "item 2", "item 3"],
+  "preventive": ["Corrective action item 1 (root-cause elimination)", "item 2", "item 3"],
+  "verification": "④ Verification of Effectiveness\\nWhat to confirm: ...\\nTiming/Frequency: ...\\nResponsible: ...\\nAcceptance criteria: ...",
+  "hint": "2-3 line practical explanation of WHY these actions"
 }`
     return { system, userText }
   }
 
-  const system = 'あなたは食品安全の専門家です。異物混入事故データをもとに是正処置と再発防止策を生成してください。AI画像解析が示す異物種別に整合した内容にすること。指定されたJSON形式のみで回答してください。他の文章は一切不要です。'
-  const userText = `以下の異物混入事故情報をもとに、是正処置と再発防止策の下書きを生成してください。
+  const system = 'あなたはISO 22000 / HACCPに精通した食品安全の専門家です。CAPA下書きを4つの区分で生成してください。①修正=今回の不適合品への処置（保留・隔離・選別・廃棄など）、③是正処置=原因を除去し再発を防ぐ行動計画（担当・期限を含む）、④有効性の検証計画=何を確認するか・いつ・誰が・判定基準。修正と是正処置を混在させないこと。指定されたJSON形式のみで回答してください。'
+  const userText = `以下の異物混入事故情報をもとに、ISO 22000に準じたCAPAの下書きを生成してください。
 
 製品名: ${productName || '-'}
 発見工程: ${discoveryProcess ?? '-'}
@@ -56,22 +57,24 @@ AI推定（最優先）: ${aiResult ? `${aiResult.name ?? '-'}（${aiResult.cate
 AI推奨対応: ${aiResult?.action || '-'}
 異物特徴チェック: ${featuresSummary || '（なし）'}
 
-【重要】是正処置・再発防止策は、AI画像解析が示す異物種別に整合すること。
+【重要】AI画像解析が示す異物種別に整合すること。是正処置は特定した原因に対応させること。
 
 以下の形式で【必ずJSONのみ】回答してください:
 {
-  "corrective": ["項目1", "項目2", "項目3"],
-  "preventive": ["項目1", "項目2", "項目3"],
-  "hint": "なぜこの対策か、新人向けに2〜3行で説明"
+  "corrective": ["①修正項目1（当該ロット隔離・出荷保留・現物保管など）", "項目2", "項目3"],
+  "preventive": ["③是正処置項目1（原因除去・再発防止）担当: ○○　期限: YYYY-MM", "項目2", "項目3"],
+  "verification": "④ 有効性の検証計画\\n確認内容: ...\\n時期・頻度: ...\\n担当者: ...\\n判定基準: ...",
+  "hint": "なぜこの対策か、現場向けに2〜3行で説明"
 }
 
-是正処置は即時対応（ライン停止・製品隔離・現物保管・全数点検など）を3〜5項目。
-再発防止策は中長期対策（手順書改訂・教育・設備改善・点検強化など）を3〜5項目。`
+①修正は即時対応（ライン停止・製品隔離・現物保管・全数点検）を3〜5項目。
+③是正処置は中長期の再発防止策（手順書改訂・教育・設備改善・点検強化）を3〜5項目、各項目に担当と期限の目安を入れること。
+④有効性の検証計画は「確認内容・時期と頻度・担当者・判定基準」を1段落で記載すること。`
 
   return { system, userText }
 }
 
-function parseJsonDraft(raw: string): { corrective: string[]; preventive: string[]; hint: string } | null {
+function parseJsonDraft(raw: string): { corrective: string[]; preventive: string[]; verification: string; hint: string } | null {
   try {
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
     const start = cleaned.indexOf('{')
@@ -80,12 +83,14 @@ function parseJsonDraft(raw: string): { corrective: string[]; preventive: string
     const parsed = JSON.parse(cleaned.slice(start, end + 1)) as {
       corrective?: string[]
       preventive?: string[]
+      verification?: string
       hint?: string
     }
     if (!Array.isArray(parsed.corrective) && !Array.isArray(parsed.preventive)) return null
     return {
       corrective: parsed.corrective ?? [],
       preventive: parsed.preventive ?? [],
+      verification: parsed.verification ?? '',
       hint: parsed.hint ?? '',
     }
   } catch {

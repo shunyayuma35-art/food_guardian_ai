@@ -119,6 +119,10 @@ function getPreventive(incident: Incident): string {
   return incident.editedPreventive || incident.aiPreventiveRaw || incident.preventiveMeasure || '（未入力）'
 }
 
+function getVerification(incident: Incident): string {
+  return incident.editedVerification || incident.editedVerify || incident.aiVerifyRaw || '（未入力）'
+}
+
 function getStatusLabel(incident: Incident): string {
   if (incident.pdcaStatus === 'done') return '対応完了'
   return INCIDENT_STATUS_LABELS[incident.status]
@@ -291,14 +295,19 @@ ${buildRecallSection(incident)}
 ・お客様または社内関係者への一次報告
 
 ────────────────────────────────
-7. 是正処置・再発防止策
+7. CAPA（修正・是正処置・有効性の検証計画）
 ────────────────────────────────
 
-【是正処置】
+【① 修正（今回の製品への処置）】
 ${getCorrective(incident)}
 
-【再発防止策】
+【③ 是正処置（再発防止の行動計画）】
 ${getPreventive(incident)}
+
+【④ 有効性の検証計画】
+${getVerification(incident)}
+
+検証結果：________________（記入日：________　記入者：________________）
 
 ────────────────────────────────
 8. 備考・注意事項
@@ -452,8 +461,9 @@ export function incidentToCSV(incident: Incident): string {
     ['発見工程', DISCOVERY_PROCESS_LABELS[incident.discoveryProcess]],
     ['ステータス', INCIDENT_STATUS_LABELS[incident.status]],
     ['AI推定第1位', top ? `${top.category}（${top.probability}%）` : '（なし）'],
-    ['是正処置', incident.correctiveAction],
-    ['再発防止策', incident.preventiveMeasure],
+    ['①修正（今回の処置）', getCorrective(incident)],
+    ['③是正処置（再発防止）', getPreventive(incident)],
+    ['④有効性の検証計画', getVerification(incident)],
     ['コメント', incident.comment],
     ['登録日時', fmtDatetime(incident.createdAt)],
   ]

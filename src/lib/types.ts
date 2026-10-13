@@ -223,6 +223,7 @@ export interface Incident {
   editedCorrective?: string
   editedPreventive?: string
   editedVerify?: string
+  editedVerification?: string
   causeVerifiedBy?: string
   causeVerifiedAt?: string
   // 是正処置・再発防止の直接編集

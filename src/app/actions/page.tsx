@@ -37,8 +37,8 @@ function summarize(text: string, maxLen = 40): string {
 
 function toCSV(rows: Incident[], isEn: boolean): string {
   const header = isEn
-    ? ['Discovery Date', 'Product Name', 'Category', 'Corrective (summary)', 'Preventive (summary)', 'PDCA', 'Updated By', 'Updated At']
-    : ['発見日', '商品名', '異物種別', '是正処置(要約)', '再発防止(要約)', 'PDCA状態', '最終更新者', '最終更新日']
+    ? ['Discovery Date', 'Product Name', 'Category', 'Correction (summary)', 'Corrective Action (summary)', 'PDCA', 'Updated By', 'Updated At']
+    : ['発見日', '商品名', '異物種別', '①修正(要約)', '③是正処置(要約)', 'PDCA状態', '最終更新者', '最終更新日']
   const lines = [header.join(',')]
   for (const inc of rows) {
     const pdca = inc.pdcaStatus ? PDCA_STATUS_LABELS[inc.pdcaStatus] : ''

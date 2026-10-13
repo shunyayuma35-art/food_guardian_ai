@@ -176,7 +176,7 @@ export type TranslationKey =
   // detail page (record/[id])
   | 'detail.corrective' | 'detail.preventive'
   | 'detail.actionsCard' | 'detail.aiDraftReplace' | 'detail.aiDraftAppend' | 'detail.aiCreating'
-  | 'detail.correctiveLabel' | 'detail.preventiveLabel'
+  | 'detail.correctiveLabel' | 'detail.preventiveLabel' | 'detail.verificationLabel'
   | 'detail.editorName' | 'detail.lastUpdated' | 'detail.saveActions'
   | 'detail.pdcaCard' | 'detail.pdcaDeadline' | 'detail.pdcaNotes' | 'detail.savePdca'
   | 'detail.causeCard' | 'detail.verified' | 'detail.analyzing'
@@ -712,15 +712,16 @@ const ja: Dict = {
   // detail page
   'detail.corrective': '是正処置',
   'detail.preventive': '再発防止策',
-  'detail.actionsCard': '🔧 是正処置・再発防止策',
+  'detail.actionsCard': '🔧 CAPA（修正・是正処置・検証計画）',
   'detail.aiDraftReplace': '🤖 AIで下書き（置き換え）',
   'detail.aiDraftAppend': '🤖 AI下書き（追記）',
   'detail.aiCreating': '作成中...',
-  'detail.correctiveLabel': '🔧 是正処置（今回の対処）',
-  'detail.preventiveLabel': '🛡️ 再発防止策',
+  'detail.correctiveLabel': '① 修正（今回の製品への処置）',
+  'detail.preventiveLabel': '③ 是正処置（再発防止の行動計画）',
+  'detail.verificationLabel': '④ 有効性の検証計画',
   'detail.editorName': '編集者名',
   'detail.lastUpdated': '最終更新:',
-  'detail.saveActions': '💾 是正・再発防止を保存',
+  'detail.saveActions': '💾 CAPA情報を保存',
   'detail.pdcaCard': '🔄 是正処置 PDCA 進捗',
   'detail.pdcaDeadline': '期限日',
   'detail.pdcaNotes': 'PDCA メモ（進捗・担当者・次のアクション）',
@@ -731,9 +732,9 @@ const ja: Dict = {
   'detail.generateCause': '🧠 AIで原因・是正を作成',
   'detail.causeDisclaimer': '⚠️ AIによる仮説です。現場確認のうえ編集してください。',
   'detail.causeLabel': '📋 推定原因（4M分析）',
-  'detail.correctiveLabel2': '🔧 是正処置（今回の対処）',
-  'detail.preventiveLabel2': '🛡️ 予防処置（再発防止）',
-  'detail.verifyLabel': '🔍 確認すべき事項',
+  'detail.correctiveLabel2': '① 修正（今回の対処）',
+  'detail.preventiveLabel2': '③ 是正処置（再発防止策）',
+  'detail.verifyLabel': '④ 有効性の検証計画',
   'detail.aiRevert': '↩ AI原文に戻す',
   'detail.verifierName': '確認者名',
   'detail.regenerate': '🔄 再生成',
@@ -756,8 +757,8 @@ const ja: Dict = {
   'actions.allCategories': 'すべての異物種別',
   'actions.noRecords': '該当する記録がありません',
   'actions.sameType': '⚠️ 同種 {n}件',
-  'actions.corrective': '是正: ',
-  'actions.preventive': '再発防止: ',
+  'actions.corrective': '修正: ',
+  'actions.preventive': '是正処置: ',
   'actions.noCorrectiveInput': '是正処置: 未入力',
   'actions.noPreventiveInput': '再発防止策: 未入力',
   // lightbox
@@ -1604,15 +1605,16 @@ const en: Dict = {
   // detail page
   'detail.corrective': 'Corrective Action',
   'detail.preventive': 'Preventive Measure',
-  'detail.actionsCard': '🔧 Corrective & Preventive Actions',
+  'detail.actionsCard': '🔧 CAPA (Correction / Corrective Action / Verification)',
   'detail.aiDraftReplace': '🤖 AI Draft (Replace)',
   'detail.aiDraftAppend': '🤖 AI Draft (Append)',
   'detail.aiCreating': 'Creating...',
-  'detail.correctiveLabel': '🔧 Corrective Action',
-  'detail.preventiveLabel': '🛡️ Preventive Measure',
+  'detail.correctiveLabel': '① Correction (product disposition)',
+  'detail.preventiveLabel': '③ Corrective Action (recurrence prevention plan)',
+  'detail.verificationLabel': '④ Verification of Effectiveness',
   'detail.editorName': 'Updated by',
   'detail.lastUpdated': 'Last updated:',
-  'detail.saveActions': '💾 Save Corrective Actions',
+  'detail.saveActions': '💾 Save CAPA',
   'detail.pdcaCard': '🔄 Corrective Action PDCA',
   'detail.pdcaDeadline': 'Due Date',
   'detail.pdcaNotes': 'PDCA Notes (progress / owner / next action)',
@@ -1623,9 +1625,9 @@ const en: Dict = {
   'detail.generateCause': '🧠 Generate AI Root Cause',
   'detail.causeDisclaimer': '⚠️ AI hypothesis — please verify on-site before applying.',
   'detail.causeLabel': '📋 Estimated Cause (4M Analysis)',
-  'detail.correctiveLabel2': '🔧 Corrective Action',
-  'detail.preventiveLabel2': '🛡️ Preventive Measure',
-  'detail.verifyLabel': '🔍 Items to Verify',
+  'detail.correctiveLabel2': '① Correction (immediate action)',
+  'detail.preventiveLabel2': '③ Corrective Action (preventive measure)',
+  'detail.verifyLabel': '④ Verification of Effectiveness',
   'detail.aiRevert': '↩ Revert to AI original',
   'detail.verifierName': 'Verified by',
   'detail.regenerate': '🔄 Regenerate',
@@ -1648,8 +1650,8 @@ const en: Dict = {
   'actions.allCategories': 'All categories',
   'actions.noRecords': 'No records found',
   'actions.sameType': '⚠️ Same type: {n}',
-  'actions.corrective': 'Corr: ',
-  'actions.preventive': 'Prev: ',
+  'actions.corrective': 'Correction: ',
+  'actions.preventive': 'Corrective: ',
   'actions.noCorrectiveInput': 'No corrective action',
   'actions.noPreventiveInput': 'No preventive measure',
   // lightbox
