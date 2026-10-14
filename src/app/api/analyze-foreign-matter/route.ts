@@ -3,6 +3,7 @@ import { callAI, type MediaType } from '@/lib/ai-provider';
 import { FOREIGN_MATTER_DB } from '@/lib/foreign-matter-db';
 import { findSimilarCases } from '@/lib/confirmed-cases';
 import { buildCategoryListForPrompt, HIGH_URGENCY_NAMES } from '@/lib/foreign-matter-categories';
+import { findMemory } from '@/lib/ai-memory';
 
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -62,11 +63,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { imageBase64, mediaType, userHint, structured, lang, productName, situationComment, hintsSummary } = body;
 
-    // 確定事例を取得（非同期・失敗しても続行）
+    // 確定事例・AI記憶を取得（非同期・失敗しても続行）
     type ConfirmedCase = { product_name: string; confirmed_name: string; confirmed_category: string; ai_match: string }
     let confirmedCases: ConfirmedCase[] = []
     try {
       confirmedCases = await findSimilarCases(String(productName ?? ''), '', 5)
+    } catch { /* ignore */ }
+    let memoryRows: Awaited<ReturnType<typeof findMemory>> = []
+    try {
+      memoryRows = await findMemory('foreign_matter', String(productName ?? ''), 5)
     } catch { /* ignore */ }
 
     if (!imageBase64 || typeof imageBase64 !== 'string') {
@@ -230,6 +235,18 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
           : `過去の確定事例（参考 — 特徴が一致する場合は手がかりとして使用）：\n${caseLines}`
       )
     }
+    if (memoryRows.length > 0) {
+      const memLines = memoryRows.map(m =>
+        isEn
+          ? `  - Situation: ${m.input_summary}, AI said: ${m.ai_output}, Human confirmed: ${m.human_final}`
+          : `  ・状況: ${m.input_summary}, AI判定: ${m.ai_output}, 人が確定: ${m.human_final}`
+      ).join('\n')
+      productHintParts.push(
+        isEn
+          ? `Learned cases from past human confirmations (high priority reference):\n${memLines}`
+          : `過去の人が確定した学習済み事例（優先度高い参考情報）：\n${memLines}`
+      )
+    }
     const contextHint = productHintParts.join('\n')
 
     const userText = structured
@@ -298,6 +315,7 @@ y=上端、x=左端、h=高さ、w=幅（すべて画像全体に対する0.0〜
       ...(bbox ? { bbox } : {}),
       ...(sizeEstimate ? { sizeEstimate } : {}),
       ...(confirmedCases.length > 0 ? { confirmedCasesUsed: confirmedCases.length } : {}),
+      ...(memoryRows.length > 0 ? { memoryCasesUsed: memoryRows.length } : {}),
     })
     if (!HACKATHON_MODE) {
       finalRes.cookies.set(USAGE_COOKIE, `${usage.month}:${usage.count + 1}`, {

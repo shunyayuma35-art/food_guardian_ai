@@ -100,6 +100,7 @@ function IncidentDetailPageInner() {
   const [savingActions, setSavingActions] = useState(false)
   const [actionsUpdatedAt, setActionsUpdatedAt] = useState('')
   const [draftLoading, setDraftLoading] = useState(false)
+  const [draftMemoryCount, setDraftMemoryCount] = useState(0)
   const [regenEnLoading, setRegenEnLoading] = useState(false)
   const [showRuleBased, setShowRuleBased] = useState(false)
   const [recallAssessment, setRecallAssessment] = useState<RecallAssessment>({
@@ -254,6 +255,9 @@ function IncidentDetailPageInner() {
         }
       }
       setVerifyAiDrafted(true)
+      if (typeof data.memoryCasesUsed === 'number' && data.memoryCasesUsed > 0) {
+        setDraftMemoryCount(data.memoryCasesUsed)
+      }
       toast.success(t('toast.aiDraftCreated') || (lang === 'en' ? 'AI draft created ✅' : 'AI下書きを作成しました ✅'))
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'AI draft failed'
@@ -347,6 +351,27 @@ function IncidentDetailPageInner() {
         actionsUpdatedBy: actionsEditor,
         actionsUpdatedAt: now,
       } : prev)
+      // AI関与がある場合は学習記憶に保存（非致命的）
+      if (verifyAiDrafted || aiCorrectiveRaw || aiPreventiveRaw) {
+        const topEst = incident.estimations?.[0]
+        const humanFinalParts = [
+          editCorrective && `①修正:${editCorrective.slice(0, 80)}`,
+          editPreventive && `③是正:${editPreventive.slice(0, 80)}`,
+          verifyWhat && `④確認:${verifyWhat.slice(0, 60)}`,
+          verifyCriteria && `基準:${verifyCriteria.slice(0, 60)}`,
+        ].filter(Boolean).join(' | ')
+        fetch('/api/ai-memory', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            kind: 'capa_draft',
+            category: topEst?.name ?? topEst?.category ?? incident.productName ?? '',
+            input_summary: incident.comment ? `状況:${incident.comment.slice(0, 100)}` : '',
+            ai_output: [aiCorrectiveRaw, aiPreventiveRaw].filter(Boolean).join(' | ').slice(0, 200),
+            human_final: humanFinalParts,
+          }),
+        }).catch(() => {/* 非致命的 */})
+      }
       toast.success(t('toast.saveOk'))
     } catch {
       toast.error(t('toast.saveFailed'))
@@ -544,6 +569,23 @@ function IncidentDetailPageInner() {
           }),
         })
       } catch { /* Supabase失敗は非致命的 */ }
+      // AI記憶にも保存（非致命的）
+      const topEst2 = incident.estimations?.[0]
+      fetch('/api/ai-memory', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'foreign_matter',
+          category: confirmedCategory || topEst2?.category || '',
+          input_summary: [
+            incident.productName && `製品:${incident.productName}`,
+            incident.comment ? `状況:${incident.comment.slice(0, 100)}` : null,
+            topEst2?.name ? `AI判定:${topEst2.name}` : null,
+          ].filter(Boolean).join(' '),
+          ai_output: topEst2?.name ?? topEst2?.category ?? '',
+          human_final: `${confirmedName.trim()}（${confirmedCategory}${confirmedSubcategory ? '/' + confirmedSubcategory : ''}）${confirmedMethod ? ' 確認方法:' + confirmedMethod : ''}`,
+        }),
+      }).catch(() => {/* 非致命的 */})
       setIncident(prev => prev ? { ...prev, ...updates } : prev)
       toast.success(t('toast.confirmedSaved'))
     } catch {
@@ -1004,6 +1046,11 @@ function IncidentDetailPageInner() {
               {draftLoading ? '...' : <>{t('detail.aiDraftAppend')}</>}
             </button>
           </div>
+          {draftMemoryCount > 0 && (
+            <div className="mb-2 flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
+              📚 {isEn ? `Referenced ${draftMemoryCount} past cases` : `${draftMemoryCount}件の学習済み事例を参考にしました`}
+            </div>
+          )}
 
           <div className="space-y-3">
             {/* ② 原因 */}

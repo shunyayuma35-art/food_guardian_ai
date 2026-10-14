@@ -107,6 +107,21 @@ export default function MasterPage() {
           <p className="text-xs text-purple-700 font-medium">{t('master.info')}</p>
         </div>
 
+        {/* AI記憶リンク */}
+        <button
+          onClick={() => router.push('/memory')}
+          className="w-full flex items-center justify-between px-4 py-3.5 bg-white border border-emerald-200 rounded-2xl shadow-sm hover:bg-emerald-50 transition-all active:scale-[0.98]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🧠</span>
+            <div className="text-left">
+              <p className="text-sm font-bold text-gray-800">AI記憶管理</p>
+              <p className="text-xs text-gray-500">使うほど賢くなる学習済み事例の確認・管理</p>
+            </div>
+          </div>
+          <span className="text-gray-400 text-lg">›</span>
+        </button>
+
         {/* Staff */}
         <div className="card p-4">
           <p className="section-title">

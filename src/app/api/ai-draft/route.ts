@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callAI } from '@/lib/ai-provider'
+import { findMemory } from '@/lib/ai-memory'
 
 export const maxDuration = 60
 
@@ -45,7 +46,7 @@ function fixPastDates(items: string[], discoveryDate?: string): string[] {
   )
 }
 
-function buildPrompt(body: DraftRequest): { system: string; userText: string } {
+function buildPrompt(body: DraftRequest, memoryCases: { input_summary: string; ai_output: string; human_final: string }[] = []): { system: string; userText: string } {
   const { productName, comment, discoveryProcess, discoveryDate, aiResult, featuresSummary, lang = 'ja' } = body
   const isEn = lang === 'en'
 
@@ -67,6 +68,7 @@ AI Estimation (PRIMARY): ${aiResult ? `${aiResult.name ?? '-'} (${aiResult.categ
 Suspected Routes: ${aiResult?.route?.join(', ') || '-'}
 AI Recommended Action: ${aiResult?.action || '-'}
 Checked Features: ${featuresSummary || '(none)'}
+${memoryCases.length > 0 ? `\nLearned cases from past human-confirmed CAPAs (use as reference for actions):\n${memoryCases.map(m => `  - Situation: ${m.input_summary} | Past CAPA: ${m.human_final}`).join('\n')}` : ''}
 
 IMPORTANT:
 - All items must be consistent with the AI-identified foreign matter type.
@@ -100,6 +102,7 @@ AI推定（最優先）: ${aiResult ? `${aiResult.name ?? '-'}（${aiResult.cate
 推定混入経路: ${aiResult?.route?.join('、') || '-'}
 AI推奨対応: ${aiResult?.action || '-'}
 異物特徴チェック: ${featuresSummary || '（なし）'}
+${memoryCases.length > 0 ? `\n過去の人が確定した学習済みCAPAアクション（参考として活用すること）：\n${memoryCases.map(m => `  ・状況: ${m.input_summary} | 過去のCAPAアクション: ${m.human_final}`).join('\n')}` : ''}
 
 【重要ルール】
 - AI画像解析が示す異物種別に整合すること。
@@ -198,9 +201,14 @@ function fillVerificationDefaults(v: VerificationObj, isEn: boolean): Verificati
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as DraftRequest
-    const { system, userText } = buildPrompt(body)
     const lang = body.lang ?? 'ja'
     const isEn = lang === 'en'
+    const foreignMatterName = body.aiResult?.name ?? body.aiResult?.category ?? ''
+    let memoryCases: Awaited<ReturnType<typeof findMemory>> = []
+    try {
+      memoryCases = await findMemory('capa_draft', foreignMatterName, 3)
+    } catch { /* ignore */ }
+    const { system, userText } = buildPrompt(body, memoryCases)
 
     let parsed: ParsedDraft | null = null
     let lastRaw = ''
@@ -233,7 +241,10 @@ export async function POST(req: NextRequest) {
     // 過去日付をサーバー側で修正
     parsed.preventive = fixPastDates(parsed.preventive, body.discoveryDate)
 
-    return NextResponse.json(parsed)
+    return NextResponse.json({
+      ...parsed,
+      ...(memoryCases.length > 0 ? { memoryCasesUsed: memoryCases.length } : {}),
+    })
   } catch (err) {
     console.error('[POST /api/ai-draft]', err)
     return NextResponse.json({ error: 'AIの応答を読み取れませんでした。もう一度お試しください。' }, { status: 500 })

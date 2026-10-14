@@ -103,6 +103,7 @@ function RecordPageInner() {
 
   const [aiQuickResult, setAiQuickResult] = useState<AiQuickResult | null>(null)
   const [aiEstimating, setAiEstimating] = useState(false)
+  const [aiMemoryCount, setAiMemoryCount] = useState(0)
 
   // 異物写真がアップロードされたら自動でAI即時判定
   useEffect(() => {
@@ -147,6 +148,9 @@ function RecordPageInner() {
         if (!res.ok) return
         if (data.quickResult) {
           if (!cancelled) setAiQuickResult(data.quickResult as AiQuickResult)
+        }
+        if (!cancelled && typeof data.memoryCasesUsed === 'number') {
+          setAiMemoryCount(data.memoryCasesUsed)
         }
       } catch {
         // ネットワークエラーは静かに無視
@@ -690,11 +694,16 @@ function RecordPageInner() {
                 <div className={`rounded-2xl border-2 ${u.border} ${u.bg} p-4 space-y-3 shadow-sm`}>
                   {/* ヘッダー */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-xs font-bold text-gray-500 tracking-wide">{t('record.ai.quickTitle')}</span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-700">
                         {isEn ? 'Preliminary' : '暫定判定'}
                       </span>
+                      {aiMemoryCount > 0 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-700">
+                          📚 {isEn ? `${aiMemoryCount} learned` : `${aiMemoryCount}件参考`}
+                        </span>
+                      )}
                     </div>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-white border ${u.border} ${u.text}`}>
                       {u.label}
