@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLang } from '@/context/LanguageContext'
+import { ENABLED_LANGUAGES } from '@/lib/i18n'
 import { createIncident } from '@/lib/firestore'
 import AutoResizeTextarea from '@/components/AutoResizeTextarea'
 import { uploadPhotos } from '@/lib/storage'
@@ -21,7 +22,6 @@ import {
   type EstimationResult,
   type ForeignMatterHints,
 } from '@/lib/types'
-import Navigation from '@/components/Navigation'
 import QRScanner from '@/components/QRScanner'
 import PhotoUpload from '@/components/PhotoUpload'
 import FeatureChecklistComponent from '@/components/FeatureChecklist'
@@ -39,11 +39,13 @@ function getStoredLang(): string {
 }
 
 export default function RecordPage() {
-  const { user, loading } = useAuth()
-  const { t, lang } = useLang()
+  const { user, loading, lock } = useAuth()
+  const { t, lang, setLang } = useLang()
+  const currentLang = ENABLED_LANGUAGES.find(l => l.code === lang) ?? ENABLED_LANGUAGES[0]
   const router = useRouter()
 
-  const STEPS = [t('record.step.product'), t('record.step.photo'), t('record.step.features'), t('record.step.detail')]
+  const isEn = lang === 'en'
+  const STEPS = isEn ? ['Product', 'Photo', 'Features', 'Details'] : ['商品', '写真', '特徴', '詳細']
 
   const [step, setStep] = useState(0)
   const [showQR, setShowQR] = useState(false)
@@ -402,38 +404,57 @@ export default function RecordPage() {
     <div className="min-h-screen">
       {showQR && <QRScanner onScan={handleQRScan} onClose={() => setShowQR(false)} />}
 
-      <header className="bg-white/85 backdrop-blur-xl border-b border-orange-100 shadow-sm px-5 py-4 sticky top-0 z-40 no-print">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
+      <header className="bg-white/85 backdrop-blur-xl border-b border-orange-100 shadow-sm px-4 py-2 sticky top-0 z-40 no-print">
+        <div className="max-w-2xl mx-auto flex items-center gap-2">
           <button
             onClick={() => (step > 0 ? setStep(step - 1) : router.push('/'))}
-            className="back-btn"
+            className="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-orange-50 border border-orange-200 text-orange-600 font-bold text-lg hover:bg-orange-100 transition-all active:scale-95"
             aria-label={t('common.back')}
           >
             ←
           </button>
-          <h1 className="font-extrabold text-gray-800 text-base">{t('record.title')}</h1>
-          <span className="text-sm font-bold text-orange-500 bg-orange-50 px-3 py-1 rounded-full">
-            {step + 1} / {STEPS.length}
+          <h1 className="font-extrabold text-gray-800 text-sm flex-1 truncate">{t('record.title')}</h1>
+          {/* LOCK/LANG in header */}
+          <button
+            type="button"
+            onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}
+            className="w-8 h-8 shrink-0 flex items-center justify-center rounded-xl bg-gray-50 border border-gray-200 text-sm hover:bg-orange-50 transition-all active:scale-95"
+            aria-label="言語切替"
+            title="言語切替"
+          >
+            {currentLang.flag}
+          </button>
+          <button
+            type="button"
+            onClick={lock}
+            className="w-8 h-8 shrink-0 flex items-center justify-center rounded-xl bg-gray-50 border border-gray-200 text-sm hover:bg-red-50 hover:border-red-200 transition-all active:scale-95"
+            aria-label={t('lock.button')}
+            title={t('lock.button')}
+          >
+            🔒
+          </button>
+          <span className="shrink-0 text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-full">
+            {step + 1}/{STEPS.length}
           </span>
         </div>
 
-        <div className="max-w-2xl mx-auto mt-3">
-          <div className="flex gap-1.5">
+        <div className="max-w-2xl mx-auto mt-2">
+          <div className="flex gap-1">
             {STEPS.map((label, i) => (
               <div key={i} className="flex-1">
                 <div
-                  className={`h-2 rounded-full transition-all ${
+                  className={`h-1.5 rounded-full transition-all ${
                     i < step
                       ? 'bg-orange-400'
                       : i === step
-                      ? 'bg-gradient-to-r from-orange-400 to-rose-400 shadow-sm shadow-orange-200'
+                      ? 'bg-gradient-to-r from-orange-400 to-rose-400'
                       : 'bg-orange-100'
                   }`}
                 />
-                <p className={`text-[10px] mt-1 text-center font-semibold ${
+                <p className={`text-[9px] mt-0.5 text-center font-semibold truncate ${
                   i === step ? 'text-orange-500' : i < step ? 'text-orange-400' : 'text-gray-400'
                 }`}>
-                  {STEP_ICONS[i]} {label}
+                  {label}
                 </p>
               </div>
             ))}
@@ -505,7 +526,7 @@ export default function RecordPage() {
                 </div>
                 <div>
                   <label className="label">{t('record.claimDate')} <span className="text-red-400">*</span></label>
-                  <DateInput value={claimDate} onChange={setClaimDate} />
+                  <DateInput value={claimDate} onChange={setClaimDate} quickPast />
                 </div>
                 <div>
                   <label className="label">{t('record.claimContent')}</label>
@@ -541,7 +562,7 @@ export default function RecordPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">{t('record.mfgDate')}</label>
-                <DateInput value={manufacturingDate} onChange={setManufacturingDate} />
+                <DateInput value={manufacturingDate} onChange={setManufacturingDate} quickPast />
               </div>
               <div>
                 <label className="label">{t('record.expiryDate')}</label>
@@ -549,6 +570,8 @@ export default function RecordPage() {
                   value={expiryDate}
                   onChange={setExpiryDate}
                   warnIfBeforeDate={manufacturingDate || undefined}
+                  quickFutureOffsets={[1, 3, 7, 30]}
+                  baseDate={manufacturingDate || undefined}
                 />
               </div>
             </div>
@@ -757,13 +780,52 @@ export default function RecordPage() {
             </div>
             <div>
               <label className="label">{t('record.discoveryDate')}</label>
-              <DateInput value={discoveryDate} onChange={setDiscoveryDate} type="datetime-local" />
+              <DateInput value={discoveryDate} onChange={setDiscoveryDate} type="datetime-local" quickPast />
             </div>
             <div>
               <label className="label">{t('record.comment')}</label>
               <AutoResizeTextarea value={comment} onChange={(e) => setComment(e.target.value)}
                 className="input-field"
                 placeholder="異物の発見状況、大きさ、特記事項など" />
+              {/* コメント補助チップ */}
+              {[
+                {
+                  label: isEn ? '📍 Scene' : '📍 発見場面',
+                  chips: isEn
+                    ? ['On opening', 'While cooking', 'While eating', 'After eating']
+                    : ['開封時', '調理中', '食べている途中', '食べ終わった後'],
+                },
+                {
+                  label: isEn ? '🔢 Count' : '🔢 個数',
+                  chips: isEn ? ['1 piece', 'Multiple'] : ['1個', '複数'],
+                },
+                {
+                  label: isEn ? '📌 Location' : '📌 場所',
+                  chips: isEn ? ['Surface', 'Inside', 'Bottom', 'Inside packaging'] : ['表面', '中', '底', '包装内側'],
+                },
+                {
+                  label: isEn ? '🤔 Guess' : '🤔 推測',
+                  chips: isEn
+                    ? ['Tape', 'Plastic film', 'Hair', 'Insect', 'Bone', 'Char', 'Metal', 'Unknown']
+                    : ['テープ片', 'ビニール片', '毛', '虫', '骨', '焦げ', '金属', 'わからない'],
+                },
+              ].map(({ label, chips }) => (
+                <div key={label} className="mt-2">
+                  <p className="text-[10px] font-bold text-gray-400 mb-1">{label}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {chips.map(chip => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => setComment(prev => prev ? `${prev} ${chip}` : chip)}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 active:scale-95 transition-all"
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
             {/* AI draft */}
             <div>
@@ -816,13 +878,14 @@ export default function RecordPage() {
             </div>
           </div>
         )}
-        <div style={{ height: 'calc(168px + env(safe-area-inset-bottom, 0px))' }} aria-hidden="true" />
+        <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} aria-hidden="true" />
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-orange-100 p-4 no-print shadow-[0_-4px_20px_rgba(251,146,60,0.08)]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-orange-100 no-print shadow-[0_-4px_20px_rgba(251,146,60,0.08)]"
+        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))', paddingTop: '12px', paddingLeft: '16px', paddingRight: '16px' }}>
         <div className="max-w-2xl mx-auto flex gap-3">
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)} className="back-btn shrink-0" aria-label={t('common.back')}>
+            <button onClick={() => setStep(step - 1)} className="w-10 h-11 shrink-0 flex items-center justify-center rounded-xl bg-orange-50 border border-orange-200 text-orange-600 font-bold text-lg hover:bg-orange-100 transition-all active:scale-95" aria-label={t('common.back')}>
               ←
             </button>
           )}
@@ -848,7 +911,6 @@ export default function RecordPage() {
         </div>
       </div>
 
-      <Navigation />
     </div>
   )
 }

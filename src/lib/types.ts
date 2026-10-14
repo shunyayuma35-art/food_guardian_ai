@@ -147,6 +147,15 @@ export interface WeightHintFeatures {
   heavy: boolean      // 重い・ずっしり（金属・ガラス）
 }
 
+export interface StateFeatures {
+  heated: boolean      // 加熱された様子あり
+  raw: boolean         // 生・未加熱
+  embedded: boolean    // 食品に埋没
+  attached: boolean    // 表面に付着
+  wet: boolean         // 濡れている
+  dry: boolean         // 乾燥
+}
+
 export interface FeatureChecklist {
   texture: TextureFeatures
   appearance: AppearanceFeatures
@@ -156,6 +165,10 @@ export interface FeatureChecklist {
   size: SizeFeatures
   magnetTest: MagnetTestFeatures
   weight: WeightHintFeatures
+  state?: StateFeatures
+  // 「該当なし」「不明」フラグ（グループ名 → 'none' | 'unknown'）
+  groupNone?: Record<string, boolean>
+  groupUnknown?: Record<string, boolean>
 }
 
 export interface EstimationResult {
@@ -289,6 +302,9 @@ export function createEmptyFeatures(): FeatureChecklist {
     },
     magnetTest: { sticks: false, noStick: false, partialStick: false, notTested: true },
     weight: { veryLight: false, heavy: false },
+    state: { heated: false, raw: false, embedded: false, attached: false, wet: false, dry: false },
+    groupNone: {},
+    groupUnknown: {},
   }
 }
 

@@ -180,6 +180,21 @@ function hasVerification(d: ParsedDraft): boolean {
   return !!(d.verification.what || d.verification.when || d.verification.who || d.verification.criteria)
 }
 
+function fillVerificationDefaults(v: VerificationObj, isEn: boolean): VerificationObj {
+  if (isEn) return {
+    what: v.what || 'No recurrence of the same type of foreign matter',
+    when: v.when || 'Weekly for 1 month after implementation, then monthly for 3 months',
+    who: v.who || 'QA Department',
+    criteria: v.criteria || '0 incidents of same type for 3 months, 0 missed inspection records',
+  }
+  return {
+    what: v.what || '同種異物の再発がないこと・該当工程の点検記録に問題がないこと',
+    when: v.when || '是正処置実施から1か月間は毎週、その後3か月間は毎月',
+    who: v.who || '品質管理責任者',
+    criteria: v.criteria || '同種異物の発生0件・点検記録の記入漏れ0件',
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as DraftRequest
@@ -213,6 +228,9 @@ export async function POST(req: NextRequest) {
       console.error('[ai-draft] parse failed, raw:', lastRaw.slice(0, 200))
       return NextResponse.json({ error: msg }, { status: 500 })
     }
+
+    // 空フィールドにデフォルト値を補完（絶対に空欄にしない）
+    parsed.verification = fillVerificationDefaults(parsed.verification, isEn)
 
     // 過去日付をサーバー側で修正
     parsed.preventive = fixPastDates(parsed.preventive, body.discoveryDate)

@@ -8,9 +8,15 @@ interface DateInputProps {
   onChange: (v: string) => void
   className?: string
   type?: 'date' | 'datetime-local'
-  showDaysOffset?: number[]
+  quickPast?: boolean
+  quickFutureOffsets?: number[]
   baseDate?: string
   warnIfBeforeDate?: string
+}
+
+function jstDate(d: Date): string {
+  const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000)
+  return jst.toISOString().slice(0, 10)
 }
 
 function toDatetimeLocal(iso: string): string {
@@ -36,9 +42,13 @@ export default function DateInput({
   onChange,
   className = 'input-field',
   type = 'date',
+  quickPast,
+  quickFutureOffsets,
+  baseDate,
   warnIfBeforeDate,
 }: DateInputProps) {
-  const { t } = useLang()
+  const { lang } = useLang()
+  const isEn = lang === 'en'
   const [focused, setFocused] = useState(false)
 
   const inputValue = type === 'datetime-local' ? toDatetimeLocal(value) : (value ?? '')
@@ -53,11 +63,39 @@ export default function DateInput({
   const showWarn = !!warnIfBeforeDate && !!dateValue && dateValue < warnIfBeforeDate
 
   const overlayText = type === 'datetime-local'
-    ? t('date.overlayDatetime')
-    : t('date.overlayDate')
+    ? (isEn ? 'Select date & time' : '日付・時刻を選択')
+    : (isEn ? 'Select date' : '日付を選択')
+
+  function setDaysAgo(n: number) {
+    const d = new Date()
+    d.setDate(d.getDate() - n)
+    const dateStr = jstDate(d)
+    if (type === 'datetime-local') {
+      const now = new Date()
+      onChange(`${dateStr}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`)
+    } else {
+      onChange(dateStr)
+    }
+  }
+
+  function setDaysFromBase(n: number) {
+    const base = baseDate ? new Date(baseDate + 'T00:00:00') : new Date()
+    if (isNaN(base.getTime())) {
+      const d = new Date()
+      d.setDate(d.getDate() + n)
+      onChange(jstDate(d))
+      return
+    }
+    base.setDate(base.getDate() + n)
+    onChange(jstDate(base))
+  }
+
+  const pastLabels = isEn
+    ? ['Today', '-1', '-2']
+    : ['今日', '昨日', '一昨日']
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="relative">
         <input
           type={type}
@@ -78,9 +116,42 @@ export default function DateInput({
           </span>
         )}
       </div>
+
+      {/* 過去日付チップ */}
+      {quickPast && (
+        <div className="flex gap-1.5">
+          {[0, 1, 2].map(i => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setDaysAgo(i)}
+              className="flex-1 py-1.5 text-[11px] font-semibold rounded-lg border border-orange-200 text-orange-600 bg-orange-50 hover:bg-orange-100 active:scale-95 transition-all"
+            >
+              {pastLabels[i]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* 未来日付オフセットチップ */}
+      {quickFutureOffsets && quickFutureOffsets.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap">
+          {quickFutureOffsets.map(n => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setDaysFromBase(n)}
+              className="px-2.5 py-1.5 text-[11px] font-semibold rounded-lg border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 active:scale-95 transition-all"
+            >
+              +{n}{isEn ? 'd' : '日'}
+            </button>
+          ))}
+        </div>
+      )}
+
       {showWarn && (
         <p className="text-[10px] text-amber-600 font-semibold">
-          ⚠️ {t('date.warnBefore')}
+          ⚠️ {isEn ? 'Date is before manufacturing date' : '製造日より前の日付です'}
         </p>
       )}
     </div>

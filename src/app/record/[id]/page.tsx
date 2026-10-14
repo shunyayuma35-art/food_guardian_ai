@@ -1041,7 +1041,20 @@ export default function IncidentDetailPage() {
             </div>
             {/* ④ 有効性の検証計画（4項目） */}
             <div>
-              <label className="text-xs font-bold text-gray-600 mb-2 block">{t('detail.verificationLabel')}</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold text-gray-600">{t('detail.verificationLabel')}</label>
+                <button
+                  type="button"
+                  onClick={() => handleAiDraftDetail('replace')}
+                  disabled={draftLoading}
+                  className="text-[10px] font-bold px-2 py-1 rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1"
+                >
+                  {draftLoading
+                    ? <span className="w-2.5 h-2.5 border border-green-500 border-t-transparent rounded-full animate-spin" />
+                    : '🤖'}
+                  {isEn ? 'AI Draft' : 'AIで下書き'}
+                </button>
+              </div>
               <div className="space-y-2 bg-green-50 border border-green-100 rounded-xl p-3">
                 <div>
                   <p className="text-[10px] text-gray-500 font-semibold mb-1">{isEn ? '🔍 What to confirm' : '🔍 確認内容（何を確認するか）'}</p>

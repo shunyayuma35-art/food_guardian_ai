@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { useLang } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import { ENABLED_LANGUAGES } from '@/lib/i18n'
@@ -11,6 +12,10 @@ export default function FloatingLanguageButton() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const current = ENABLED_LANGUAGES.find((l) => l.code === lang) ?? ENABLED_LANGUAGES[0]
+  const pathname = usePathname()
+
+  // 登録ウィザードではヘッダー内のボタンを使うため非表示
+  if (pathname === '/record') return null
 
   useEffect(() => {
     function onOutside(e: MouseEvent) {

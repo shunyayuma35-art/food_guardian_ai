@@ -463,13 +463,17 @@ export default function DashboardPage() {
           steps={[
             { icon: '⚙️', title: t('home.guide.step1.title'), desc: t('home.guide.step1.desc') },
             { icon: '📷', title: t('home.guide.step2.title'), desc: t('home.guide.step2.desc') },
-            { icon: '🧲', title: t('home.guide.step3.title'), desc: t('home.guide.step3.desc') },
-            { icon: '📊', title: t('home.guide.step4.title'), desc: t('home.guide.step4.desc') },
+            { icon: '✅', title: t('home.guide.step3.title'), desc: t('home.guide.step3.desc') },
+            { icon: '🤖', title: t('home.guide.step4.title'), desc: t('home.guide.step4.desc') },
+            { icon: '📊', title: t('home.guide.step5.title'), desc: t('home.guide.step5.desc') },
           ]}
           tips={[
             t('home.guide.tip1'),
             t('home.guide.tip2'),
             t('home.guide.tip3'),
+            t('home.guide.tip4'),
+            t('home.guide.tip5'),
+            t('home.guide.tip6'),
           ]}
         />
 

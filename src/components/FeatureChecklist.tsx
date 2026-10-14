@@ -12,6 +12,7 @@ interface CheckItem {
   key: string
   label: string
   checked: boolean
+  exclusive?: boolean
 }
 
 interface CheckboxGroupProps {
@@ -22,6 +23,10 @@ interface CheckboxGroupProps {
   onToggle: (key: string) => void
   accent?: 'orange' | 'blue' | 'purple' | 'teal' | 'red' | 'green'
   selectedLabel: string
+  groupKey?: string
+  groupNone?: Record<string, boolean>
+  groupUnknown?: Record<string, boolean>
+  onNoneToggle?: (groupKey: string, type: 'none' | 'unknown') => void
 }
 
 const ACCENT: Record<string, { active: string; hover: string }> = {
@@ -51,9 +56,12 @@ const ACCENT: Record<string, { active: string; hover: string }> = {
   },
 }
 
-function CheckboxGroup({ title, icon, subtitle, items, onToggle, accent = 'orange', selectedLabel }: CheckboxGroupProps) {
+function CheckboxGroup({ title, icon, subtitle, items, onToggle, accent = 'orange', selectedLabel, groupKey, groupNone, groupUnknown, onNoneToggle }: CheckboxGroupProps) {
+  const { t } = useLang()
   const { active: activeClass, hover: hoverClass } = ACCENT[accent] ?? ACCENT.orange
   const checkedCount = items.filter(i => i.checked).length
+  const isNone = groupKey ? (groupNone?.[groupKey] ?? false) : false
+  const isUnknown = groupKey ? (groupUnknown?.[groupKey] ?? false) : false
 
   return (
     <div className="mb-5">
@@ -61,9 +69,9 @@ function CheckboxGroup({ title, icon, subtitle, items, onToggle, accent = 'orang
         <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
           {icon} {title}
         </p>
-        {checkedCount > 0 && (
+        {(checkedCount > 0 || isNone || isUnknown) && (
           <span className="text-[10px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full">
-            {selectedLabel.replace('{n}', String(checkedCount))}
+            {isNone ? t('feat.noneApplicable') : isUnknown ? t('feat.unknown') : selectedLabel.replace('{n}', String(checkedCount))}
           </span>
         )}
       </div>
@@ -82,6 +90,28 @@ function CheckboxGroup({ title, icon, subtitle, items, onToggle, accent = 'orang
             {label}
           </button>
         ))}
+        {groupKey && onNoneToggle && (
+          <>
+            <button
+              type="button"
+              onClick={() => onNoneToggle(groupKey, 'none')}
+              className={`px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all active:scale-95 ${
+                isNone ? 'bg-gray-500 border-gray-500 text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-400'
+              }`}
+            >
+              {t('feat.noneApplicable')}
+            </button>
+            <button
+              type="button"
+              onClick={() => onNoneToggle(groupKey, 'unknown')}
+              className={`px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all active:scale-95 ${
+                isUnknown ? 'bg-yellow-400 border-yellow-400 text-white' : 'bg-white border-yellow-200 text-yellow-600 hover:border-yellow-400'
+              }`}
+            >
+              {t('feat.unknown')}
+            </button>
+          </>
+        )}
       </div>
     </div>
   )
@@ -98,6 +128,9 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
     sticks: false, noStick: false, partialStick: false, notTested: true,
   }
   const weight = value.weight ?? { veryLight: false, heavy: false }
+  const state = value.state ?? { heated: false, raw: false, embedded: false, attached: false, wet: false, dry: false }
+  const groupNone = value.groupNone ?? {}
+  const groupUnknown = value.groupUnknown ?? {}
 
   const ap = value.appearance
   const co = value.color
@@ -105,6 +138,24 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
   const tx = value.texture
 
   const sel = t('feat.selected')
+
+  function handleNoneToggle(groupKey: string, type: 'none' | 'unknown') {
+    const isNone = groupNone[groupKey]
+    const isUnknown = groupUnknown[groupKey]
+    if (type === 'none') {
+      onChange({
+        ...value,
+        groupNone: { ...groupNone, [groupKey]: !isNone },
+        groupUnknown: { ...groupUnknown, [groupKey]: false },
+      })
+    } else {
+      onChange({
+        ...value,
+        groupUnknown: { ...groupUnknown, [groupKey]: !isUnknown },
+        groupNone: { ...groupNone, [groupKey]: false },
+      })
+    }
+  }
 
   return (
     <div>
@@ -116,6 +167,10 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         subtitle={t('feat.texture.sub')}
         accent="orange"
         selectedLabel={sel}
+        groupKey="texture"
+        groupNone={groupNone}
+        groupUnknown={groupUnknown}
+        onNoneToggle={handleNoneToggle}
         items={[
           { key: 'hard',      label: t('feat.texture.hard'),     checked: tx.hard },
           { key: 'soft',      label: t('feat.texture.soft'),     checked: tx.soft },
@@ -140,6 +195,10 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         subtitle={t('feat.shape.sub')}
         accent="orange"
         selectedLabel={sel}
+        groupKey="shape"
+        groupNone={groupNone}
+        groupUnknown={groupUnknown}
+        onNoneToggle={handleNoneToggle}
         items={[
           { key: 'fibrous',     label: t('feat.shape.fibrous'),      checked: ap.fibrous },
           { key: 'wireShape',   label: t('feat.shape.wireShape'),    checked: ap.wireShape ?? false },
@@ -165,6 +224,10 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         subtitle={t('feat.surface.sub')}
         accent="orange"
         selectedLabel={sel}
+        groupKey="surface"
+        groupNone={groupNone}
+        groupUnknown={groupUnknown}
+        onNoneToggle={handleNoneToggle}
         items={[
           { key: 'mirrorGloss', label: t('feat.surface.mirrorGloss'), checked: ap.mirrorGloss ?? false },
           { key: 'glossy',      label: t('feat.surface.glossy'),      checked: ap.glossy },
@@ -189,6 +252,10 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         subtitle={t('feat.color.sub')}
         accent="purple"
         selectedLabel={sel}
+        groupKey="color"
+        groupNone={groupNone}
+        groupUnknown={groupUnknown}
+        onNoneToggle={handleNoneToggle}
         items={[
           { key: 'black',       label: t('feat.color.black'),       checked: co.black },
           { key: 'gray',        label: t('feat.color.gray'),        checked: co.gray ?? false },
@@ -219,6 +286,10 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         subtitle={t('feat.size.sub')}
         accent="blue"
         selectedLabel={sel}
+        groupKey="size"
+        groupNone={groupNone}
+        groupUnknown={groupUnknown}
+        onNoneToggle={handleNoneToggle}
         items={[
           { key: 'tiny',       label: t('feat.size.tiny'),       checked: size.tiny },
           { key: 'finePowder', label: t('feat.size.finePowder'), checked: size.finePowder },
@@ -288,6 +359,10 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         subtitle={t('feat.weight.sub')}
         accent="teal"
         selectedLabel={sel}
+        groupKey="weight"
+        groupNone={groupNone}
+        groupUnknown={groupUnknown}
+        onNoneToggle={handleNoneToggle}
         items={[
           { key: 'veryLight', label: t('feat.weight.veryLight'), checked: weight.veryLight },
           { key: 'heavy',     label: t('feat.weight.heavy'),     checked: weight.heavy },
@@ -304,6 +379,10 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         subtitle={t('feat.smell.sub')}
         accent="teal"
         selectedLabel={sel}
+        groupKey="smell"
+        groupNone={groupNone}
+        groupUnknown={groupUnknown}
+        onNoneToggle={handleNoneToggle}
         items={[
           { key: 'noSmell',      label: t('feat.smell.noSmell'),      checked: sm.noSmell },
           { key: 'burnedSmell',  label: t('feat.smell.burnedSmell'),  checked: sm.burnedSmell },
@@ -326,6 +405,10 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         subtitle={t('feat.water.sub')}
         accent="blue"
         selectedLabel={sel}
+        groupKey="water"
+        groupNone={groupNone}
+        groupUnknown={groupUnknown}
+        onNoneToggle={handleNoneToggle}
         items={[
           { key: 'floats',     label: t('feat.water.floats'),     checked: value.waterTest.floats },
           { key: 'sinks',      label: t('feat.water.sinks'),      checked: value.waterTest.sinks },
@@ -337,6 +420,30 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
             ...value,
             waterTest: { ...value.waterTest, [key]: !value.waterTest[key as keyof typeof value.waterTest] },
           })
+        }
+      />
+
+      {/* ⑩ 状態 */}
+      <CheckboxGroup
+        title={t('feat.state.title')}
+        icon="🌡️"
+        subtitle={t('feat.state.sub')}
+        accent="red"
+        selectedLabel={sel}
+        groupKey="state"
+        groupNone={groupNone}
+        groupUnknown={groupUnknown}
+        onNoneToggle={handleNoneToggle}
+        items={[
+          { key: 'heated',   label: t('feat.state.heated'),   checked: state.heated },
+          { key: 'raw',      label: t('feat.state.raw'),      checked: state.raw },
+          { key: 'embedded', label: t('feat.state.embedded'), checked: state.embedded },
+          { key: 'attached', label: t('feat.state.attached'), checked: state.attached },
+          { key: 'wet',      label: t('feat.state.wet'),      checked: state.wet },
+          { key: 'dry',      label: t('feat.state.dry'),      checked: state.dry },
+        ]}
+        onToggle={(key) =>
+          onChange({ ...value, state: { ...state, [key]: !state[key as keyof typeof state] } })
         }
       />
 

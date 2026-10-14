@@ -117,7 +117,9 @@ export type TranslationKey =
   | 'home.guide.step2.title' | 'home.guide.step2.desc'
   | 'home.guide.step3.title' | 'home.guide.step3.desc'
   | 'home.guide.step4.title' | 'home.guide.step4.desc'
+  | 'home.guide.step5.title' | 'home.guide.step5.desc'
   | 'home.guide.tip1' | 'home.guide.tip2' | 'home.guide.tip3'
+  | 'home.guide.tip4' | 'home.guide.tip5' | 'home.guide.tip6'
   | 'home.sectionIncident' | 'home.sectionInsp' | 'home.sectionQuickAction'
   | 'home.backup.desc' | 'home.backup.autoInfo'
   | 'home.reports' | 'home.generated' | 'home.caution' | 'home.web'
@@ -249,6 +251,12 @@ export type TranslationKey =
   | 'feat.smell.rubberSmell' | 'feat.smell.plasticSmell' | 'feat.smell.chemicalSmell' | 'feat.smell.sourSmell'
   // feature checklist – water test items
   | 'feat.water.floats' | 'feat.water.sinks' | 'feat.water.dissolves' | 'feat.water.oilSurface'
+  // feature checklist – state items
+  | 'feat.state.title' | 'feat.state.sub'
+  | 'feat.state.heated' | 'feat.state.raw' | 'feat.state.embedded'
+  | 'feat.state.attached' | 'feat.state.wet' | 'feat.state.dry'
+  // feature checklist – exclusive chips
+  | 'feat.noneApplicable' | 'feat.unknown'
   // login form (Firebase mode)
   | 'login.form.titleSignup' | 'login.form.titleLogin'
   | 'login.form.email' | 'login.form.password' | 'login.form.passwordHint'
@@ -589,18 +597,23 @@ const ja: Dict = {
   'home.resetDemoConfirm': 'デモデータをリセットしますか？\n登録したデータはすべて削除され、初期サンプルデータに戻ります。',
   'home.internalBadge': '🏭 社内 {n}件',
   'home.externalBadge': '📦 外部 {n}件',
-  'home.guide.title': '📖 FoodEye 使い方・操作手順',
-  'home.guide.step1.title': 'まず「マスターデータ」を設定する',
-  'home.guide.step1.desc': '担当者名・製品名・検査機器名を登録しておくと、各画面で選択式になり入力が速くなります。初回利用時に必ず設定してください。',
-  'home.guide.step2.title': '異物を発見したら「新規 異物登録」',
-  'home.guide.step2.desc': '工場内発見・お客様クレームどちらも登録できます。写真を撮影し、異物の特徴（触感・色・においなど）を選択するとAIが種類を自動推定します。',
-  'home.guide.step3.title': '毎日「検査記録を登録」する',
-  'home.guide.step3.desc': '金属探知機・X線検査機のテストピース確認結果を記録します。始業・終業の合否チェックと排除件数を入力してください。',
-  'home.guide.step4.title': '「月次・年次レポート」で傾向を確認',
-  'home.guide.step4.desc': '期間を選んで集計グラフを確認できます。監査・品質会議の資料として印刷もできます。',
-  'home.guide.tip1': '登録したデータはサーバーPCに自動保存されます（1日1回自動バックアップ）',
-  'home.guide.tip2': 'QRコードを印刷して壁に貼ると、スマホからすぐアクセスできます',
-  'home.guide.tip3': '同じWi-Fiに接続した全端末でデータを共有できます',
+  'home.guide.title': '📖 かんたん操作ガイド（5ステップ）',
+  'home.guide.step1.title': '⚙️ マスタ設定（初回のみ）',
+  'home.guide.step1.desc': '担当者・製品・検査機器を事前登録。以降の入力がドロップダウンになり速くなります。',
+  'home.guide.step2.title': '📷 写真を撮影',
+  'home.guide.step2.desc': '異物を発見したら「新規登録」→ 定規と一緒に撮影。鮮明な写真ほどAI精度が上がります。',
+  'home.guide.step3.title': '✅ 特徴を入力',
+  'home.guide.step3.desc': '触感・色・大きさ・においをチェック。磁石テストの結果も入力するとAI判定の精度が大幅向上。',
+  'home.guide.step4.title': '🤖 AI判定・CAPA記録',
+  'home.guide.step4.desc': 'AIが異物の種類・発生源を推定。ISO 22000準拠のCAPAフォーム（修正・是正・検証計画）を記録します。',
+  'home.guide.step5.title': '📊 月次レポートで傾向確認',
+  'home.guide.step5.desc': '期間を選んでグラフを確認。監査・品質会議の資料として印刷できます。',
+  'home.guide.tip1': '📸 撮影コツ①：定規や1円玉を並べてスケール感を出す',
+  'home.guide.tip2': '📸 撮影コツ②：白い紙や皿の上に置いてバックをシンプルに',
+  'home.guide.tip3': '📸 撮影コツ③：フラッシュは反射するため自然光推奨',
+  'home.guide.tip4': '❓ 困ったとき①：ログアウト → ログインで再接続',
+  'home.guide.tip5': '❓ 困ったとき②：AI推定が出ない → 画像・特徴を再入力して再試行',
+  'home.guide.tip6': '❓ 困ったとき③：データが見つからない → 右上メニューから履歴を確認',
   'home.sectionIncident': '異物事故',
   'home.sectionInsp': '検査記録（金属探知・X線）',
   'home.sectionQuickAction': 'クイックアクション',
@@ -881,6 +894,13 @@ const ja: Dict = {
   // water test items
   'feat.water.floats': '浮く', 'feat.water.sinks': '沈む',
   'feat.water.dissolves': 'とける', 'feat.water.oilSurface': '油膜浮き',
+  // state items
+  'feat.state.title': '状態', 'feat.state.sub': '発見時の異物の状態・位置',
+  'feat.state.heated': '加熱された様子あり', 'feat.state.raw': '生・未加熱',
+  'feat.state.embedded': '食品に埋没', 'feat.state.attached': '表面に付着',
+  'feat.state.wet': '濡れている', 'feat.state.dry': '乾燥',
+  // exclusive chips
+  'feat.noneApplicable': '該当なし', 'feat.unknown': '不明',
   // login form (Firebase mode)
   'login.form.titleSignup': '🌟 新規アカウント作成',
   'login.form.titleLogin': '👋 ログイン',
@@ -1504,18 +1524,23 @@ const en: Dict = {
   'home.resetDemoConfirm': 'Reset demo data?\nAll entered data will be deleted and initial sample data will be restored.',
   'home.internalBadge': '🏭 Internal {n}',
   'home.externalBadge': '📦 External {n}',
-  'home.guide.title': '📖 FoodEye – How to Use',
-  'home.guide.step1.title': 'Set up Master Data first',
-  'home.guide.step1.desc': 'Register operators, products, and inspection equipment. They become dropdowns throughout the app, speeding up entry. Do this on first use.',
-  'home.guide.step2.title': 'Use "New Incident Report" when foreign matter is found',
-  'home.guide.step2.desc': 'Works for factory-found incidents and customer complaints. Take a photo and select material characteristics (texture, color, smell, etc.) for AI estimation.',
-  'home.guide.step3.title': 'Log "Inspection Record" every day',
-  'home.guide.step3.desc': 'Record metal detector and X-ray test-piece results. Enter pass/fail for start- and end-of-day checks plus any reject counts.',
-  'home.guide.step4.title': 'Review trends in "Monthly/Annual Reports"',
-  'home.guide.step4.desc': 'Select a period to view summary charts. Reports can be printed for audits and quality meetings.',
-  'home.guide.tip1': 'All data is auto-saved to the server (automatic daily backup).',
-  'home.guide.tip2': 'Print a QR code and post it on the wall for instant phone access.',
-  'home.guide.tip3': 'All devices on the same Wi-Fi share the same data.',
+  'home.guide.title': '📖 Quick Guide (5 Steps)',
+  'home.guide.step1.title': '⚙️ Set up Master Data (first time)',
+  'home.guide.step1.desc': 'Register operators, products, and equipment. They become dropdowns — speeds up every entry.',
+  'home.guide.step2.title': '📷 Take a Photo',
+  'home.guide.step2.desc': 'Tap "New Report" and photograph the foreign matter with a ruler. Clearer photos = better AI accuracy.',
+  'home.guide.step3.title': '✅ Enter Characteristics',
+  'home.guide.step3.desc': 'Check texture, color, size, and smell. Adding the magnet test result significantly improves AI estimation.',
+  'home.guide.step4.title': '🤖 AI Estimation & CAPA',
+  'home.guide.step4.desc': 'AI estimates the type and source. Record ISO 22000 CAPA (correction, corrective action, verification plan).',
+  'home.guide.step5.title': '📊 Review Monthly Reports',
+  'home.guide.step5.desc': 'Select a period to view charts. Reports can be printed for audits and quality meetings.',
+  'home.guide.tip1': '📸 Photo tip 1: Place a ruler or coin next to the object for scale.',
+  'home.guide.tip2': '📸 Photo tip 2: Use a plain white background — paper or plate.',
+  'home.guide.tip3': '📸 Photo tip 3: Use natural light; flash causes reflections.',
+  'home.guide.tip4': '❓ Trouble 1: Connection lost → Log out and log in again.',
+  'home.guide.tip5': '❓ Trouble 2: No AI result → Re-enter photo and features, then retry.',
+  'home.guide.tip6': '❓ Trouble 3: Data missing → Check history from the top-right menu.',
   'home.sectionIncident': 'Incidents',
   'home.sectionInsp': 'Inspections (Metal / X-ray)',
   'home.sectionQuickAction': 'Quick Actions',
@@ -1797,6 +1822,13 @@ const en: Dict = {
   // water test items
   'feat.water.floats': 'Floats', 'feat.water.sinks': 'Sinks',
   'feat.water.dissolves': 'Dissolves', 'feat.water.oilSurface': 'Oil film on surface',
+  // state items
+  'feat.state.title': 'Condition', 'feat.state.sub': 'State / position of foreign matter at discovery',
+  'feat.state.heated': 'Appears heated', 'feat.state.raw': 'Raw / unheated',
+  'feat.state.embedded': 'Embedded in food', 'feat.state.attached': 'Attached to surface',
+  'feat.state.wet': 'Wet', 'feat.state.dry': 'Dry',
+  // exclusive chips
+  'feat.noneApplicable': 'N/A', 'feat.unknown': 'Unknown',
   // login form (Firebase mode)
   'login.form.titleSignup': '🌟 Create Account',
   'login.form.titleLogin': '👋 Log In',
