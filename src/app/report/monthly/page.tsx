@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import { useLang } from '@/context/LanguageContext'
 import Navigation from '@/components/Navigation'
 import UsageGuide from '@/components/UsageGuide'
@@ -25,7 +26,7 @@ function BarRow({ label, count, max, color }: { label: string; count: number; ma
   )
 }
 
-export default function MonthlyReportPage() {
+function MonthlyReportPage() {
   const { user, loading } = useAuth()
   const { t, lang } = useLang()
   const router = useRouter()
@@ -329,4 +330,8 @@ export default function MonthlyReportPage() {
       `}</style>
     </div>
   )
+}
+
+export default function MonthlyReportPageWrapper() {
+  return <ErrorBoundary><MonthlyReportPage /></ErrorBoundary>
 }

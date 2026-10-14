@@ -292,9 +292,11 @@ export default function FeatureChecklistComponent({ value, onChange }: Props) {
         onNoneToggle={handleNoneToggle}
         items={[
           { key: 'tiny',       label: t('feat.size.tiny'),       checked: size.tiny },
-          { key: 'finePowder', label: t('feat.size.finePowder'), checked: size.finePowder },
           { key: 'medium',     label: t('feat.size.medium'),     checked: size.medium },
+          { key: 'mm3to5',     label: t('feat.size.mm3to5'),     checked: size.mm3to5 ?? false },
           { key: 'large',      label: t('feat.size.large'),      checked: size.large ?? false },
+          { key: 'mm10plus',   label: t('feat.size.mm10plus'),   checked: size.mm10plus ?? false },
+          { key: 'finePowder', label: t('feat.size.finePowder'), checked: size.finePowder },
           { key: 'longFiber',  label: t('feat.size.longFiber'),  checked: size.longFiber },
           { key: 'thinFilm',   label: t('feat.size.thinFilm'),   checked: size.thinFilm },
           { key: 'thickPiece', label: t('feat.size.thickPiece'), checked: size.thickPiece },

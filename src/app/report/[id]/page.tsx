@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import { useLang } from '@/context/LanguageContext'
 import { getReport, updateReport, deleteReport, listReports } from '@/lib/firestore'
 import { reportToWordHTML } from '@/lib/report-generator'
@@ -42,7 +43,7 @@ function ReportContent({ content }: { content: string }) {
   return <div>{nodes}</div>
 }
 
-export default function ReportDetailPage() {
+function ReportDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user, loading } = useAuth()
   const { t } = useLang()
@@ -411,4 +412,8 @@ export default function ReportDetailPage() {
       `}</style>
     </div>
   )
+}
+
+export default function ReportDetailPageWrapper() {
+  return <ErrorBoundary><ReportDetailPage /></ErrorBoundary>
 }

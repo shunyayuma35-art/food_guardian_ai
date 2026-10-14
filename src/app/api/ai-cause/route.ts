@@ -4,6 +4,35 @@ import { findSimilarCases } from '@/lib/confirmed-cases'
 
 export const maxDuration = 60
 
+function buildFeaturesSummary(inc: Record<string, unknown>, lang: string): string {
+  const features = inc.features as Record<string, Record<string, unknown>> | undefined
+  if (!features) return ''
+  const isEn = lang === 'en'
+  const groupNone = (inc.features as Record<string, Record<string, boolean>>)?.groupNone ?? {}
+  const groupUnknown = (inc.features as Record<string, Record<string, boolean>>)?.groupUnknown ?? {}
+
+  const labelMap: Record<string, Record<string, string>> = {
+    texture: { hard: isEn ? 'Hard' : '硬い', soft: isEn ? 'Soft' : '柔らかい', elastic: isEn ? 'Elastic' : '弾力あり', crumbly: isEn ? 'Crumbly' : 'もろい', sticky: isEn ? 'Sticky' : 'べたつく', sharp: isEn ? 'Sharp' : '鋭利', smooth: isEn ? 'Smooth' : 'なめらか', rough: isEn ? 'Rough' : 'ざらざら', coldFeel: isEn ? 'Cold feel' : '冷たい感触', brittle: isEn ? 'Brittle' : 'もろい・割れやすい' },
+    size: { tiny: isEn ? '~1mm' : '〜1mm', medium: isEn ? '1-3mm' : '1〜3mm', mm3to5: isEn ? '3-5mm' : '3〜5mm', large: isEn ? '5-10mm' : '5〜10mm', mm10plus: isEn ? '10mm+' : '10mm以上', finePowder: isEn ? 'Fine powder' : '微粉末', longFiber: isEn ? 'Long fiber' : '長い繊維', thinFilm: isEn ? 'Thin film' : '薄いフィルム', thickPiece: isEn ? 'Thick piece' : '厚い片' },
+    color: { black: isEn ? 'Black' : '黒', brown: isEn ? 'Brown' : '茶', white: isEn ? 'White' : '白', metalColor: isEn ? 'Metal color' : '金属色', green: isEn ? 'Green' : '緑', transparent: isEn ? 'Transparent' : '透明', blue: isEn ? 'Blue' : '青', red: isEn ? 'Red' : '赤', yellow: isEn ? 'Yellow' : '黄', gray: isEn ? 'Gray' : '灰', silver: isEn ? 'Silver' : '銀' },
+    smell: { noSmell: isEn ? 'No smell' : '無臭', burnedSmell: isEn ? 'Burned' : '焦げ臭', oilSmell: isEn ? 'Oil' : '油臭', metalSmell: isEn ? 'Metal' : '金属臭', rubberSmell: isEn ? 'Rubber' : 'ゴム臭', plasticSmell: isEn ? 'Plastic' : 'プラスチック臭', chemicalSmell: isEn ? 'Chemical' : '化学臭', sourSmell: isEn ? 'Sour' : '酸っぱい臭い' },
+    magnetTest: { sticks: isEn ? 'Magnetic (sticks)' : '磁石に引き付けられる', noStick: isEn ? 'Non-magnetic' : '磁石につかない', partialStick: isEn ? 'Partially magnetic' : '一部磁石につく' },
+    state: { heated: isEn ? 'Heated/cooked' : '加熱済み', raw: isEn ? 'Raw' : '生', embedded: isEn ? 'Embedded' : '埋まっている', attached: isEn ? 'Attached to surface' : '表面付着', wet: isEn ? 'Wet' : '湿っている', dry: isEn ? 'Dry' : '乾燥' },
+  }
+
+  const parts: string[] = []
+  for (const [group, labels] of Object.entries(labelMap)) {
+    if (groupNone[group] || groupUnknown[group]) continue
+    const groupData = features[group] as Record<string, boolean> | undefined
+    if (!groupData) continue
+    const checked = Object.entries(labels)
+      .filter(([k]) => groupData[k])
+      .map(([, v]) => v)
+    if (checked.length > 0) parts.push(checked.join(', '))
+  }
+  return parts.join(' / ')
+}
+
 function buildPrompt(inc: Record<string, unknown>, lang: string): string {
   const isEn = lang === 'en'
   const estimations = Array.isArray(inc.estimations) ? inc.estimations : []
@@ -22,6 +51,7 @@ function buildPrompt(inc: Record<string, unknown>, lang: string): string {
   // ヒント項目（ForeignMatterHints）から「該当」項目を文字列化
   const hintsObj = (inc.hints ?? {}) as Record<string, string>
   const hintsYes = Object.entries(hintsObj).filter(([, v]) => v === 'yes').map(([k]) => k).join(', ')
+  const featuresSummary = buildFeaturesSummary(inc, lang)
 
   const catStr = String(est?.category ?? '')
   const nameStr = String(est?.name ?? '')
@@ -56,6 +86,7 @@ Incident Data:
 - Discovery Process: ${inc.discoveryProcess ?? '-'}
 - Top Estimation (PRIMARY): ${estLabelEn}
 - Suspicion / Situation Notes: ${hint || '(none)'}
+- Observed Features (characteristics): ${featuresSummary || '(none)'}
 - Observed Features (hints): ${hintsYes || '(none)'}
 - Factory: ${inc.factory ?? '-'}, Line: ${inc.lineNumber ?? '-'}
 - Corrective Action (recorded): ${inc.correctiveAction ?? '-'}
@@ -99,6 +130,7 @@ ${productHint}
 - 発見工程: ${inc.discoveryProcess ?? '-'}
 - 第1候補推定（最優先）: ${estLabel}
 - 異物の心当たり・状況コメント: ${hint || '（なし）'}
+- 観察した特徴（チェックリスト）: ${featuresSummary || '（なし）'}
 - 現場の観察結果（ヒント）: ${hintsYes || '（なし）'}
 - 工場: ${inc.factory ?? '-'}、ライン: ${inc.lineNumber ?? '-'}
 - 是正処置（登録済み）: ${inc.correctiveAction ?? '-'}
@@ -229,11 +261,10 @@ export async function POST(req: NextRequest) {
     let lastRaw = ''
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const result = await callAI({
-          system: systemPrompt,
-          userText: prompt,
-          maxTokens: 3000,
-        })
+        const result = await Promise.race([
+          callAI({ system: systemPrompt, userText: prompt, maxTokens: 3000 }),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 60000)),
+        ])
         lastRaw = result.text
         const cause      = extractSection(result.text, 'CAUSE_4M')
         const corrective = extractSection(result.text, 'CORRECTIVE')

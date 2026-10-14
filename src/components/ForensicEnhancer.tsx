@@ -217,6 +217,7 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
   const [userHint, setUserHint]   = useState('')
   const [remaining, setRemaining] = useState<number | null>(null)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
+  const [l4Ms, setL4Ms] = useState<number | null>(null)
 
   // File → data URL
   useEffect(() => {
@@ -268,11 +269,17 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
         const ctx3 = oc3.getContext('2d')!
         ctx3.putImageData(new ImageData(equalized.slice() as Uint8ClampedArray<ArrayBuffer>, w, h), 0, 0)
 
-        // Layer 4 – Sobel + local contrast cyan overlay
+        // Layer 4 – Sobel + local contrast cyan overlay (with timing + 3s fallback)
+        const t0 = performance.now()
         const sobelPixels = sobelLocalContrastVis(equalized, w, h)
+        const l4Time = performance.now() - t0
+        console.log('[ForensicEnhancer] L4:', Math.round(l4Time), 'ms')
+        if (!cancelled) setL4Ms(Math.round(l4Time))
+        // 3秒超過時は equalized をそのまま L4 として使う
+        const l4Pixels = l4Time > 3000 ? equalized : sobelPixels
         const oc4 = make()
         const ctx4 = oc4.getContext('2d')!
-        ctx4.putImageData(new ImageData(sobelPixels.slice() as Uint8ClampedArray<ArrayBuffer>, w, h), 0, 0)
+        ctx4.putImageData(new ImageData(l4Pixels.slice() as Uint8ClampedArray<ArrayBuffer>, w, h), 0, 0)
 
         // Layer 5 – Red overlay on original
         const mag = sobelMag(equalized, w, h)
@@ -421,6 +428,9 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
           <span className="text-[9px] font-mono" style={{ color: '#6b7280' }}>{layer.title} / {LAYERS.length}</span>
           <span className="text-[11px] font-bold" style={{ color: layer.color }}>{layer.icon} {layer.label}</span>
           <span className="text-[9px] font-mono ml-auto" style={{ color: '#4b5563' }}>{layer.desc}</span>
+          {layerIdx === 3 && l4Ms !== null && (
+            <span className="text-[9px] font-mono ml-1" style={{ color: '#34d399' }}>{l4Ms}ms</span>
+          )}
         </div>
       )}
       {computing && (

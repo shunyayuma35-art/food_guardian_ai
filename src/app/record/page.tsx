@@ -710,7 +710,8 @@ function RecordPageInner() {
                   <button
                     type="button"
                     onClick={applyAIToFeatures}
-                    className="w-full py-2 text-xs font-bold text-white bg-orange-500 rounded-xl hover:bg-orange-600 active:scale-95 transition-all"
+                    disabled={aiEstimating}
+                    className="w-full py-2 text-xs font-bold text-white bg-orange-500 rounded-xl hover:bg-orange-600 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {t('record.ai.applyBtn')}
                   </button>
@@ -795,7 +796,7 @@ function RecordPageInner() {
               <label className="label">{t('record.comment')}</label>
               <AutoResizeTextarea value={comment} onChange={(e) => setComment(e.target.value)}
                 className="input-field"
-                placeholder="異物の発見状況、大きさ、特記事項など" />
+                placeholder="例:食べている途中で歯に当たった/青いテープのような薄い片/約3mm/硬い/1個" />
               {/* コメント補助チップ */}
               {[
                 {

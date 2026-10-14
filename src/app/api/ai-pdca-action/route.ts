@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callAI } from '@/lib/ai-provider'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 interface PdcaActionRequest {
   pdcaStatus?: string
@@ -97,9 +97,21 @@ Output plain text (no JSON, no headers), 3–5 lines max.`
 日付は今日（${today}）以降のYYYY/MM/DD形式で記載すること。期限が近い場合は優先度を上げること。
 プレーンテキストのみ、3〜5行以内で出力してください。`
 
-    const result = await callAI({ system, userText, maxTokens: 600 })
-    const text = fixPastDates(result.text.trim())
-    return NextResponse.json({ suggestion: text })
+    let lastErr: unknown
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const result = await Promise.race([
+          callAI({ system, userText, maxTokens: 600 }),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 60000)),
+        ])
+        const text = fixPastDates(result.text.trim())
+        return NextResponse.json({ suggestion: text })
+      } catch (e) {
+        console.error(`[ai-pdca-action] attempt ${attempt + 1} failed:`, e)
+        lastErr = e
+      }
+    }
+    throw lastErr
   } catch (err) {
     console.error('[ai-pdca-action]', err)
     return NextResponse.json({ error: 'AI提案の生成に失敗しました' }, { status: 500 })

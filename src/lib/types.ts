@@ -124,13 +124,15 @@ export interface WaterTestFeatures {
 }
 
 export interface SizeFeatures {
-  finePowder: boolean // 微細粉
-  longFiber: boolean  // 長い繊維（5mm以上）
-  thinFilm: boolean   // 薄膜・フィルム状
-  thickPiece: boolean // 厚片・塊状
-  tiny: boolean       // 微小（1mm未満）
-  medium: boolean     // 中型（1〜5mm）
-  large: boolean      // 大型（5mm超）
+  finePowder: boolean  // 微細粉
+  longFiber: boolean   // 長い繊維（5mm以上）
+  thinFilm: boolean    // 薄膜・フィルム状
+  thickPiece: boolean  // 厚片・塊状
+  tiny: boolean        // 〜1mm
+  medium: boolean      // 1〜3mm（旧: 1〜5mm）
+  large: boolean       // 5〜10mm（旧: 5mm超）
+  mm3to5?: boolean     // 3〜5mm
+  mm10plus?: boolean   // 10mm以上
 }
 
 // 磁石試験（金属種別判定に最重要）
@@ -299,6 +301,7 @@ export function createEmptyFeatures(): FeatureChecklist {
     size: {
       finePowder: false, longFiber: false, thinFilm: false,
       thickPiece: false, tiny: false, medium: false, large: false,
+      mm3to5: false, mm10plus: false,
     },
     magnetTest: { sticks: false, noStick: false, partialStick: false, notTested: true },
     weight: { veryLight: false, heavy: false },

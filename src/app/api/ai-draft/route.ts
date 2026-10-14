@@ -206,12 +206,10 @@ export async function POST(req: NextRequest) {
     let lastRaw = ''
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const result = await callAI({
-          system,
-          userText,
-          maxTokens: 4000,
-          jsonMode: true,
-        })
+        const result = await Promise.race([
+          callAI({ system, userText, maxTokens: 4000, jsonMode: true }),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 60000)),
+        ])
         lastRaw = result.text
         parsed = parseJsonDraft(result.text)
         if (parsed && hasVerification(parsed)) break
