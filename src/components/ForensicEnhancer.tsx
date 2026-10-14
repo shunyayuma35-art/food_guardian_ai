@@ -110,17 +110,41 @@ function sobelMag(src: Uint8ClampedArray, w: number, h: number): Float32Array {
   return mag
 }
 
-// Sobel visualization: bright white edges on dark background (forensic style)
-function sobelVis(src: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
-  const mag = sobelMag(src, w, h)
-  let maxMag = 0
-  for (let i = 0; i < mag.length; i++) if (mag[i] > maxMag) maxMag = mag[i]
+// Local contrast: |lum(pixel) - lum(blurred_pixel)| — highlights fine texture
+function localContrast(src: Uint8ClampedArray, blurred: Uint8ClampedArray, w: number, h: number): Float32Array {
+  const lc = new Float32Array(w * h)
+  for (let i = 0; i < w * h; i++) {
+    const ri = i * 4
+    const lumOrig = src[ri] * 0.299 + src[ri + 1] * 0.587 + src[ri + 2] * 0.114
+    const lumBlur = blurred[ri] * 0.299 + blurred[ri + 1] * 0.587 + blurred[ri + 2] * 0.114
+    lc[i] = Math.abs(lumOrig - lumBlur)
+  }
+  return lc
+}
+
+// Sobel + local contrast visualization: cyan overlay on dark background (forensic L4)
+function sobelLocalContrastVis(src: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
+  // use single-pass blur as neighborhood reference for local contrast
+  const blurred = gaussianBlur(src, w, h)
+  const sobel = sobelMag(src, w, h)
+  const lc = localContrast(src, blurred, w, h)
+
+  let maxS = 0, maxL = 0
+  for (let i = 0; i < sobel.length; i++) {
+    if (sobel[i] > maxS) maxS = sobel[i]
+    if (lc[i] > maxL) maxL = lc[i]
+  }
+
   const out = new Uint8ClampedArray(w * h * 4)
   for (let i = 0; i < w * h; i++) {
-    const v = maxMag > 0 ? Math.min(255, Math.round(Math.pow(mag[i] / maxMag, 0.4) * 255)) : 0
-    // Cyan tint: forensic scanner look
+    const sNorm = maxS > 0 ? sobel[i] / maxS : 0
+    const lNorm = maxL > 0 ? lc[i] / maxL : 0
+    // Combined: Sobel dominates edges, local contrast fills in fine texture
+    const combined = Math.min(1, Math.sqrt(sNorm * sNorm * 0.7 + lNorm * lNorm * 0.3))
+    const v = Math.min(255, Math.round(Math.pow(combined, 0.4) * 255))
+    // Cyan channel: G slightly brighter than B for the forensic scanner look
     out[i * 4]     = 0
-    out[i * 4 + 1] = Math.min(255, Math.round(v * 0.9))
+    out[i * 4 + 1] = Math.min(255, Math.round(v * 0.92))
     out[i * 4 + 2] = v
     out[i * 4 + 3] = 255
   }
@@ -244,8 +268,8 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
         const ctx3 = oc3.getContext('2d')!
         ctx3.putImageData(new ImageData(equalized.slice() as Uint8ClampedArray<ArrayBuffer>, w, h), 0, 0)
 
-        // Layer 4 – Sobel cyan visualization
-        const sobelPixels = sobelVis(equalized, w, h)
+        // Layer 4 – Sobel + local contrast cyan overlay
+        const sobelPixels = sobelLocalContrastVis(equalized, w, h)
         const oc4 = make()
         const ctx4 = oc4.getContext('2d')!
         ctx4.putImageData(new ImageData(sobelPixels.slice() as Uint8ClampedArray<ArrayBuffer>, w, h), 0, 0)
