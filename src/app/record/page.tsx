@@ -29,6 +29,7 @@ import ForeignMatterHintsInput from '@/components/ForeignMatterHintsInput'
 import UsageGuide from '@/components/UsageGuide'
 import DateInput from '@/components/DateInput'
 import ForensicEnhancer from '@/components/ForensicEnhancer'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import toast from 'react-hot-toast'
 
 const STEP_ICONS = ['📦', '📸', '🔍', '📝']
@@ -39,6 +40,14 @@ function getStoredLang(): string {
 }
 
 export default function RecordPage() {
+  return (
+    <ErrorBoundary resetKeys={['foodeye_draft_v2', 'foodeye_draft']}>
+      <RecordPageInner />
+    </ErrorBoundary>
+  )
+}
+
+function RecordPageInner() {
   const { user, loading, lock } = useAuth()
   const { t, lang, setLang } = useLang()
   const currentLang = ENABLED_LANGUAGES.find(l => l.code === lang) ?? ENABLED_LANGUAGES[0]

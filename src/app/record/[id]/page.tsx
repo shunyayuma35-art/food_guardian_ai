@@ -14,6 +14,7 @@ import { generateIncidentCode, formatDate, formatDateTime } from '@/lib/utils'
 import { generateIncidentReport, incidentToCSV } from '@/lib/report-generator'
 import { generateIncidentDocx } from '@/lib/docx-generator'
 import Navigation from '@/components/Navigation'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import AutoResizeTextarea from '@/components/AutoResizeTextarea'
 import RecallAssessmentCard from '@/components/RecallAssessmentCard'
 import PhotoImg from '@/components/PhotoImg'
@@ -48,6 +49,14 @@ function serializeVerification(what: string, when: string, who: string, criteria
 
 
 export default function IncidentDetailPage() {
+  return (
+    <ErrorBoundary>
+      <IncidentDetailPageInner />
+    </ErrorBoundary>
+  )
+}
+
+function IncidentDetailPageInner() {
   const { user, loading } = useAuth()
   const { t, lang } = useLang()
   const isEn = lang === 'en'

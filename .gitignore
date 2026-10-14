@@ -21,3 +21,7 @@ dist/
 electron/
 
 .vercel
+
+# Playwright
+test-results/
+playwright-report/

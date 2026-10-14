@@ -14,9 +14,7 @@ export default function FloatingLanguageButton() {
   const current = ENABLED_LANGUAGES.find((l) => l.code === lang) ?? ENABLED_LANGUAGES[0]
   const pathname = usePathname()
 
-  // 登録ウィザードではヘッダー内のボタンを使うため非表示
-  if (pathname === '/record') return null
-
+  // すべてのフックを条件分岐より前に呼ぶ (Rules of Hooks)
   useEffect(() => {
     function onOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
@@ -24,6 +22,9 @@ export default function FloatingLanguageButton() {
     document.addEventListener('mousedown', onOutside)
     return () => document.removeEventListener('mousedown', onOutside)
   }, [])
+
+  // 登録ウィザードではヘッダー内のボタンを使うため非表示
+  if (pathname === '/record') return null
 
   return (
     <div ref={ref} className="fixed bottom-[175px] right-2 z-[100] no-print flex flex-col items-end gap-1.5">
