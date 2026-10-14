@@ -95,6 +95,7 @@ function IncidentDetailPageInner() {
   const [verifyWhen, setVerifyWhen] = useState('')
   const [verifyWho, setVerifyWho] = useState('')
   const [verifyCriteria, setVerifyCriteria] = useState('')
+  const [verifyAiDrafted, setVerifyAiDrafted] = useState(false)
   const [actionsEditor, setActionsEditor] = useState('')
   const [savingActions, setSavingActions] = useState(false)
   const [actionsUpdatedAt, setActionsUpdatedAt] = useState('')
@@ -252,6 +253,7 @@ function IncidentDetailPageInner() {
           setVerifyCriteria(prev => (prev && verifObj.criteria) ? `${prev}\n${verifObj.criteria}` : verifObj.criteria ?? prev)
         }
       }
+      setVerifyAiDrafted(true)
       toast.success(t('toast.aiDraftCreated') || (lang === 'en' ? 'AI draft created ✅' : 'AI下書きを作成しました ✅'))
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'AI draft failed'
@@ -1068,6 +1070,11 @@ function IncidentDetailPageInner() {
                   {isEn ? 'AI Draft' : 'AIで下書き'}
                 </button>
               </div>
+              {verifyAiDrafted && (verifyWhat || verifyWhen || verifyWho || verifyCriteria) && (
+                <div className="mb-2 flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1">
+                  🤖 {isEn ? 'AI Draft (requires review)' : 'AI下書き（要確認）'}
+                </div>
+              )}
               <div className="space-y-2 bg-green-50 border border-green-100 rounded-xl p-3">
                 <div>
                   <p className="text-[10px] text-gray-500 font-semibold mb-1">{isEn ? '🔍 What to confirm' : '🔍 確認内容（何を確認するか）'}</p>

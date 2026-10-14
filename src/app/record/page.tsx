@@ -159,6 +159,24 @@ function RecordPageInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photos[0]?.name, photos[0]?.size])
 
+  function getSemanticGroup(text: string): number {
+    const t = text.toLowerCase()
+    const groups = [
+      ['金属', 'スチール', 'steel', 'ステンレス', 'stainless', 'アルミ', 'aluminum', '鉄', 'iron', '銅', 'copper', 'metal', 'wire', '針金'],
+      ['骨', 'bone', '軟骨', 'cartilage'],
+      ['虫', 'insect', 'fly', 'ハエ', 'バエ', 'ゴキブリ', 'bug', 'mosquito'],
+      ['ガラス', 'glass', '陶器', 'ceramic'],
+      ['ゴム', 'rubber', '輪ゴム'],
+      ['プラスチック', 'plastic', 'ビニール', '樹脂', 'resin'],
+      ['毛髪', '体毛', 'hair', 'ブラシ毛', 'bristle', '繊維', 'fiber', 'thread', '糸'],
+      ['カビ', 'mold', 'mould', '酵母'],
+    ]
+    for (let i = 0; i < groups.length; i++) {
+      if (groups[i].some(kw => t.includes(kw))) return i
+    }
+    return -1
+  }
+
   function applyAIToFeatures() {
     if (!aiQuickResult) return
     setFeatures(prev => {
@@ -800,6 +818,24 @@ function RecordPageInner() {
         {/* ━━ Step 2: 異物特徴 ━━ */}
         {step === 2 && (
           <div className="space-y-4">
+            {/* AI判定と特徴チェック推定の不一致ワーニング */}
+            {aiQuickResult && hasAnyFeature(features) && (() => {
+              const ruleEsts = estimateForeignMaterial(features, discoveryProcess)
+              const topRule = ruleEsts[0]
+              if (!topRule || topRule.probability < 50) return null
+              const aiGrp = getSemanticGroup(aiQuickResult.name)
+              const featGrp = getSemanticGroup(topRule.category)
+              if (aiGrp === -1 || featGrp === -1 || aiGrp === featGrp) return null
+              const aiLabel = isEn ? (aiQuickResult.nameEn ?? aiQuickResult.name) : aiQuickResult.name
+              return (
+                <div className="px-4 py-2.5 bg-amber-50 border border-amber-300 rounded-2xl text-xs text-amber-800 font-medium">
+                  {isEn
+                    ? `⚠️ Feature check suggests "${topRule.category}" (${topRule.probability}%) but AI identified "${aiLabel}". Please verify which is correct.`
+                    : `⚠️ 特徴チェックから「${topRule.category}」(${topRule.probability}%) が推定されますが、AI画像判定は「${aiLabel}」です。どちらが実態に近いか確認してください。`
+                  }
+                </div>
+              )
+            })()}
             <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-4">
               <p className="text-orange-600 text-xs font-bold">💡 {t('record.featureHint')}</p>
               <p className="text-gray-500 text-xs mt-1 leading-relaxed">{t('record.featureSubhint')}</p>
@@ -875,7 +911,7 @@ function RecordPageInner() {
                 {
                   label: isEn ? '🤔 Guess' : '🤔 推測',
                   chips: isEn
-                    ? ['Tape', 'Plastic film', 'Hair/body hair', 'Insect', 'Bone', 'Char', 'Metal', 'Rubber band', 'Glove fragment', 'Bandage', 'Brush bristle', 'Plastic piece', 'Thread/fiber', 'Paper', 'Stone/sand', 'Glass', 'Wood', 'Sponge piece', 'Scrub pad', 'Steel wool', 'Unknown']
+                    ? ['Tape', 'Plastic film', 'Hair', 'Insect', 'Bone', 'Char', 'Metal', 'Rubber band', 'Glove piece', 'Bandage', 'Brush bristle', 'Plastic piece', 'Thread/Fiber', 'Paper', 'Stone/Sand', 'Glass', 'Wood', 'Sponge piece', 'Scrubber', 'Steel wool', 'Unknown']
                     : ['テープ片', 'ビニール片', '毛髪・体毛', '虫', '骨', '焦げ', '金属', '輪ゴム・ゴム片', '手袋片', '絆創膏', 'ブラシ毛', 'プラスチック片', '糸・繊維', '紙片', '石・砂', 'ガラス', '木片', 'スポンジ片', 'たわし・研磨材', '金属たわし', 'わからない'],
                 },
               ].map(({ label, chips }) => (
