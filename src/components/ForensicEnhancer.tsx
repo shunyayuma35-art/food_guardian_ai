@@ -293,7 +293,7 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
 
         if (cancelled) return
         setLayerUrls([url(oc1), url(oc2), url(oc3), url(oc4), url(oc5)])
-        setAiReadyUrl(url(oc3)) // equalized image for AI analysis
+        setAiReadyUrl(url(oc1)) // 元画像をAI送信に使用（加工画像は人が見るための表示のみ）
       } catch (e) {
         console.error('[ForensicEnhancer]', e)
       } finally {
@@ -547,6 +547,13 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
 
           {/* Name + badges */}
           <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border"
+                style={{ background: '#2d2006', color: '#fbbf24', borderColor: '#78500a' }}>
+                暫定判定
+              </span>
+              <span className="text-[9px]" style={{ color: '#6b7280' }}>※ 写真のみの推定。特徴入力で精度向上</span>
+            </div>
             <p className="text-2xl font-extrabold leading-tight" style={{ color: '#ffffff' }}>
               🔴 {aiResult.name}
             </p>

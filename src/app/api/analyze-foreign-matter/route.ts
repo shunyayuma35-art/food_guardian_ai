@@ -105,6 +105,8 @@ export async function POST(req: NextRequest) {
     const systemPrompt = structured
       ? `食品工場の異物特定専門家として画像を分析し、以下のJSONのみを返してください（説明文・前置き一切不要）。
 
+【色の判定について重要な注意】照明・カメラの色温度・反射の影響で、実物の色と画像の色が大きく異なる場合があります。色は断定せず必ず「〇〇系」「〇〇〜△△色」のように幅を持たせた表現にすること。例: 黒色→「黒〜濃灰色系」、白色→「白〜淡黄色系」。
+
 ${FOREIGN_MATTER_DB}
 
 【異物カテゴリ一覧（大分類）】
@@ -140,6 +142,8 @@ confidence は素材が目視で確認できる場合のみ 高 を使用する�
 
 ${FOREIGN_MATTER_DB}
 
+IMPORTANT NOTE ON COLOR: Lighting, camera white balance, and reflections can significantly alter how colors appear in photos. Do NOT state colors definitively. Always use range expressions like "black to dark gray", "white to pale yellow", "brown to tan". Example: never say "black rubber" — say "dark-colored (black to dark brown range) rubber-like material".
+
 For insects: identify species from body shape, color, wings, antennae, and leg count.
 For metals: consider magnetic reaction (magnetic = iron/steel, non-magnetic = SUS/Al/Cu).
 
@@ -171,6 +175,8 @@ y=top edge, x=left edge, h=height, w=width (all 0.0–1.0 fraction of image dime
         : `食品工場の異物特定専門家として画像を分析してください。
 
 ${FOREIGN_MATTER_DB}
+
+【色の判定について重要な注意】照明・カメラの色温度・反射の影響で、実物の色と画像の色が大きく異なる場合があります。色は断定せず必ず「〇〇系」「〇〇〜△△色」のように幅を持たせた表現にすること。例: 黒色→「黒〜濃灰色系」、ベージュ→「ベージュ〜薄茶色系」。
 
 上記データベースを参照し、虫類は体型・色・翅・触角・脚の本数から種類を推定すること。
 金属は磁石反応（つく＝鉄/鋼、つかない＝SUS/Al/Cu）を考慮すること。
