@@ -230,6 +230,10 @@ function IncidentDetailPageInner() {
             ? parseVerification(data.verification as string)
             : null
       if (mode === 'replace') {
+        const hasExistingVerify = verifyWhat.trim() || verifyWhen.trim() || verifyWho.trim() || verifyCriteria.trim()
+        if (hasExistingVerify && !window.confirm(isEn ? 'Overwrite the existing verification plan?' : '既存の④検証計画を上書きします。よろしいですか？')) {
+          return
+        }
         setEditCorrective(corrDraft)
         setEditPreventive(prevDraft)
         if (verifObj) {

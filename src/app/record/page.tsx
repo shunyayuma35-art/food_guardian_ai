@@ -321,19 +321,50 @@ function RecordPageInner() {
       // 特徴チェックに意味のあるデータがある場合のみ rule-based を採用
       const hasFeatureData = hasAnyFeature(features) ||
         features.magnetTest.sticks || features.magnetTest.noStick || features.magnetTest.partialStick
+      // 特徴・コメントがある場合、フル情報で再解析して暫定判定を更新
+      let finalAiQuickResult = aiQuickResult
+      const hasContext = comment.trim() !== '' || hasAnyFeature(features)
+      if (photos[0] && aiQuickResult && hasContext) {
+        try {
+          const featureKeys: string[] = []
+          const addFeat = (obj: unknown, g: string) => {
+            Object.entries(obj as Record<string, boolean>).forEach(([k, v]) => { if (v) featureKeys.push(`${g}.${k}`) })
+          }
+          addFeat(features.texture, 'texture'); addFeat(features.appearance, 'appearance')
+          addFeat(features.color, 'color'); addFeat(features.smell, 'smell')
+          addFeat(features.size, 'size'); addFeat(features.magnetTest, 'magnetTest')
+          const compressed = await compressImage(photos[0])
+          const reRes = await fetch('/api/analyze-foreign-matter', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              imageBase64: compressed.base64, mediaType: compressed.mimeType,
+              structured: true, lang: getStoredLang(),
+              productName: productName || undefined,
+              situationComment: comment || undefined,
+              hintsSummary: featureKeys.length > 0 ? featureKeys.join(', ') : undefined,
+            }),
+          })
+          if (reRes.ok) {
+            const reData = await reRes.json()
+            if (reData.quickResult) finalAiQuickResult = reData.quickResult as AiQuickResult
+          }
+        } catch { /* 失敗時は既存のaiQuickResultを使用 */ }
+      }
+      const confidenceToProb: Record<string, number> = { '高': 85, '中': 65, '低': 45, 'High': 85, 'Medium': 65, 'Low': 45 }
       // AI即時判定（画像解析）を第1候補として保存
-      const aiVisionEst: EstimationResult | null = aiQuickResult ? {
-        category: aiQuickResult.category,
-        probability: 95,
+      const aiVisionEst: EstimationResult | null = finalAiQuickResult ? {
+        category: finalAiQuickResult.category,
+        probability: confidenceToProb[finalAiQuickResult.confidence] ?? 65,
         basis: ['AI画像解析（Gemini Vision）'],
-        urgency: aiQuickResult.urgency,
+        urgency: finalAiQuickResult.urgency,
         source: 'ai_vision',
-        name: aiQuickResult.name,
-        nameEn: aiQuickResult.nameEn,
-        route: aiQuickResult.route,
-        routeEn: aiQuickResult.routeEn,
-        action: aiQuickResult.action,
-        actionEn: aiQuickResult.actionEn,
+        name: finalAiQuickResult.name,
+        nameEn: finalAiQuickResult.nameEn,
+        route: finalAiQuickResult.route,
+        routeEn: finalAiQuickResult.routeEn,
+        action: finalAiQuickResult.action,
+        actionEn: finalAiQuickResult.actionEn,
       } : null
       const estimations: EstimationResult[] = [
         ...(aiVisionEst ? [aiVisionEst] : []),
@@ -535,7 +566,7 @@ function RecordPageInner() {
                 </div>
                 <div>
                   <label className="label">{t('record.claimDate')} <span className="text-red-400">*</span></label>
-                  <DateInput value={claimDate} onChange={setClaimDate} quickPast />
+                  <DateInput value={claimDate} onChange={setClaimDate} />
                 </div>
                 <div>
                   <label className="label">{t('record.claimContent')}</label>
@@ -571,7 +602,7 @@ function RecordPageInner() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">{t('record.mfgDate')}</label>
-                <DateInput value={manufacturingDate} onChange={setManufacturingDate} quickPast />
+                <DateInput value={manufacturingDate} onChange={setManufacturingDate} />
               </div>
               <div>
                 <label className="label">{t('record.expiryDate')}</label>
@@ -579,8 +610,6 @@ function RecordPageInner() {
                   value={expiryDate}
                   onChange={setExpiryDate}
                   warnIfBeforeDate={manufacturingDate || undefined}
-                  quickFutureOffsets={[1, 3, 7, 30]}
-                  baseDate={manufacturingDate || undefined}
                 />
               </div>
             </div>
@@ -643,7 +672,12 @@ function RecordPageInner() {
                 <div className={`rounded-2xl border-2 ${u.border} ${u.bg} p-4 space-y-3 shadow-sm`}>
                   {/* ヘッダー */}
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-gray-500 tracking-wide">{t('record.ai.quickTitle')}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-gray-500 tracking-wide">{t('record.ai.quickTitle')}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-700">
+                        {isEn ? 'Preliminary' : '暫定判定'}
+                      </span>
+                    </div>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-white border ${u.border} ${u.text}`}>
                       {u.label}
                     </span>
@@ -723,6 +757,31 @@ function RecordPageInner() {
               )
             })()}
 
+            {/* AI判定とコメントの競合警告 */}
+            {aiQuickResult && !aiEstimating && comment && (() => {
+              const aiName = aiQuickResult.name
+              const rubberRe = /ゴム|rubber/i
+              const brushRe = /ブラシ|brush|bristle/i
+              const hairRe = /毛髪|体毛|hair/i
+              const gloveRe = /手袋|glove/i
+              const aiIsRubber = rubberRe.test(aiName)
+              const aiIsBrush = brushRe.test(aiName)
+              const aiIsGlove = gloveRe.test(aiName)
+              const cmtHasRubber = rubberRe.test(comment)
+              const cmtHasBrushOrHair = brushRe.test(comment) || hairRe.test(comment)
+              const cmtHasGlove = gloveRe.test(comment)
+              let warning = ''
+              if (aiIsBrush && cmtHasRubber) warning = isEn ? '⚠️ Comment mentions rubber, but AI identified brush bristle — please verify features.' : '⚠️ コメントにゴム系の記述がありますが、AI判定は「ブラシ毛」です。特徴を再確認してください。'
+              else if (aiIsRubber && cmtHasBrushOrHair) warning = isEn ? '⚠️ Comment mentions brush/hair, but AI identified rubber — please verify features.' : '⚠️ コメントにブラシ/毛の記述がありますが、AI判定は「ゴム片」です。特徴を再確認してください。'
+              else if (aiIsGlove && cmtHasRubber && !cmtHasGlove) warning = isEn ? '⚠️ Comment mentions rubber, but AI identified glove fragment — please verify.' : '⚠️ コメントにゴム系の記述がありますが、AI判定は「手袋片」です。確認してください。'
+              if (!warning) return null
+              return (
+                <div className="px-4 py-2.5 bg-amber-50 border border-amber-300 rounded-2xl text-xs text-amber-800 font-medium">
+                  {warning}
+                </div>
+              )
+            })()}
+
             {/* 鑑識画像解析 – 異物写真がある場合に表示 */}
             {photos.length > 0 && (
               <ForensicEnhancer file={photos[0]} productName={productName || undefined} situationComment={comment || undefined} />
@@ -790,7 +849,7 @@ function RecordPageInner() {
             </div>
             <div>
               <label className="label">{t('record.discoveryDate')}</label>
-              <DateInput value={discoveryDate} onChange={setDiscoveryDate} type="datetime-local" quickPast />
+              <DateInput value={discoveryDate} onChange={setDiscoveryDate} type="datetime-local" />
             </div>
             <div>
               <label className="label">{t('record.comment')}</label>
@@ -816,8 +875,8 @@ function RecordPageInner() {
                 {
                   label: isEn ? '🤔 Guess' : '🤔 推測',
                   chips: isEn
-                    ? ['Tape', 'Plastic film', 'Hair', 'Insect', 'Bone', 'Char', 'Metal', 'Unknown']
-                    : ['テープ片', 'ビニール片', '毛', '虫', '骨', '焦げ', '金属', 'わからない'],
+                    ? ['Tape', 'Plastic film', 'Hair/body hair', 'Insect', 'Bone', 'Char', 'Metal', 'Rubber band', 'Glove fragment', 'Bandage', 'Brush bristle', 'Plastic piece', 'Thread/fiber', 'Paper', 'Stone/sand', 'Glass', 'Wood', 'Sponge piece', 'Scrub pad', 'Steel wool', 'Unknown']
+                    : ['テープ片', 'ビニール片', '毛髪・体毛', '虫', '骨', '焦げ', '金属', '輪ゴム・ゴム片', '手袋片', '絆創膏', 'ブラシ毛', 'プラスチック片', '糸・繊維', '紙片', '石・砂', 'ガラス', '木片', 'スポンジ片', 'たわし・研磨材', '金属たわし', 'わからない'],
                 },
               ].map(({ label, chips }) => (
                 <div key={label} className="mt-2">

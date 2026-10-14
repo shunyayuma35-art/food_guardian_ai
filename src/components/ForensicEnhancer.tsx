@@ -218,6 +218,9 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
   const [remaining, setRemaining] = useState<number | null>(null)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const [l4Ms, setL4Ms] = useState<number | null>(null)
+  const [scanKey, setScanKey] = useState(0)
+
+  useEffect(() => { setScanKey(k => k + 1) }, [layerIdx])
 
   // File → data URL
   useEffect(() => {
@@ -406,6 +409,9 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
           70%  { transform: scale(1);    box-shadow: 0 0 0 10px rgba(239,68,68,0); }
           100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239,68,68,0); }
         }
+        @media (prefers-reduced-motion: reduce) {
+          .fe-layer-scan { animation: none !important; }
+        }
       `}</style>
 
       {/* Header bar */}
@@ -465,6 +471,21 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
               style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.22s ease', filter: layerIdx === 3 ? 'brightness(1.3)' : 'none' }}
               onClick={() => setLightboxSrc(imgSrc)}
             />
+
+            {/* Per-layer scan line */}
+            {!computing && !analyzing && layerUrls.length > 0 && (
+              <div
+                key={`scan-${scanKey}`}
+                className="fe-layer-scan"
+                style={{
+                  position: 'absolute', left: 0, right: 0, height: '2px',
+                  background: `linear-gradient(90deg, transparent, ${layer.color}cc, ${layer.color}, ${layer.color}cc, transparent)`,
+                  animation: 'fe-scan 2.8s linear infinite',
+                  boxShadow: `0 0 8px ${layer.color}`,
+                  pointerEvents: 'none',
+                }}
+              />
+            )}
 
             {/* Scanning animation */}
             {analyzing && (
