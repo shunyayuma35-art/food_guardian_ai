@@ -74,10 +74,11 @@ IMPORTANT:
 - All items must be consistent with the AI-identified foreign matter type.
 - Corrective action deadlines MUST be in YYYY/MM/DD format and MUST be between ${deadlineMin} and ${deadlineMax} (14–90 days after discovery date). Never use past dates.
 - Responsible persons should be generic roles (e.g., QA Dept., Line Manager).
+- "corrective" items MUST NOT say "initiate a recall" or "begin recall". Instead write "Assess recall necessity (factors: health impact, hazard level, lot contamination scope) — recall requires management approval." Shipment HOLD and quarantine are acceptable.
 
 Respond in this EXACT JSON format (no other text):
 {
-  "corrective": ["Correction item 1 (product hold/quarantine/segregation/disposal)", "item 2", "item 3"],
+  "corrective": ["Correction item 1 (product HOLD/quarantine/segregation — do NOT write recall initiation)", "item 2", "item 3"],
   "preventive": ["Corrective action item 1 — Responsible: [role]  Deadline: ${deadlineMin}", "item 2", "item 3"],
   "verification": {
     "what": "What to confirm (e.g., no recurrence of same foreign matter type)",
@@ -109,10 +110,11 @@ ${memoryCases.length > 0 ? `\n過去の人が確定した学習済みCAPAアク�
 - ③是正処置の各項目に「担当: ○○　期限: YYYY/MM/DD」の形式で期限を記入すること。
 - 期限は必ず ${deadlineMin} 〜 ${deadlineMax}（発見日から2週間〜3か月後）の範囲で YYYY/MM/DD 形式にすること。過去の日付は絶対に使わないこと。
 - ④有効性の検証計画は必ず4つのキーを持つJSONオブジェクトで返すこと。
+- ①修正の項目で「回収を実施」「回収を開始」「回収手配を実施」と書いてはいけない。代わりに「回収要否を判断する（判断材料: 健康被害の有無・異物の危険性・同一ロットへの広がり）※回収実施は責任者の承認を要する」と書くこと。出荷保留・隔離は記載可。
 
 以下の形式で【必ずJSONのみ】回答してください:
 {
-  "corrective": ["①修正項目1（当該ロット隔離・出荷保留・現物保管など）", "項目2", "項目3"],
+  "corrective": ["①修正項目1（当該ロット隔離・出荷保留・現物保管など — 回収の実施は書かないこと）", "項目2", "項目3"],
   "preventive": ["③是正処置項目1（原因除去・再発防止）担当: ○○　期限: ${deadlineMin}", "項目2", "項目3"],
   "verification": {
     "what": "確認内容（例: 同種異物の再発がないこと）",

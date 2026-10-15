@@ -169,8 +169,9 @@ function IncidentDetailPageInner() {
           setVerifyCriteria(vParsed.criteria)
           setActionsUpdatedAt(data.actionsUpdatedAt ?? data.causeVerifiedAt ?? '')
           // 正解の登録フィールドを復元（AIの第1候補の名前を初期値にする）
-          setConfirmedName(data.confirmedName ?? data.estimations?.[0]?.name ?? data.estimations?.[0]?.category ?? '')
-          const aiMapped = mapAiCategoryToFM(data.estimations?.[0]?.category ?? '')
+          const initEst = data.estimations?.find((e: { source?: string }) => e.source === 'ai_vision') ?? data.estimations?.[0]
+          setConfirmedName(data.confirmedName ?? initEst?.name ?? initEst?.category ?? '')
+          const aiMapped = mapAiCategoryToFM(initEst?.category ?? '')
           setConfirmedCategory(data.confirmedCategory ?? aiMapped.main)
           setConfirmedSubcategory(data.confirmedSubcategory ?? aiMapped.sub)
           setConfirmedMethod(data.confirmedMethod ?? '')
@@ -181,7 +182,7 @@ function IncidentDetailPageInner() {
           if (data.recallAssessment) setRecallAssessment(data.recallAssessment)
           // Q1の初期値をAI判定から自動設定
           else if (!data.recallAssessment) {
-            const topEst0 = data.estimations?.[0]
+            const topEst0 = data.estimations?.find((e: { source?: string }) => e.source === 'ai_vision') ?? data.estimations?.[0]
             const topCat = topEst0?.category ?? ''
             const topName = topEst0?.name ?? ''
             const isHighUrgency = topEst0?.urgency === 'high'
@@ -208,7 +209,7 @@ function IncidentDetailPageInner() {
     setDraftLoading(true)
     try {
       const lang = typeof window !== 'undefined' ? (localStorage.getItem('foodeye_lang') ?? 'ja') : 'ja'
-      const topEst = incident.estimations?.[0] ?? null
+      const topEst = incident.estimations?.find(e => e.source === 'ai_vision') ?? incident.estimations?.[0] ?? null
       const res = await fetch('/api/ai-draft', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -289,7 +290,7 @@ function IncidentDetailPageInner() {
       const hintsYes = incident.hints
         ? Object.entries(incident.hints).filter(([, v]) => v === 'yes').map(([k]) => k).join(', ')
         : undefined
-      const prevEst = incident.estimations?.[0]
+      const prevEst = incident.estimations?.find(e => e.source === 'ai_vision') ?? incident.estimations?.[0]
       const prevContext = prevEst ? `前回の即時判定: ${prevEst.name ?? prevEst.category}（${prevEst.source === 'ai_vision' ? 'AI画像解析' : 'ルールベース'}）` : undefined
       const res = await fetch('/api/analyze-foreign-matter', {
         method: 'POST',
@@ -358,7 +359,7 @@ function IncidentDetailPageInner() {
       } : prev)
       // AI関与がある場合は学習記憶に保存（非致命的）
       if (verifyAiDrafted || aiCorrectiveRaw || aiPreventiveRaw) {
-        const topEst = incident.estimations?.[0]
+        const topEst = incident.estimations?.find(e => e.source === 'ai_vision') ?? incident.estimations?.[0]
         const humanFinalParts = [
           editCorrective && `①修正:${editCorrective.slice(0, 80)}`,
           editPreventive && `③是正:${editPreventive.slice(0, 80)}`,
@@ -582,7 +583,7 @@ function IncidentDetailPageInner() {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
             product_name: incident.productName ?? '',
-            category: incident.estimations?.[0]?.category ?? '',
+            category: (incident.estimations?.find(e => e.source === 'ai_vision') ?? incident.estimations?.[0])?.category ?? '',
             confirmed_name: confirmedName.trim(),
             confirmed_category: confirmedCategory,
             confirmed_subcategory: confirmedSubcategory,
@@ -594,7 +595,7 @@ function IncidentDetailPageInner() {
         })
       } catch { /* Supabase失敗は非致命的 */ }
       // AI記憶にも保存（非致命的）
-      const topEst2 = incident.estimations?.[0]
+      const topEst2 = incident.estimations?.find(e => e.source === 'ai_vision') ?? incident.estimations?.[0]
       fetch('/api/ai-memory', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -646,7 +647,7 @@ function IncidentDetailPageInner() {
     )
   }
 
-  const topEst = incident.estimations?.[0]
+  const topEst = incident.estimations?.find(e => e.source === 'ai_vision') ?? incident.estimations?.[0]
 
   return (
     <div className="min-h-screen pb-28">
@@ -734,14 +735,14 @@ function IncidentDetailPageInner() {
           </div>
           {topEst && (
             <div className={`px-4 py-2.5 rounded-xl text-sm font-bold badge-${topEst.urgency}`}>
-              ⚡ {t(`urgency.${topEst.urgency}` as Parameters<typeof t>[0])}: {topEst.category}
+              ⚡ {t(`urgency.${topEst.urgency}` as Parameters<typeof t>[0])}: {incident.confirmedName || (isEn ? (topEst.nameEn ?? topEst.name ?? topEst.category) : (topEst.name ?? topEst.category))}
             </div>
           )}
         </div>
 
         {/* AI推定結果 */}
         {incident.estimations && incident.estimations.length > 0 && (() => {
-          const aiVisionEst = incident.estimations[0]?.source === 'ai_vision' ? incident.estimations[0] : null
+          const aiVisionEst = incident.estimations.find(e => e.source === 'ai_vision') ?? null
           const topIsHighConfidenceAi = !!aiVisionEst && aiVisionEst.urgency === 'high'
           const aiIsNonMetal = !!aiVisionEst && !/金属|ステンレス|SUS|鉄|アルミ|銅|ガラス|glass|metal/i.test(aiVisionEst.category)
           const isMetalCandidate = (cat: string) => /金属|ステンレス|SUS|鉄|アルミ|銅|鋼/.test(cat)

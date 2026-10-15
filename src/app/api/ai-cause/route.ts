@@ -101,7 +101,7 @@ Method: (hypothesis about process/procedure — must match the foreign matter ty
 [/CAUSE_4M]
 
 [CORRECTIVE]
-(immediate corrective actions: product quarantine, shipment hold, physical evidence preservation, etc.)
+(immediate corrective actions: product quarantine, shipment HOLD, line stop, physical evidence preservation. Do NOT write "initiate a recall" or "begin recall". Instead write "Assess recall necessity (factors: health impact, hazard level, lot contamination scope) — recall requires management approval." Shipment hold and quarantine are acceptable.)
 [/CORRECTIVE]
 
 [PREVENTIVE]
@@ -145,7 +145,7 @@ ${productHint}
 [/CAUSE_4M]
 
 [CORRECTIVE]
-（今回の対処: 製品の隔離・出荷保留・現物保管・ライン停止など）
+（今回の即時対処: 製品の隔離・出荷保留・ライン停止・現物保管など。「回収を実施」「回収を開始」と書いてはいけない。代わりに「回収要否を判断する（判断材料: 健康被害の有無・異物の危険性・同一ロットへの広がり）※回収実施は責任者の承認を要する」と書くこと。出荷保留・隔離は記載可。）
 [/CORRECTIVE]
 
 [PREVENTIVE]
