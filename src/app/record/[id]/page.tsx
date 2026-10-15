@@ -231,13 +231,13 @@ function IncidentDetailPageInner() {
       if (!res.ok) throw new Error(data.error ?? 'AI error')
       const corrDraft = Array.isArray(data.corrective) ? data.corrective.join('\n') : (data.corrective ?? '')
       const prevDraft = Array.isArray(data.preventive) ? data.preventive.join('\n') : (data.preventive ?? '')
-      // structured verification
-      const verifObj: { what?: string; when?: string; who?: string; criteria?: string } | null =
+      // structured verification — verifObj は API 側で fillVerificationDefaults 済み
+      const verifObj =
         typeof data.verification === 'object' && data.verification !== null
           ? (data.verification as { what?: string; when?: string; who?: string; criteria?: string })
           : typeof data.verification === 'string'
             ? parseVerification(data.verification as string)
-            : null
+            : { what: '', when: '', who: '', criteria: '' }
       if (mode === 'replace') {
         const hasExistingVerify = verifyWhat.trim() || verifyWhen.trim() || verifyWho.trim() || verifyCriteria.trim()
         if (hasExistingVerify && !window.confirm(isEn ? 'Overwrite the existing verification plan?' : '既存の④検証計画を上書きします。よろしいですか？')) {
@@ -245,21 +245,18 @@ function IncidentDetailPageInner() {
         }
         setEditCorrective(corrDraft)
         setEditPreventive(prevDraft)
-        if (verifObj) {
-          setVerifyWhat(verifObj.what ?? '')
-          setVerifyWhen(verifObj.when ?? '')
-          setVerifyWho(verifObj.who ?? '')
-          setVerifyCriteria(verifObj.criteria ?? '')
-        }
+        // 常に4項目をセット（条件なし）
+        setVerifyWhat(verifObj.what ?? '')
+        setVerifyWhen(verifObj.when ?? '')
+        setVerifyWho(verifObj.who ?? '')
+        setVerifyCriteria(verifObj.criteria ?? '')
       } else {
         setEditCorrective(prev => prev ? `${prev}\n\n${corrDraft}` : corrDraft)
         setEditPreventive(prev => prev ? `${prev}\n\n${prevDraft}` : prevDraft)
-        if (verifObj) {
-          setVerifyWhat(prev => (prev && verifObj.what) ? `${prev}\n${verifObj.what}` : verifObj.what ?? prev)
-          setVerifyWhen(prev => (prev && verifObj.when) ? `${prev}\n${verifObj.when}` : verifObj.when ?? prev)
-          setVerifyWho(prev => (prev && verifObj.who) ? `${prev}\n${verifObj.who}` : verifObj.who ?? prev)
-          setVerifyCriteria(prev => (prev && verifObj.criteria) ? `${prev}\n${verifObj.criteria}` : verifObj.criteria ?? prev)
-        }
+        setVerifyWhat(prev => (prev && verifObj.what) ? `${prev}\n${verifObj.what}` : verifObj.what ?? prev)
+        setVerifyWhen(prev => (prev && verifObj.when) ? `${prev}\n${verifObj.when}` : verifObj.when ?? prev)
+        setVerifyWho(prev => (prev && verifObj.who) ? `${prev}\n${verifObj.who}` : verifObj.who ?? prev)
+        setVerifyCriteria(prev => (prev && verifObj.criteria) ? `${prev}\n${verifObj.criteria}` : verifObj.criteria ?? prev)
       }
       setVerifyAiDrafted(true)
       if (typeof data.memoryCasesUsed === 'number' && data.memoryCasesUsed > 0) {

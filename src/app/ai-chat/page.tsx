@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, type RefObject } from 'react'
+import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import { useLang } from '@/context/LanguageContext'
 import ImageEnhancer from '@/components/ImageEnhancer'
@@ -289,6 +290,7 @@ function stripMarkdown(text: string): string {
 
 export default function AiChatPage() {
   const { t, lang } = useLang()
+  const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -944,9 +946,13 @@ export default function AiChatPage() {
             {hasAnalysis && (
               <div className="pt-2 space-y-2">
                 {savedIncidentId !== null ? (
-                  <div className="w-full py-2.5 bg-green-50 border border-green-300 text-green-800 text-sm font-bold rounded-xl flex items-center justify-center gap-1.5">
-                    ✅ {lang === 'en' ? `Saved to list (#${savedIncidentId})` : `一覧に保存しました（#${savedIncidentId}）`}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/list')}
+                    className="w-full py-2.5 bg-green-50 border border-green-300 text-green-800 text-sm font-bold rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                  >
+                    ✅ {lang === 'en' ? `Saved to list (#${savedIncidentId}) → View` : `一覧に保存しました（#${savedIncidentId}）→ 一覧を見る`}
+                  </button>
                 ) : (
                   <>
                     <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
