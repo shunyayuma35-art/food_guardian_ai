@@ -31,10 +31,44 @@ const URGENCY_BAR_COLOR: Record<string, string> = {
 export default function IncidentCard({ incident }: Props) {
   const { t, lang } = useLang()
   const isEn = lang === 'en'
-  const topEst = incident.estimations?.[0]
+
+  // 優先順: ①確定名 → ②AI Vision → ③ルールベース
+  const aiEst = incident.estimations?.find(e => e.source === 'ai_vision') ?? null
+  const ruleEst = incident.estimations?.find(e => e.source !== 'ai_vision') ?? incident.estimations?.[0] ?? null
+  const hasConfirmed = !!incident.confirmedName
+
+  type DisplayMode = 'confirmed' | 'ai' | 'rule' | 'none'
+  let displayMode: DisplayMode = 'none'
+  let displayName = ''
+  let displayUrgency: string | null = null
+
+  if (hasConfirmed) {
+    displayMode = 'confirmed'
+    displayName = incident.confirmedName!
+    displayUrgency = (aiEst ?? ruleEst)?.urgency ?? null
+  } else if (aiEst) {
+    displayMode = 'ai'
+    displayName = (isEn ? aiEst.nameEn : aiEst.name) || aiEst.category
+    displayUrgency = aiEst.urgency
+  } else if (ruleEst) {
+    displayMode = 'rule'
+    displayName = ruleEst.category
+    displayUrgency = ruleEst.urgency
+  }
+
+  const urgencyForIcon = displayUrgency
   const statusClass = STATUS_CLASS[incident.status] ?? 'badge-open'
-  const urgencyIcon = topEst ? (URGENCY_ICON[topEst.urgency] ?? '⚪') : ''
-  const barColor = topEst ? (URGENCY_BAR_COLOR[topEst.urgency] ?? 'bg-orange-400') : 'bg-orange-400'
+  const urgencyIcon = urgencyForIcon ? (URGENCY_ICON[urgencyForIcon] ?? '⚪') : ''
+  const barColor = urgencyForIcon ? (URGENCY_BAR_COLOR[urgencyForIcon] ?? 'bg-orange-400') : 'bg-orange-400'
+
+  const urgencyLabel = (u: string) =>
+    isEn
+      ? (u === 'high' ? 'High' : u === 'medium' ? 'Medium' : 'Low')
+      : (u === 'high' ? '高' : u === 'medium' ? '中' : '低')
+  const urgencyChipColor = (u: string) =>
+    u === 'high' ? 'bg-red-100 text-red-700' :
+    u === 'medium' ? 'bg-orange-100 text-orange-700' :
+    'bg-yellow-100 text-yellow-700'
 
   return (
     <Link href={`/record/${incident.id}`}>
@@ -73,17 +107,43 @@ export default function IncidentCard({ incident }: Props) {
           )}
         </div>
 
-        {topEst && (
-          <div className="mt-2.5 flex items-center gap-2">
-            <div className="flex-1 bg-orange-50 rounded-full h-2 overflow-hidden">
-              <div
-                className={`h-full ${barColor} rounded-full transition-all`}
-                style={{ width: `${topEst.probability}%` }}
-              />
-            </div>
-            <span className="text-xs text-orange-600 font-semibold whitespace-nowrap">
-              {topEst.category} {topEst.probability}%
+        {displayMode !== 'none' && (
+          <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+            {/* バッジ */}
+            {displayMode === 'confirmed' && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-700 border border-green-200 shrink-0">
+                ✅{isEn ? 'Confirmed' : '確定'}
+              </span>
+            )}
+            {displayMode === 'ai' && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200 shrink-0">
+                🤖AI
+              </span>
+            )}
+            {displayMode === 'rule' && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200 shrink-0">
+                {isEn ? 'Est.' : '参考'}
+              </span>
+            )}
+
+            {/* 異物名 */}
+            <span className="text-xs font-semibold text-orange-700 truncate flex-1 min-w-0">
+              {displayName}
             </span>
+
+            {/* 信頼度または確率バー */}
+            {displayMode === 'rule' && ruleEst ? (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="w-16 bg-orange-50 rounded-full h-2 overflow-hidden">
+                  <div className={`h-full ${barColor} rounded-full`} style={{ width: `${ruleEst.probability}%` }} />
+                </div>
+                <span className="text-xs text-gray-500">{ruleEst.probability}%</span>
+              </div>
+            ) : displayUrgency ? (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap shrink-0 ${urgencyChipColor(displayUrgency)}`}>
+                {urgencyLabel(displayUrgency)}
+              </span>
+            ) : null}
           </div>
         )}
 
