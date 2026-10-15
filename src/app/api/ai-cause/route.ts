@@ -109,7 +109,7 @@ Method: (hypothesis about process/procedure — must match the foreign matter ty
 [/PREVENTIVE]
 
 [VERIFY]
-(items to verify on-site to confirm root cause)
+(effectiveness verification plan AFTER ③ corrective actions are implemented: what to confirm to prove non-recurrence, timing/frequency, responsible person, acceptance criteria e.g. "0 incidents of same type for 3 months")
 [/VERIFY]`
   }
 
@@ -153,7 +153,7 @@ ${productHint}
 [/PREVENTIVE]
 
 [VERIFY]
-（原因を確定するために現場で確認すべき事項）
+（③是正処置の実施後に再発していないことを確認する計画：確認内容・時期・頻度・担当者・判定基準（例：同種異物の発生0件が3か月続くこと））
 [/VERIFY]`
 }
 
@@ -262,7 +262,7 @@ export async function POST(req: NextRequest) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const result = await Promise.race([
-          callAI({ system: systemPrompt, userText: prompt, maxTokens: 3000 }),
+          callAI({ system: systemPrompt, userText: prompt, maxTokens: 6000 }),
           new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 60000)),
         ])
         lastRaw = result.text

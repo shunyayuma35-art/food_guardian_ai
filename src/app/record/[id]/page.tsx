@@ -404,6 +404,12 @@ function IncidentDetailPageInner() {
       setCorrectiveText(data.corrective ?? '')
       setPreventiveText(data.preventive ?? '')
       setVerifyText(data.verify ?? '')
+      // CAPA編集欄と同期（PDCA警告が常に最新の③を参照するよう）
+      if (data.corrective) setEditCorrective(data.corrective)
+      if (data.preventive) setEditPreventive(data.preventive)
+      if (!data.preventive) {
+        toast.error(isEn ? '③ Corrective action failed to generate. Please regenerate.' : '③の生成に失敗しました。再生成してください')
+      }
       setShowCausePanel(true)
       const usedCount = typeof data.confirmedCasesUsed === 'number' ? data.confirmedCasesUsed : 0
       toast.success(
