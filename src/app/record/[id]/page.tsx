@@ -101,6 +101,7 @@ function IncidentDetailPageInner() {
   const [actionsUpdatedAt, setActionsUpdatedAt] = useState('')
   const [draftLoading, setDraftLoading] = useState(false)
   const [draftMemoryCount, setDraftMemoryCount] = useState(0)
+  const [draftError, setDraftError] = useState('')
   const [regenEnLoading, setRegenEnLoading] = useState(false)
   const [showRuleBased, setShowRuleBased] = useState(false)
   const [recallAssessment, setRecallAssessment] = useState<RecallAssessment>({
@@ -198,6 +199,12 @@ function IncidentDetailPageInner() {
 
   async function handleAiDraftDetail(mode: 'replace' | 'append') {
     if (!incident) return
+    setDraftError('')
+    const hasContext = !!(incident.productName || incident.estimations?.length || incident.comment)
+    if (!hasContext) {
+      setDraftError(isEn ? 'Please fill in ①–③ first (product, photo, or situation).' : '先に①〜③を入力してください（商品・写真・状況のいずれか）。')
+      return
+    }
     setDraftLoading(true)
     try {
       const lang = typeof window !== 'undefined' ? (localStorage.getItem('foodeye_lang') ?? 'ja') : 'ja'
@@ -262,6 +269,7 @@ function IncidentDetailPageInner() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'AI draft failed'
       toast.error(msg)
+      setDraftError(msg)
     } finally {
       setDraftLoading(false)
     }
@@ -1046,6 +1054,11 @@ function IncidentDetailPageInner() {
               {draftLoading ? '...' : <>{t('detail.aiDraftAppend')}</>}
             </button>
           </div>
+          {draftError && (
+            <div className="mb-2 text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">
+              ⚠️ {draftError}
+            </div>
+          )}
           {draftMemoryCount > 0 && (
             <div className="mb-2 flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
               📚 {isEn ? `Referenced ${draftMemoryCount} past cases` : `${draftMemoryCount}件の学習済み事例を参考にしました`}

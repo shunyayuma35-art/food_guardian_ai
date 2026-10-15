@@ -10,6 +10,7 @@ interface Props {
   dataUrl?: string | null
   productName?: string
   situationComment?: string
+  onForensicResult?: (name: string) => void
 }
 
 interface AiForensicResult {
@@ -193,7 +194,7 @@ function playBeep() {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ForensicEnhancer({ file, dataUrl, productName, situationComment }: Props) {
+export default function ForensicEnhancer({ file, dataUrl, productName, situationComment, onForensicResult }: Props) {
   const { t } = useLang()
 
   const LAYERS = [
@@ -359,6 +360,7 @@ export default function ForensicEnhancer({ file, dataUrl, productName, situation
         setAiResult(data.quickResult as AiForensicResult)
         setShowResult(true)
         if (data.remaining != null) setRemaining(data.remaining)
+        if (onForensicResult && data.quickResult.name) onForensicResult(data.quickResult.name)
       }
     } catch {
       setAiResult({ name: t('forensic.errorNet'), category: '', confidence: '', urgency: 'low',

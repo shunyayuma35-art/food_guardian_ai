@@ -300,6 +300,8 @@ export default function AiChatPage() {
   const [visualizerDataUrl, setVisualizerDataUrl] = useState<string | null>(null)
   const [showVisualizer, setShowVisualizer] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [savedIncidentId, setSavedIncidentId] = useState<number | null>(null)
+  const [memoryCount, setMemoryCount] = useState(0)
   const [agentPanelOpen, setAgentPanelOpen] = useState(false)
   const [agentAnalysis, setAgentAnalysis] = useState<AnalysisResult | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -505,6 +507,9 @@ export default function AiChatPage() {
 
       if (data.limit) setAnalysisLimit(data.limit)
       if (data.remaining !== undefined) setUsageRemaining(data.remaining)
+      if (typeof data.memoryCasesUsed === 'number' && data.memoryCasesUsed > 0) {
+        setMemoryCount(data.memoryCasesUsed)
+      }
 
       const analysisMsg: Message = {
         id: Date.now().toString(),
@@ -806,6 +811,8 @@ export default function AiChatPage() {
         }),
       });
       if (!res.ok) throw new Error('save failed');
+      const saveData = await res.json();
+      if (saveData?.incident?.id) setSavedIncidentId(saveData.incident.id)
       toast.success(t('toast.aiSaved'));
     } catch {
       toast.error(t('toast.aiSaveFailed'));
@@ -935,14 +942,30 @@ export default function AiChatPage() {
           <div className="px-3 pb-2 space-y-2 border-t border-gray-100 max-h-[45vh] overflow-y-auto">
             {/* 保存ボタン（解析結果あり時のみ） */}
             {hasAnalysis && (
-              <div className="pt-2">
-                <button
-                  onClick={saveAsIncident}
-                  disabled={saving}
-                  className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-1.5"
-                >
-                  {saving ? t('common.saving') : t('aichat.save')}
-                </button>
+              <div className="pt-2 space-y-2">
+                {savedIncidentId !== null ? (
+                  <div className="w-full py-2.5 bg-green-50 border border-green-300 text-green-800 text-sm font-bold rounded-xl flex items-center justify-center gap-1.5">
+                    ✅ {lang === 'en' ? `Saved to list (#${savedIncidentId})` : `一覧に保存しました（#${savedIncidentId}）`}
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+                      ⚠️ {lang === 'en' ? 'This analysis is not saved yet. Tap 💾 to keep it in the list.' : 'この解析はまだ保存されていません。💾記録保存で一覧に残ります'}
+                    </div>
+                    <button
+                      onClick={saveAsIncident}
+                      disabled={saving}
+                      className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-1.5"
+                    >
+                      {saving ? t('common.saving') : `💾 ${t('aichat.save')}`}
+                    </button>
+                  </>
+                )}
+                {memoryCount > 0 && (
+                  <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1 flex items-center gap-1">
+                    📚 {lang === 'en' ? `Referenced ${memoryCount} past cases` : `確定事例${memoryCount}件を参考にしました`}
+                  </div>
+                )}
               </div>
             )}
             {/* AI 検索 */}

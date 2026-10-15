@@ -104,6 +104,7 @@ function RecordPageInner() {
   const [aiQuickResult, setAiQuickResult] = useState<AiQuickResult | null>(null)
   const [aiEstimating, setAiEstimating] = useState(false)
   const [aiMemoryCount, setAiMemoryCount] = useState(0)
+  const [forensicResultName, setForensicResultName] = useState<string | null>(null)
 
   // 異物写真がアップロードされたら自動でAI即時判定
   useEffect(() => {
@@ -809,9 +810,23 @@ function RecordPageInner() {
               )
             })()}
 
+            {/* 鑑識判定と即時判定の食い違い警告 */}
+            {forensicResultName && aiQuickResult && (() => {
+              const fg = getSemanticGroup(forensicResultName)
+              const qg = getSemanticGroup(aiQuickResult.name)
+              if (fg === qg) return null
+              return (
+                <div className="px-4 py-2.5 bg-amber-50 border border-amber-400 rounded-2xl text-xs text-amber-900 font-semibold">
+                  ⚠️ {isEn
+                    ? 'Forensic and quick analysis results differ. Prioritize human judgment.'
+                    : '判定が分かれています。人の確認を優先してください'}
+                </div>
+              )
+            })()}
+
             {/* 鑑識画像解析 – 異物写真がある場合に表示 */}
             {photos.length > 0 && (
-              <ForensicEnhancer file={photos[0]} productName={productName || undefined} situationComment={comment || undefined} />
+              <ForensicEnhancer file={photos[0]} productName={productName || undefined} situationComment={comment || undefined} onForensicResult={setForensicResultName} />
             )}
 
             <div className="border-t border-orange-100" />
@@ -819,7 +834,7 @@ function RecordPageInner() {
 
             {/* 顕微鏡写真の鑑識解析 */}
             {microscopePhotos.length > 0 && (
-              <ForensicEnhancer file={microscopePhotos[0]} productName={productName || undefined} situationComment={comment || undefined} />
+              <ForensicEnhancer file={microscopePhotos[0]} productName={productName || undefined} situationComment={comment || undefined} onForensicResult={setForensicResultName} />
             )}
           </div>
         )}
@@ -898,6 +913,9 @@ function RecordPageInner() {
             </div>
             <div>
               <label className="label">{t('record.comment')}</label>
+              <p className="text-[11px] text-gray-400 mb-1.5">
+                {isEn ? 'Select from chips below or type a note (e.g., sponge?)' : '下の候補から選ぶか、ひとこと入力してください（例：スポンジ？）'}
+              </p>
               <AutoResizeTextarea value={comment} onChange={(e) => setComment(e.target.value)}
                 className="input-field"
                 placeholder="例:食べている途中で歯に当たった/青いテープのような薄い片/約3mm/硬い/1個" />
@@ -906,8 +924,8 @@ function RecordPageInner() {
                 {
                   label: isEn ? '📍 Scene' : '📍 発見場面',
                   chips: isEn
-                    ? ['On opening', 'While cooking', 'While eating', 'After eating']
-                    : ['開封時', '調理中', '食べている途中', '食べ終わった後'],
+                    ? ['While eating', 'On opening', 'While cooking', 'Production line', 'Inspection', 'Before shipment', 'Customer report', 'Other']
+                    : ['喫食中', '開封時', '調理中', '製造ライン', '検品時', '出荷前', 'お客様からの申出', 'その他'],
                 },
                 {
                   label: isEn ? '🔢 Count' : '🔢 個数',
