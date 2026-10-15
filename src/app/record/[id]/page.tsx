@@ -404,9 +404,9 @@ function IncidentDetailPageInner() {
       setCorrectiveText(data.corrective ?? '')
       setPreventiveText(data.preventive ?? '')
       setVerifyText(data.verify ?? '')
-      // CAPA編集欄と同期（PDCA警告が常に最新の③を参照するよう）
-      if (data.corrective) setEditCorrective(data.corrective)
-      if (data.preventive) setEditPreventive(data.preventive)
+      // CAPA編集欄が空の場合のみ同期（人が入力済みの場合は上書きしない）
+      if (data.corrective && !editCorrective.trim()) setEditCorrective(data.corrective)
+      if (data.preventive && !editPreventive.trim()) setEditPreventive(data.preventive)
       if (!data.preventive) {
         toast.error(isEn ? '③ Corrective action failed to generate. Please regenerate.' : '③の生成に失敗しました。再生成してください')
       }
@@ -1238,11 +1238,15 @@ function IncidentDetailPageInner() {
               <label className="label">{t('detail.pdcaDeadline')}</label>
               <input type="date" value={pdcaDeadline} onChange={(e) => setPdcaDeadline(e.target.value)}
                 className="input-field" />
-              {/* ③是正処置の期限 > PDCA期限 の場合に警告 */}
-              {pdcaDeadline && editPreventive && (() => {
-                const latestPreventive = editPreventive.match(/\b20[0-9]{2}[/\-](?:0[1-9]|1[0-2])[/\-](?:0[1-9]|[12]\d|3[01])\b/g)
-                if (!latestPreventive) return null
-                const latest = latestPreventive.map(d => d.replace(/-/g, '/')).sort((a, b) => b.localeCompare(a))[0]
+              {/* ③是正処置の期限 > PDCA期限 の場合に警告（CAPA欄③とAIカード③の両方から最遅日付を拾う） */}
+              {pdcaDeadline && (() => {
+                const dateRe = /\b20[0-9]{2}[/\-](?:0[1-9]|1[0-2])[/\-](?:0[1-9]|[12]\d|3[01])\b/g
+                const allDates = [
+                  ...(editPreventive.match(dateRe) ?? []),
+                  ...(preventiveText.match(dateRe) ?? []),
+                ].map(d => d.replace(/-/g, '/'))
+                if (allDates.length === 0) return null
+                const latest = allDates.sort((a, b) => b.localeCompare(a))[0]
                 const latestDate = latest.replace(/\//g, '-')
                 if (latestDate > pdcaDeadline) {
                   return (
