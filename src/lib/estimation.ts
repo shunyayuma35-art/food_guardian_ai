@@ -20,6 +20,11 @@ const URGENCY_MAP: Record<string, 'high' | 'medium' | 'low'> = {
   'シリコーンゴム':       'medium',
   '手袋片':               'medium',
   '洗浄スポンジ':         'medium',
+  'スポンジ片':           'medium',
+  'たわし・研磨材':       'medium',
+  '金属たわし':           'medium',
+  '輪ゴム・ゴム片':       'medium',
+  '絆創膏':               'medium',
   '錆・酸化鉄':          'medium',
   'プラスチック硬質片':   'medium',
   '塗料・コーティング片': 'medium',
@@ -145,6 +150,36 @@ export function getForeignObjectAdvice(category: string): ForeignObjectAdvice {
       immediateActions: ['当該ロット隔離', '使用スポンジ・ブラシの全数確認'],
       investigation: ['洗浄記録と使用器材の確認', '欠損片の材質・色の照合'],
       prevention: ['スポンジ・ブラシは使用前後の状態確認を義務化', '金属探知機対応スポンジの採用', '使用回数管理・定期交換の徹底'],
+    },
+    'スポンジ片': {
+      description: '清掃・調理用スポンジの破片が混入した可能性があります。多孔質・軽量・柔らかい特徴があります。',
+      immediateActions: ['当該ロット隔離', '使用スポンジの全数確認（破損・欠損チェック）'],
+      investigation: ['洗浄・調理記録の確認', '欠損片の色・材質照合'],
+      prevention: ['スポンジは使用前後に状態確認を義務化', '金属探知機対応スポンジへの切り替え', '使用回数管理・定期交換の徹底'],
+    },
+    'たわし・研磨材': {
+      description: '清掃用たわし・スチールウール・研磨パッドの破片が混入した可能性があります。',
+      immediateActions: ['当該ロット隔離', '使用たわし・研磨材の全数確認'],
+      investigation: ['清掃記録の確認', '欠損片の材質・色照合'],
+      prevention: ['たわし使用後の全数確認を義務化', '食品接触面への研磨材使用禁止', '使用記録の管理強化'],
+    },
+    '金属たわし': {
+      description: 'スチールウール・金属製たわしの繊維が混入した可能性があります。非常に細い金属繊維で危険です。',
+      immediateActions: ['当該ロット全量隔離', '金属探知機で全数確認', '金属たわしの使用状況確認'],
+      investigation: ['使用エリアと混入工程の特定', '金属たわしの欠損・破損確認'],
+      prevention: ['製造エリアへの金属たわし持込禁止', '非金属製（ナイロン・樹脂）たわしへの切り替え', '使用記録の管理'],
+    },
+    '輪ゴム・ゴム片': {
+      description: '輪ゴムや弾性ゴム製品の破片が混入した可能性があります。弾力があり伸縮します。',
+      immediateActions: ['当該ロット隔離', '使用中の輪ゴム・ゴム製品の確認'],
+      investigation: ['輪ゴムの使用記録・使用場所の確認', '欠損片の色・サイズ照合'],
+      prevention: ['製造ラインへの輪ゴム持ち込み禁止', '食品衛生法適合のゴム製品への切り替え', 'ゴム製品の使用管理強化'],
+    },
+    '絆創膏': {
+      description: '作業者が使用した絆創膏が混入した可能性があります。目立つ色（青・緑）の使用が推奨されます。',
+      immediateActions: ['当該ロット隔離', '全作業者の絆創膏使用確認', '記録との照合'],
+      investigation: ['混入工程の特定', '絆創膏の色・サイズの照合'],
+      prevention: ['食品工場向け青色金属探知機対応絆創膏の採用', '作業前の絆創膏確認を義務化（枚数管理）', '切創発生時の即時報告手順整備'],
     },
     '錆・酸化鉄': {
       description: '設備・配管・道具の錆が剥落して混入した可能性があります。茶褐色・粉状・崩れやすい特徴。',
@@ -589,6 +624,42 @@ export function estimateForeignMaterial(
   if ((co.blue ?? false) && tx.soft)   add('洗浄スポンジ', 18, '青+柔らかい')
   if (tx.elastic)                add('洗浄スポンジ', 14)
   if (wt.floats)                 add('洗浄スポンジ', 10)
+
+  // ── スポンジ片 ──
+  if (tx.soft && ap.bubbly)      add('スポンジ片', 50, '柔らかい+気泡（多孔質）')
+  if (wt.floats)                 add('スポンジ片', 25, '浮く')
+  if (wgt.veryLight)             add('スポンジ片', 20, '非常に軽い')
+  if (tx.soft && !tx.elastic)    add('スポンジ片', 18, '柔らかい')
+  if (ap.bubbly)                 add('スポンジ片', 15, '多孔質・気泡構造')
+  if (tx.elastic)                add('スポンジ片', 10)
+
+  // ── たわし・研磨材 ──
+  if (tx.rough ?? false)         add('たわし・研磨材', 30, 'ざらざら・研磨感')
+  if (ap.fibrous && tx.rough)    add('たわし・研磨材', 25, '繊維状+粗い')
+  if (!ap.metallic && tx.rough)  add('たわし・研磨材', 15, '非金属+粗い')
+  if (wt.floats && tx.rough)     add('たわし・研磨材', 10)
+
+  // ── 金属たわし ──
+  if (ap.fibrous && ap.metallic) add('金属たわし', 40, '金属繊維状')
+  if (ap.wireShape && tx.rough)  add('金属たわし', 30, 'ワイヤー状+粗い')
+  if (co.silver && ap.fibrous)   add('金属たわし', 25, '銀色繊維')
+  if (mag.sticks && ap.fibrous)  add('金属たわし', 30, '磁石につく+繊維状')
+  if (tx.rough && ap.metallic)   add('金属たわし', 18, '粗い+金属感')
+
+  // ── 輪ゴム・ゴム片 ──
+  if (tx.elastic)                add('輪ゴム・ゴム片', 35, '弾力あり')
+  if (tx.elastic && co.black)    add('輪ゴム・ゴム片', 20, '弾力+黒色')
+  if (tx.elastic && co.red)      add('輪ゴム・ゴム片', 15, '弾力+赤色')
+  if (ap.rubbery)                add('輪ゴム・ゴム片', 25, 'ゴム感')
+  if (tx.elastic && wt.sinks)    add('輪ゴム・ゴム片', 10, '弾力+沈む')
+  if (!co.white && !co.transparent && tx.elastic) add('輪ゴム・ゴム片', 8)
+
+  // ── 絆創膏 ──
+  if (ap.layered && tx.soft)     add('絆創膏', 35, '層構造+柔らかい')
+  if (tx.sticky && ap.layered)   add('絆創膏', 30, '粘着+層構造')
+  if ((co.pink ?? false) && ap.layered) add('絆創膏', 25, 'ピンク+層構造')
+  if (ap.layered && !tx.elastic) add('絆創膏', 15, '層構造')
+  if (tx.sticky && tx.soft)      add('絆創膏', 12, '粘着+柔らかい')
 
   // ── 錆・酸化鉄 ──
   if (co.brown && ap.granular)   add('錆・酸化鉄', 32, '茶色+粒状')

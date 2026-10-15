@@ -482,10 +482,17 @@ function IncidentDetailPageInner() {
     }
   }
 
+  function extractLatestDate(text: string): string | null {
+    const matches = text.match(/\b20[0-9]{2}[/\-](?:0[1-9]|1[0-2])[/\-](?:0[1-9]|[12]\d|3[01])\b/g)
+    if (!matches || matches.length === 0) return null
+    return matches.map(d => d.replace(/-/g, '/')).sort((a, b) => b.localeCompare(a))[0]
+  }
+
   async function handleAiPdcaAction() {
     if (!incident) return
     setPdcaActionLoading(true)
     try {
+      const latestCorrectiveDeadline = extractLatestDate(editPreventive) ?? undefined
       const res = await fetch('/api/ai-pdca-action', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -500,17 +507,23 @@ function IncidentDetailPageInner() {
           verifyWhen,
           verifyWho,
           verifyCriteria,
+          latestCorrectiveDeadline,
           lang: typeof window !== 'undefined' ? (localStorage.getItem('foodeye_lang') ?? 'ja') : 'ja',
         }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'AI error')
       const suggestion = data.suggestion ?? ''
-      setPdcaNotes(prev => prev
-        ? `${prev}\n\n--- AIの提案 ---\n${suggestion}`
-        : `--- AIの提案 ---\n${suggestion}`
-      )
-      toast.success(isEn ? 'AI suggestion generated ✅' : 'AIの提案を追記しました ✅')
+      const MARKER = '--- AIの提案 ---'
+      setPdcaNotes(prev => {
+        const idx = prev.indexOf(MARKER)
+        if (idx > -1) {
+          const before = prev.slice(0, idx).trimEnd()
+          return (before ? `${before}\n\n` : '') + `${MARKER}\n${suggestion}`
+        }
+        return prev ? `${prev}\n\n${MARKER}\n${suggestion}` : `${MARKER}\n${suggestion}`
+      })
+      toast.success(isEn ? 'AI suggestion generated ✅' : 'AIの提案を更新しました ✅')
     } catch {
       toast.error(isEn ? 'AI suggestion failed' : 'AI提案の生成に失敗しました')
     } finally {
@@ -1219,6 +1232,21 @@ function IncidentDetailPageInner() {
               <label className="label">{t('detail.pdcaDeadline')}</label>
               <input type="date" value={pdcaDeadline} onChange={(e) => setPdcaDeadline(e.target.value)}
                 className="input-field" />
+              {/* ③是正処置の期限 > PDCA期限 の場合に警告 */}
+              {pdcaDeadline && editPreventive && (() => {
+                const latestPreventive = editPreventive.match(/\b20[0-9]{2}[/\-](?:0[1-9]|1[0-2])[/\-](?:0[1-9]|[12]\d|3[01])\b/g)
+                if (!latestPreventive) return null
+                const latest = latestPreventive.map(d => d.replace(/-/g, '/')).sort((a, b) => b.localeCompare(a))[0]
+                const latestDate = latest.replace(/\//g, '-')
+                if (latestDate > pdcaDeadline) {
+                  return (
+                    <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1">
+                      ⚠️ {isEn ? `Corrective action has a deadline (${latest}) after the PDCA target date.` : `是正処置の期限（${latest}）が残っています`}
+                    </p>
+                  )
+                }
+                return null
+              })()}
             </div>
             <div>
               <label className="label">{t('detail.pdcaNotes')}</label>
